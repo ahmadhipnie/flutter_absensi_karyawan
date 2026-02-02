@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/community_controller.dart';
+import '../../../core/theme/app_theme.dart';
 import 'widgets/chat_list_item.dart';
 import 'widgets/community_filter_chips.dart';
 import 'widgets/community_search_bar.dart';
@@ -11,7 +12,7 @@ class CommunityView extends GetView<CommunityController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,7 +71,7 @@ class CommunityView extends GetView<CommunityController> {
   Widget _buildFAB() {
     return FloatingActionButton(
       onPressed: controller.createNewChat,
-      backgroundColor: const Color(0xFF0046BE),
+      backgroundColor: AppTheme.primaryColor,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
       child: const Icon(Icons.add, color: Colors.white, size: 28),

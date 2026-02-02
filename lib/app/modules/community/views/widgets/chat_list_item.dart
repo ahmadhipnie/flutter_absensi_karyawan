@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../controllers/community_controller.dart';
 
 class ChatListItem extends StatelessWidget {
@@ -16,8 +17,8 @@ class ChatListItem extends StatelessWidget {
       child: InkWell(
         onTap: () => controller.openChat(chat['id']),
         borderRadius: BorderRadius.circular(8),
-        splashColor: const Color(0xFF0046BE).withOpacity(0.05),
-        highlightColor: const Color(0xFF0046BE).withOpacity(0.03),
+        splashColor: AppTheme.primaryColor.withOpacity(0.05),
+        highlightColor: AppTheme.primaryColor.withOpacity(0.03),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Row(
@@ -26,79 +27,91 @@ class ChatListItem extends StatelessWidget {
               _buildAvatar(),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            chat['name'],
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          chat['timestamp'],
-                          style: const TextStyle(
-                            color: Color(0xFF9E9E9E),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        // Checkmark hanya untuk pesan yang dikirim user
-                        if (chat['isSentByMe'] ?? false)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: Icon(
-                              Icons.done_all,
-                              size: 16,
-                              // Biru jika sudah dibaca, abu-abu jika belum
-                              color: (chat['isRead'] ?? false)
-                                  ? const Color(0xFF0046BE)
-                                  : const Color(0xFF9E9E9E),
-                            ),
-                          ),
-                        Expanded(
-                          child: Text(
-                            chat['message'],
-                            style: TextStyle(
-                              color: chat['unreadCount'] > 0
-                                  ? Colors.black
-                                  : const Color(0xFF757575),
-                              fontSize: 13,
-                              fontWeight: chat['unreadCount'] > 0
-                                  ? FontWeight.w500
-                                  : FontWeight.w400,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (chat['unreadCount'] > 0) ...[
-                          const SizedBox(width: 8),
-                          _buildUnreadBadge(chat['unreadCount']),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
+                child: _buildChatContent(),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildChatContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildNameAndTimestamp(),
+        const SizedBox(height: 4),
+        _buildMessageRow(),
+      ],
+    );
+  }
+
+  Widget _buildNameAndTimestamp() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            chat['name'],
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          chat['timestamp'],
+          style: const TextStyle(
+            color: Color(0xFF9E9E9E),
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMessageRow() {
+    return Row(
+      children: [
+        if (chat['isSentByMe'] ?? false) _buildReadStatus(),
+        Expanded(
+          child: Text(
+            chat['message'],
+            style: TextStyle(
+              color: chat['unreadCount'] > 0
+                  ? Colors.black
+                  : const Color(0xFF757575),
+              fontSize: 13,
+              fontWeight:
+                  chat['unreadCount'] > 0 ? FontWeight.w500 : FontWeight.w400,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (chat['unreadCount'] > 0) ...[
+          const SizedBox(width: 8),
+          _buildUnreadBadge(chat['unreadCount']),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildReadStatus() {
+    return Padding(
+      padding: const EdgeInsets.only(right: 4),
+      child: Icon(
+        Icons.done_all,
+        size: 16,
+        color: (chat['isRead'] ?? false)
+            ? AppTheme.primaryColor
+            : const Color(0xFF9E9E9E),
       ),
     );
   }
@@ -108,12 +121,11 @@ class ChatListItem extends StatelessWidget {
       return Container(
         width: 48,
         height: 48,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(24),
+        decoration: const BoxDecoration(
+          color: Color(0xFFF5F5F5),
+          shape: BoxShape.circle,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+        child: ClipOval(
           child: Image.network(
             chat['avatarImage'],
             fit: BoxFit.cover,
@@ -122,7 +134,6 @@ class ChatListItem extends StatelessWidget {
         ),
       );
     }
-
     return _buildAvatarText();
   }
 
@@ -131,8 +142,10 @@ class ChatListItem extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: Color(chat['avatarColor'] ?? 0xFF0046BE),
-        borderRadius: BorderRadius.circular(24),
+        color: chat['avatarColor'] != null
+            ? Color(chat['avatarColor'])
+            : AppTheme.primaryColor,
+        shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: Text(
@@ -149,8 +162,8 @@ class ChatListItem extends StatelessWidget {
   Widget _buildUnreadBadge(int count) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: const BoxDecoration(
-        color: Color(0xFF0046BE),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor,
         shape: BoxShape.circle,
       ),
       constraints: const BoxConstraints(minWidth: 20, minHeight: 20),

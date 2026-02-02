@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
 import '../controllers/home_controller.dart';
+import '../../../core/theme/app_theme.dart';
 
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
@@ -12,7 +12,7 @@ class HomeView extends GetView<HomeController> {
       appBar: AppBar(
         title: const Text('Talenta Attendance'),
         centerTitle: true,
-        backgroundColor: const Color(0xFF0046BE),
+        backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
       ),
       body: Center(
@@ -24,12 +24,12 @@ class HomeView extends GetView<HomeController> {
               width: 200,
             ),
             const SizedBox(height: 32),
-            const Text(
+            Text(
               'TALENTA ATTENDANCE',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF0046BE),
+                color: AppTheme.primaryColor,
               ),
             ),
             const SizedBox(height: 48),
@@ -44,7 +44,7 @@ class HomeView extends GetView<HomeController> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: controller.increment,
-        backgroundColor: const Color(0xFF0046BE),
+        backgroundColor: AppTheme.primaryColor,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),

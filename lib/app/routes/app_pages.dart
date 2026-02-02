@@ -6,6 +6,8 @@ import '../modules/navigation/bindings/navigation_binding.dart';
 import '../modules/navigation/views/navigation_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
+import '../modules/task/bindings/add_task_binding.dart';
+import '../modules/task/views/add_task_view.dart';
 
 part 'app_routes.dart';
 
@@ -29,6 +31,11 @@ class AppPages {
       name: _Paths.MAIN,
       page: () => NavigationView(),
       binding: NavigationBinding(),
+    ),
+    GetPage(
+      name: _Paths.ADD_TASK,
+      page: () => const AddTaskView(),
+      binding: AddTaskBinding(),
     ),
   ];
 }

@@ -42,7 +42,8 @@ class TaskView extends GetView<TaskController> {
 
   Widget _buildFAB() {
     return FloatingActionButton(
-      onPressed: () {},
+      heroTag: 'task_fab',
+      onPressed: () => Get.toNamed('/add-task'),
       backgroundColor: AppTheme.primaryColor,
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),

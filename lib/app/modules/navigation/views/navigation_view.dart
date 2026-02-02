@@ -11,26 +11,18 @@ class NavigationView extends GetView<NavigationController> {
 
   @override
   Widget build(BuildContext context) {
-    _initializePages();
-
     return Scaffold(
       body: Obx(
         () => IndexedStack(
           index: controller.currentIndex.value,
-          children: controller.pages,
+          children: const [
+            DashboardView(),
+            TaskView(),
+            CommunityView(),
+          ],
         ),
       ),
       bottomNavigationBar: const BottomNavBar(),
     );
-  }
-
-  void _initializePages() {
-    if (controller.pages.isEmpty) {
-      controller.pages.addAll([
-        const DashboardView(),
-        const TaskView(),
-        const CommunityView(),
-      ]);
-    }
   }
 }

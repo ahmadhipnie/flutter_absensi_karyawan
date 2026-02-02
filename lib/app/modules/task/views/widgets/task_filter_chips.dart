@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/community_controller.dart';
+import '../../controllers/task_controller.dart';
 import '../../../../core/theme/app_theme.dart';
 
-class CommunityFilterChips extends GetView<CommunityController> {
-  const CommunityFilterChips({super.key});
+class TaskFilterChips extends GetView<TaskController> {
+  const TaskFilterChips({super.key});
 
   @override
   Widget build(BuildContext context) {

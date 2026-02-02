@@ -75,8 +75,8 @@ class LoginController extends GetxController {
           colorText: Colors.white,
         );
 
-        // Navigate to home
-        Get.offAllNamed(Routes.HOME);
+        // Navigate to main layout with bottom nav
+        Get.offAllNamed(Routes.MAIN);
       } else {
         Get.snackbar(
           'Login Failed',

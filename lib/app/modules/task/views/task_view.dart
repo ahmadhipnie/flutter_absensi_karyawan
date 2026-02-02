@@ -22,6 +22,7 @@ class TaskView extends GetView<TaskController> {
           ],
         ),
       ),
+      floatingActionButton: _buildFAB(),
     );
   }
 
@@ -36,6 +37,17 @@ class TaskView extends GetView<TaskController> {
           fontWeight: FontWeight.bold,
         ),
       ),
+    );
+  }
+
+  Widget _buildFAB() {
+    return FloatingActionButton(
+      heroTag: 'task_fab',
+      onPressed: () => Get.toNamed('/add-task'),
+      backgroundColor: AppTheme.primaryColor,
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+      child: const Icon(Icons.add, color: Colors.white, size: 28),
     );
   }
 }

@@ -70,6 +70,7 @@ class CommunityView extends GetView<CommunityController> {
 
   Widget _buildFAB() {
     return FloatingActionButton(
+      heroTag: 'community_fab',
       onPressed: controller.createNewChat,
       backgroundColor: AppTheme.primaryColor,
       elevation: 4,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/add_task/add_task_controller.dart';
+import '../../controllers/add_task_controller.dart';
 import 'widgets/add_task_app_bar.dart';
 import 'widgets/add_task_cards.dart';
 

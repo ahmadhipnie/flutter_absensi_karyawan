@@ -11,7 +11,7 @@ class AddTaskController extends GetxController {
   final locationController = TextEditingController();
 
   final selectedDate = Rx<DateTime?>(null);
-  final assignedMembers = <String>[].obs;
+  final assignedMembers = ''.obs;
 
   /// Select due date
   Future<void> selectDueDate(BuildContext context) async {
@@ -56,9 +56,12 @@ class AddTaskController extends GetxController {
   }
 
   /// Assign members
-  void assignMembers() {
-    // TODO: Show member selection dialog
-    Get.snackbar('Assign', 'Member selection coming soon');
+  Future<void> assignMembers() async {
+    final result = await Get.toNamed('/select-member');
+    if (result != null && result is String) {
+      assignedMembers.value = result;
+      update();
+    }
   }
 
   /// Save task

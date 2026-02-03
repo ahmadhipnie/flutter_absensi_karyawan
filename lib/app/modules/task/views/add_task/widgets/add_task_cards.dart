@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../controllers/add_task/add_task_controller.dart';
+import '../../../controllers/add_task_controller.dart';
 import 'add_task_form_field.dart';
 import 'add_task_label.dart';
 import 'add_task_assign_chip.dart';

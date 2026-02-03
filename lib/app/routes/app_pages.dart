@@ -7,7 +7,9 @@ import '../modules/navigation/views/navigation_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
 import '../modules/task/bindings/add_task_binding.dart';
+import '../modules/task/bindings/select_member_binding.dart';
 import '../modules/task/views/add_task/add_task_view.dart';
+import '../modules/task/views/select_member/select_member_view.dart';
 
 part 'app_routes.dart';
 
@@ -36,6 +38,11 @@ class AppPages {
       name: _Paths.ADD_TASK,
       page: () => const AddTaskView(),
       binding: AddTaskBinding(),
+    ),
+    GetPage(
+      name: _Paths.SELECT_MEMBER,
+      page: () => const SelectMemberView(),
+      binding: SelectMemberBinding(),
     ),
   ];
 }

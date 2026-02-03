@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../common/widgets/filter_chips.dart';
 import '../../../../common/widgets/app_fab.dart';
-import '../../controllers/task_controller.dart';
+import '../../controllers/task/task_controller.dart';
 import 'widgets/task_list.dart';
 
 class TaskView extends GetView<TaskController> {

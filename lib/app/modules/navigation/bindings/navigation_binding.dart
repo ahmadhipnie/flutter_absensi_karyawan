@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import '../../../data/services/auth_service.dart';
 import '../../dashboard/controllers/dashboard_controller.dart';
-import '../../task/controllers/task_controller.dart';
+import '../../task/controllers/task/task_controller.dart';
 import '../../community/controllers/community_controller.dart';
 import '../controllers/navigation_controller.dart';
 

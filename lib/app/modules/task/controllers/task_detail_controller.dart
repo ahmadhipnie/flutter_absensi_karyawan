@@ -17,6 +17,62 @@ class TaskDetailController extends GetxController
   final customerName = 'Alexandria Maria'.obs;
   final location = 'Orchard 1, Batam'.obs;
 
+  // Employee work statistics
+  final approvedCount = 10.obs;
+  final lateSubmissionsCount = 20.obs;
+
+  // Employee work data
+  final List<EmployeeWorkModel> approvedEmployees = [
+    EmployeeWorkModel(
+      id: '1',
+      name: 'Karina',
+      avatarUrl: 'https://i.pravatar.cc/150?img=1',
+      status: EmployeeWorkStatus.onTime,
+    ),
+    EmployeeWorkModel(
+      id: '2',
+      name: 'Bambang',
+      avatarUrl: 'https://i.pravatar.cc/150?img=12',
+      status: EmployeeWorkStatus.late,
+    ),
+  ];
+
+  final List<EmployeeWorkModel> lateEmployees = [
+    EmployeeWorkModel(
+      id: '3',
+      name: 'Jessylin',
+      avatarUrl: 'https://i.pravatar.cc/150?img=5',
+      status: EmployeeWorkStatus.late,
+    ),
+    EmployeeWorkModel(
+      id: '4',
+      name: 'Gerald',
+      avatarUrl: 'https://i.pravatar.cc/150?img=14',
+      status: EmployeeWorkStatus.late,
+    ),
+  ];
+
+  final List<EmployeeWorkModel> assignedEmployees = [
+    EmployeeWorkModel(
+      id: '5',
+      name: 'Jessica',
+      avatarUrl: 'https://i.pravatar.cc/150?img=9',
+      status: EmployeeWorkStatus.notSubmitted,
+    ),
+    EmployeeWorkModel(
+      id: '6',
+      name: 'Karolin',
+      avatarUrl: 'https://i.pravatar.cc/150?img=10',
+      status: EmployeeWorkStatus.notSubmitted,
+    ),
+    EmployeeWorkModel(
+      id: '7',
+      name: 'Karolin2',
+      avatarUrl: 'https://i.pravatar.cc/150?img=10',
+      status: EmployeeWorkStatus.notSubmitted,
+    ),
+  ];
+
   @override
   void onInit() {
     super.onInit();
@@ -54,5 +110,43 @@ class TaskDetailController extends GetxController
   /// Edit task
   void editTask() {
     Get.snackbar('Edit Task', 'Edit functionality coming soon');
+  }
+}
+
+enum EmployeeWorkStatus { onTime, late, notSubmitted }
+
+class EmployeeWorkModel {
+  final String id;
+  final String name;
+  final String avatarUrl;
+  final EmployeeWorkStatus status;
+
+  EmployeeWorkModel({
+    required this.id,
+    required this.name,
+    required this.avatarUrl,
+    required this.status,
+  });
+
+  String get statusText {
+    switch (status) {
+      case EmployeeWorkStatus.onTime:
+        return 'Tepat Waktu';
+      case EmployeeWorkStatus.late:
+        return 'Terlambat';
+      case EmployeeWorkStatus.notSubmitted:
+        return 'Tidak mengumpulkan';
+    }
+  }
+
+  Color get statusColor {
+    switch (status) {
+      case EmployeeWorkStatus.onTime:
+        return const Color(0xFF4CAF50);
+      case EmployeeWorkStatus.late:
+        return const Color(0xFFF44336);
+      case EmployeeWorkStatus.notSubmitted:
+        return const Color(0xFF9E9E9E);
+    }
   }
 }

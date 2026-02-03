@@ -14,7 +14,6 @@ import '../modules/task/views/add_task/add_task_view.dart';
 import '../modules/task/views/select_member/select_member_view.dart';
 import '../modules/task/views/detail_task/task_detail_view.dart';
 import '../modules/task/views/employee_detail/employee_detail_view.dart';
-import '../modules/task/views/add_task_view.dart';
 import '../modules/members/bindings/members_binding.dart';
 import '../modules/members/views/members_list_view.dart';
 import '../modules/members/views/member_detail_view.dart';
@@ -69,22 +68,15 @@ class AppPages {
       name: _Paths.EMPLOYEE_DETAIL,
       page: () => const EmployeeDetailView(),
       binding: EmployeeDetailBinding(),
+    ),
+    GetPage(
       name: _Paths.MEMBERS_LIST,
       page: () => const MembersListView(),
       binding: MembersBinding(),
     ),
-    GetPage(
-      name: _Paths.MEMBER_DETAIL,
-      page: () => const MemberDetailView(),
-    ),
-    GetPage(
-      name: _Paths.CREATE_PROFILE,
-      page: () => const CreateProfileView(),
-    ),
-    GetPage(
-      name: _Paths.EDIT_PROFILE,
-      page: () => const EditProfileView(),
-    ),
+    GetPage(name: _Paths.MEMBER_DETAIL, page: () => const MemberDetailView()),
+    GetPage(name: _Paths.CREATE_PROFILE, page: () => const CreateProfileView()),
+    GetPage(name: _Paths.EDIT_PROFILE, page: () => const EditProfileView()),
     GetPage(
       name: _Paths.CHANGE_PASSWORD,
       page: () => const ChangePasswordView(),

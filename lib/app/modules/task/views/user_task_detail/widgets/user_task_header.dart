@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../common/widgets/app_card_container.dart';
+import '../../../../../common/widgets/task_date_row.dart';
 import '../../../controllers/user_task_detail_controller.dart';
 
 class UserTaskHeader extends GetView<UserTaskDetailController> {
@@ -23,9 +24,23 @@ class UserTaskHeader extends GetView<UserTaskDetailController> {
           const SizedBox(height: 24),
           Row(
             children: [
-              Expanded(child: _buildPostedOn()),
+              Expanded(
+                child: Obx(
+                  () => TaskDateRow(
+                        label: 'Posted On',
+                        value: controller.formatDateTime(controller.postedDate.value),
+                      ),
+                ),
+              ),
               const SizedBox(width: 16),
-              Expanded(child: _buildDueDate()),
+              Expanded(
+                child: Obx(
+                  () => TaskDateRow(
+                        label: 'Due Date',
+                        value: controller.formatDateTime(controller.dueDate.value),
+                      ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -38,72 +53,6 @@ class UserTaskHeader extends GetView<UserTaskDetailController> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPostedOn() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Posted On',
-          style: TextStyle(
-            fontSize: 14,
-            color: Color(0xFF9E9E9E),
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            const Icon(Icons.calendar_today, size: 16, color: Color(0xFF757575)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Obx(() => Text(
-                    controller.formatDateTime(controller.postedDate.value),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDueDate() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Due Date',
-          style: TextStyle(
-            fontSize: 14,
-            color: Color(0xFF9E9E9E),
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            const Icon(Icons.calendar_today, size: 16, color: Color(0xFF757575)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Obx(() => Text(
-                    controller.formatDateTime(controller.dueDate.value),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.black,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  )),
-            ),
-          ],
-        ),
-      ],
     );
   }
 
@@ -121,39 +70,42 @@ class UserTaskHeader extends GetView<UserTaskDetailController> {
         ),
         const SizedBox(height: 8),
         Obx(
-          () => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0046BE),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        controller.status.value,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w500,
+          () => InkWell(
+                onTap: () => _showStatusBottomSheet(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0xFFE0E0E0)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0046BE),
+                          borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                    ),
-                    const Icon(
-                      Icons.keyboard_arrow_down,
-                      size: 20,
-                      color: Color(0xFF9E9E9E),
-                    ),
-                  ],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          controller.status.value,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const Icon(
+                        Icons.keyboard_arrow_down,
+                        size: 20,
+                        color: Color(0xFF9E9E9E),
+                      ),
+                    ],
+                  ),
                 ),
               ),
         ),
@@ -181,6 +133,40 @@ class UserTaskHeader extends GetView<UserTaskDetailController> {
           ],
         ),
       ],
+    );
+  }
+
+  void _showStatusBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Select Status',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ...controller.statusOptions.map(
+              (status) => ListTile(
+                title: Text(status),
+                onTap: () {
+                  controller.changeStatus(status);
+                  Get.back();
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

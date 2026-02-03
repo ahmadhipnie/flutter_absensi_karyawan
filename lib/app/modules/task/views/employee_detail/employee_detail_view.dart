@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../controllers/employee_detail_controller.dart';
 import 'widgets/employee_header_info.dart';
 import 'widgets/employee_output_section.dart';
@@ -11,7 +12,7 @@ class EmployeeDetailView extends GetView<EmployeeDetailController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F3F8),
+      backgroundColor: AppTheme.gray100,
       appBar: _buildAppBar(),
       body: Column(
         children: [

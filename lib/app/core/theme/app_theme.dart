@@ -11,6 +11,38 @@ class AppTheme {
   static const Color backgroundColor = Colors.white;
   static const Color surfaceColor = Colors.white;
 
+  // Common Colors
+  static const Color gray50 = Color(0xFFFAFAFA);
+  static const Color gray100 = Color(0xFFF5F5F5);
+  static const Color gray200 = Color(0xFFEEEEEE);
+  static const Color gray300 = Color(0xFFE0E0E0);
+  static const Color gray400 = Color(0xFFBDBDBD);
+  static const Color gray500 = Color(0xFF9E9E9E);
+  static const Color gray600 = Color(0xFF757575);
+  static const Color gray700 = Color(0xFF616161);
+  static const Color gray800 = Color(0xFF424242);
+  static const Color gray900 = Color(0xFF212121);
+
+  // Status Colors
+  static const Color successColor = Color(0xFF4CAF50);
+  static const Color warningColor = Color(0xFFFFA726);
+  static const Color infoColor = Color(0xFF42A5F5);
+  static const Color dangerColor = Color(0xFFEF5350);
+
+  // Border Radius
+  static const double radiusSmall = 8.0;
+  static const double radiusMedium = 12.0;
+  static const double radiusLarge = 16.0;
+  static const double radiusXLarge = 24.0;
+
+  // Spacing
+  static const double paddingXS = 4.0;
+  static const double paddingS = 8.0;
+  static const double paddingM = 12.0;
+  static const double paddingL = 16.0;
+  static const double paddingXL = 20.0;
+  static const double paddingXXL = 24.0;
+
   // System UI Overlay Style
   static const SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
     statusBarColor: Colors.white,

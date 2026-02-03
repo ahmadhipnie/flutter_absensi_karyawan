@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../../../../common/widgets/user_avatar.dart';
+import '../../../../../common/widgets/app_checkbox.dart';
 import '../../../../../core/theme/app_theme.dart';
 
 class MemberItem extends StatelessWidget {
@@ -17,6 +19,8 @@ class MemberItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final avatarColor = member['avatarColor'] as int;
+
     return Column(
       children: [
         Material(
@@ -30,7 +34,11 @@ class MemberItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
                 children: [
-                  _buildAvatar(),
+                  UserAvatar(
+                    name: member['name'] as String,
+                    size: 48,
+                    backgroundColor: avatarColor,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -42,7 +50,7 @@ class MemberItem extends StatelessWidget {
                       ),
                     ),
                   ),
-                  _buildCheckbox(),
+                  AppCheckbox(isSelected: isSelected),
                 ],
               ),
             ),
@@ -50,51 +58,6 @@ class MemberItem extends StatelessWidget {
         ),
         if (showDivider) const SizedBox(height: 12),
       ],
-    );
-  }
-
-  Widget _buildAvatar() {
-    final avatarColor = member['avatarColor'] as int;
-    final avatarText = member['avatarText'] as String;
-
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: Color(avatarColor),
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        avatarText,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCheckbox() {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        color: isSelected ? AppTheme.primaryColor : Colors.transparent,
-        border: Border.all(
-          color: isSelected ? AppTheme.primaryColor : const Color(0xFFBDBDBD),
-          width: 2,
-        ),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: isSelected
-          ? const Icon(
-              Icons.check,
-              color: Colors.white,
-              size: 16,
-            )
-          : null,
     );
   }
 }

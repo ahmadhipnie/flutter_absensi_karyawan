@@ -11,14 +11,14 @@ class TaskDetailView extends GetView<TaskDetailController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F3F8),
+      backgroundColor: AppTheme.gray100,
       appBar: _buildAppBar(),
       body: Column(
         children: [
           _buildTabBar(),
           Expanded(
             child: Container(
-              color: const Color(0xFFF1F3F8),
+              color: AppTheme.gray100,
               child: TabBarView(
                 controller: controller.tabController,
                 children: const [
@@ -81,12 +81,12 @@ class TaskDetailView extends GetView<TaskDetailController> {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0), width: 1)),
+        border: Border(bottom: BorderSide(color: AppTheme.gray200, width: 1)),
       ),
       child: TabBar(
         controller: controller.tabController,
         labelColor: Colors.black,
-        unselectedLabelColor: const Color(0xFF9E9E9E),
+        unselectedLabelColor: AppTheme.gray500,
         labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(
           fontSize: 16,

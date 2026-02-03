@@ -15,6 +15,14 @@ abstract class Routes {
   static const CREATE_PROFILE = _Paths.CREATE_PROFILE;
   static const EDIT_PROFILE = _Paths.EDIT_PROFILE;
   static const CHANGE_PASSWORD = _Paths.CHANGE_PASSWORD;
+  static const PROFILE = _Paths.PROFILE;
+  static const ATTENDANCE_LOG = _Paths.ATTENDANCE_LOG;
+  static const EDIT_MY_PROFILE = _Paths.EDIT_MY_PROFILE;
+  static const CHANGE_MY_PASSWORD = _Paths.CHANGE_MY_PASSWORD;
+  static const CREATE_DEPARTMENT = _Paths.CREATE_DEPARTMENT;
+  static const EDIT_DEPARTMENT = _Paths.EDIT_DEPARTMENT;
+  static const DEPARTMENT_DETAIL = _Paths.DEPARTMENT_DETAIL;
+  static const DEPARTMENT_INFO = _Paths.DEPARTMENT_INFO;
 }
 
 abstract class _Paths {
@@ -32,4 +40,12 @@ abstract class _Paths {
   static const CREATE_PROFILE = '/create-profile';
   static const EDIT_PROFILE = '/edit-profile';
   static const CHANGE_PASSWORD = '/change-password';
+  static const PROFILE = '/profile';
+  static const ATTENDANCE_LOG = '/attendance-log';
+  static const EDIT_MY_PROFILE = '/edit-my-profile';
+  static const CHANGE_MY_PASSWORD = '/change-my-password';
+  static const CREATE_DEPARTMENT = '/create-department';
+  static const EDIT_DEPARTMENT = '/edit-department';
+  static const DEPARTMENT_DETAIL = '/department-detail';
+  static const DEPARTMENT_INFO = '/department-info';
 }

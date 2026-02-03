@@ -172,11 +172,15 @@ class DashboardController extends GetxController {
     Get.toNamed(Routes.MEMBERS_LIST);
   }
 
-  void createNewDepartment() => _showSnackbar('Create Department');
+  void createNewDepartment() {
+    Get.toNamed(Routes.CREATE_DEPARTMENT);
+  }
+
   void seeMoreTasks() => _showSnackbar('Tasks', 'Navigate to tasks...');
 
-  void openDepartment(DepartmentModel department) =>
-      _showSnackbar('Department', 'Opening ${department.name}...');
+  void openDepartment(DepartmentModel department) {
+    Get.toNamed(Routes.DEPARTMENT_DETAIL, arguments: department);
+  }
 
   void clockIn() {
     Get.snackbar(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/dashboard_controller.dart';
+import '../../../../routes/app_pages.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class DashboardHeader extends GetView<DashboardController> {
@@ -42,18 +43,21 @@ class DashboardHeader extends GetView<DashboardController> {
   }
 
   Widget _buildAvatar() {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        color: Colors.white.withOpacity(0.3),
-      ),
-      child: const Icon(
-        Icons.person,
-        color: Colors.white,
-        size: 32,
+    return GestureDetector(
+      onTap: () => Get.toNamed(Routes.PROFILE),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2),
+          color: Colors.white.withOpacity(0.3),
+        ),
+        child: const Icon(
+          Icons.person,
+          color: Colors.white,
+          size: 32,
+        ),
       ),
     );
   }

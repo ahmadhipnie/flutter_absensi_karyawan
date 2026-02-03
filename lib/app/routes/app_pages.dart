@@ -8,6 +8,12 @@ import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
 import '../modules/task/bindings/add_task_binding.dart';
 import '../modules/task/views/add_task_view.dart';
+import '../modules/members/bindings/members_binding.dart';
+import '../modules/members/views/members_list_view.dart';
+import '../modules/members/views/member_detail_view.dart';
+import '../modules/members/views/create_profile_view.dart';
+import '../modules/members/views/edit_profile_view.dart';
+import '../modules/members/views/change_password_view.dart';
 
 part 'app_routes.dart';
 
@@ -36,6 +42,27 @@ class AppPages {
       name: _Paths.ADD_TASK,
       page: () => const AddTaskView(),
       binding: AddTaskBinding(),
+    ),
+    GetPage(
+      name: _Paths.MEMBERS_LIST,
+      page: () => const MembersListView(),
+      binding: MembersBinding(),
+    ),
+    GetPage(
+      name: _Paths.MEMBER_DETAIL,
+      page: () => const MemberDetailView(),
+    ),
+    GetPage(
+      name: _Paths.CREATE_PROFILE,
+      page: () => const CreateProfileView(),
+    ),
+    GetPage(
+      name: _Paths.EDIT_PROFILE,
+      page: () => const EditProfileView(),
+    ),
+    GetPage(
+      name: _Paths.CHANGE_PASSWORD,
+      page: () => const ChangePasswordView(),
     ),
   ];
 }

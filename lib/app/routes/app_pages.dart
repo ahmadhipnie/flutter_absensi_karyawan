@@ -7,7 +7,7 @@ import '../modules/navigation/views/navigation_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
 import '../modules/task/bindings/add_task_binding.dart';
-import '../modules/task/views/add_task_view.dart';
+import '../modules/task/views/add_task/add_task_view.dart';
 
 part 'app_routes.dart';
 

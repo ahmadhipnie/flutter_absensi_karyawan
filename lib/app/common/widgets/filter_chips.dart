@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/task_controller.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../core/theme/app_theme.dart';
 
-class TaskFilterChips extends GetView<TaskController> {
-  const TaskFilterChips({super.key});
+class AppFilterChips extends StatelessWidget {
+  final RxString selectedFilter;
+  final List<String> filters;
+  final Function(String) onFilterSelected;
+
+  const AppFilterChips({
+    super.key,
+    required this.selectedFilter,
+    required this.filters,
+    required this.onFilterSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -13,14 +21,14 @@ class TaskFilterChips extends GetView<TaskController> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: controller.filters.length,
+        itemCount: filters.length,
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final filter = controller.filters[index];
+          final filter = filters[index];
           return Obx(() {
-            final isSelected = controller.selectedFilter.value == filter;
+            final isSelected = selectedFilter.value == filter;
             return GestureDetector(
-              onTap: () => controller.selectFilter(filter),
+              onTap: () => onFilterSelected(filter),
               child: Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,

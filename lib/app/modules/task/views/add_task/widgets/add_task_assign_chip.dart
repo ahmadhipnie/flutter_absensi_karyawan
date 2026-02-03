@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/add_task_controller.dart';
+import '../../../controllers/add_task/add_task_controller.dart';
 
 class AddTaskAssignChip extends GetView<AddTaskController> {
   const AddTaskAssignChip({super.key});

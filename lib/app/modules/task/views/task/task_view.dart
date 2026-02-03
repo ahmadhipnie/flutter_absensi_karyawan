@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/task_controller.dart';
-import '../../../core/theme/app_theme.dart';
-import 'widgets/task_filter_chips.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../common/widgets/filter_chips.dart';
+import '../../../../common/widgets/app_fab.dart';
+import '../../controllers/task_controller.dart';
 import 'widgets/task_list.dart';
 
 class TaskView extends GetView<TaskController> {
@@ -17,12 +18,19 @@ class TaskView extends GetView<TaskController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
-            const TaskFilterChips(),
+            AppFilterChips(
+              selectedFilter: controller.selectedFilter,
+              filters: controller.filters,
+              onFilterSelected: controller.selectFilter,
+            ),
             const Expanded(child: TaskList()),
           ],
         ),
       ),
-      floatingActionButton: _buildFAB(),
+      floatingActionButton: AppFAB(
+        heroTag: 'task_fab',
+        onPressed: () => Get.toNamed('/add-task'),
+      ),
     );
   }
 
@@ -37,17 +45,6 @@ class TaskView extends GetView<TaskController> {
           fontWeight: FontWeight.bold,
         ),
       ),
-    );
-  }
-
-  Widget _buildFAB() {
-    return FloatingActionButton(
-      heroTag: 'task_fab',
-      onPressed: () => Get.toNamed('/add-task'),
-      backgroundColor: AppTheme.primaryColor,
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-      child: const Icon(Icons.add, color: Colors.white, size: 28),
     );
   }
 }

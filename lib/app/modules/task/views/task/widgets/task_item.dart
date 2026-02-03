@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/task_controller.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../../core/theme/app_theme.dart';
+import '../../../controllers/task_controller.dart';
 
 class TaskItem extends StatelessWidget {
   final TaskModel task;

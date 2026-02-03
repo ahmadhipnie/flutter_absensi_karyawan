@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/add_task_controller.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../../core/theme/app_theme.dart';
+import '../../../controllers/add_task/add_task_controller.dart';
 
 class AddTaskAppBar extends StatelessWidget implements PreferredSizeWidget {
   const AddTaskAppBar({super.key});

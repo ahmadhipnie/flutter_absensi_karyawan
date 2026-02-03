@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import '../controllers/add_task_controller.dart';
+import '../controllers/add_task/add_task_controller.dart';
 
 class AddTaskBinding extends Bindings {
   @override

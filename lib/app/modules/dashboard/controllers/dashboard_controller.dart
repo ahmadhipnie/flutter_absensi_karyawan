@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/models/department_model.dart';
 import '../../../data/models/task_item.dart';
+import '../../../routes/app_pages.dart';
 
 class DashboardController extends GetxController {
   // Lazy initialization of AuthService
@@ -144,7 +145,32 @@ class DashboardController extends GetxController {
     return 'Due ${date.day} ${months[date.month - 1]} ${date.year}, ${hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')} $amPm';
   }
 
-  void onSearchChanged(String value) => searchQuery.value = value;
+  /// Search handler
+  void onSearchChanged(String value) {
+    searchQuery.value = value;
+  }
+
+  /// Navigate to notifications
+  void openNotifications() {
+    Get.snackbar('Notifications', 'Coming soon!',
+        snackPosition: SnackPosition.BOTTOM);
+  }
+
+  /// Navigate to attendance
+  void openAttendance() {
+    Get.snackbar('Attendance', 'Coming soon!',
+        snackPosition: SnackPosition.BOTTOM);
+  }
+
+  /// Navigate to report
+  void openReport() {
+    Get.snackbar('Report', 'Coming soon!', snackPosition: SnackPosition.BOTTOM);
+  }
+
+  /// Navigate to members
+  void openMembers() {
+    Get.toNamed(Routes.MEMBERS_LIST);
+  }
 
   void openNotifications() => _showSnackbar('Notifications');
   void openAttendance() => _showSnackbar('Attendance');

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../routes/app_pages.dart';
 
 class DashboardController extends GetxController {
   // Lazy initialization of AuthService
@@ -193,8 +194,7 @@ class DashboardController extends GetxController {
 
   /// Navigate to members
   void openMembers() {
-    Get.snackbar('Members', 'Coming soon!',
-        snackPosition: SnackPosition.BOTTOM);
+    Get.toNamed(Routes.MEMBERS_LIST);
   }
 
   /// Create new department

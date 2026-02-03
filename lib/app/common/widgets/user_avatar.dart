@@ -6,6 +6,7 @@ class UserAvatar extends StatelessWidget {
   final double size;
   final int? backgroundColor;
   final TextStyle? textStyle;
+  final String? imageUrl;
 
   const UserAvatar({
     super.key,
@@ -13,12 +14,27 @@ class UserAvatar extends StatelessWidget {
     this.size = 48,
     this.backgroundColor,
     this.textStyle,
+    this.imageUrl,
   });
 
   @override
   Widget build(BuildContext context) {
     final initials = _getInitials(name);
     final defaultColor = backgroundColor ?? AppTheme.primaryColor.value;
+
+    if (imageUrl != null && imageUrl!.isNotEmpty) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          image: DecorationImage(
+            image: NetworkImage(imageUrl!),
+            fit: BoxFit.cover,
+          ),
+        ),
+      );
+    }
 
     return Container(
       width: size,

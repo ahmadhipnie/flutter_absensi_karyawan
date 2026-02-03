@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../common/widgets/user_avatar.dart';
 import '../../../controllers/task_detail_controller.dart';
 
 class EmployeeWorkItem extends StatelessWidget {
@@ -49,31 +50,17 @@ class EmployeeWorkItem extends StatelessWidget {
   }
 
   Widget _buildAvatar() {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        image: employee.avatarUrl.isNotEmpty
-            ? DecorationImage(
-                image: NetworkImage(employee.avatarUrl),
-                fit: BoxFit.cover,
-              )
-            : null,
-        color: employee.avatarUrl.isEmpty ? const Color(0xFFE0E0E0) : null,
-      ),
-      child: employee.avatarUrl.isEmpty
-          ? Center(
-              child: Text(
-                employee.name[0].toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            )
-          : null,
+    if (employee.avatarUrl.isNotEmpty) {
+      return UserAvatar(
+        name: employee.name,
+        size: 48,
+        backgroundColor: 0xFFE0E0E0,
+        imageUrl: employee.avatarUrl,
+      );
+    }
+    return UserAvatar(
+      name: employee.name,
+      size: 48,
     );
   }
 }

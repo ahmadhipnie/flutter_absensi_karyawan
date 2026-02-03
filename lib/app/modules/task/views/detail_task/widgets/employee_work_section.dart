@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../common/widgets/card_container.dart';
+import '../../../../../common/widgets/app_card_container.dart';
 import '../../../controllers/task_detail_controller.dart';
 import 'employee_work_item.dart';
 
@@ -27,7 +27,7 @@ class EmployeeWorkSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        CardContainer(
+        AppCardContainer(
           padding: EdgeInsets.zero,
           child: ListView.separated(
             shrinkWrap: true,

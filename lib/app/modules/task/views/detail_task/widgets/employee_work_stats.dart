@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../common/widgets/card_container.dart';
+import '../../../../../common/widgets/app_card_container.dart';
 
 class EmployeeWorkStats extends StatelessWidget {
   final int approvedCount;
@@ -30,7 +30,7 @@ class EmployeeWorkStats extends StatelessWidget {
   }
 
   Widget _buildStatCard({required String label, required int count}) {
-    return CardContainer(
+    return AppCardContainer(
       backgroundColor: const Color(0xFFF8F9FA),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

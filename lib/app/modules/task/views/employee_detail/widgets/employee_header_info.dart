@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../../../common/widgets/card_container.dart';
+import '../../../../../common/widgets/app_card_container.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../controllers/employee_detail_controller.dart';
 
@@ -9,7 +9,7 @@ class EmployeeHeaderInfo extends GetView<EmployeeDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    return CardContainer(
+    return AppCardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

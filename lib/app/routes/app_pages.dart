@@ -24,7 +24,11 @@ import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/profile/views/attendance_log_view.dart';
 import '../modules/profile/views/edit_profile_view.dart' as profile_edit;
-import '../modules/profile/views/change_password_view.dart' as profile_password;
+import '../modules/department/bindings/department_binding.dart';
+import '../modules/department/views/create_department_view.dart';
+import '../modules/department/views/department_detail_view.dart';
+import '../modules/department/views/edit_department_view.dart';
+import '../modules/department/views/department_info_view.dart';
 
 part 'app_routes.dart';
 
@@ -99,12 +103,33 @@ class AppPages {
     GetPage(
       name: _Paths.EDIT_MY_PROFILE,
       page: () => const profile_edit.EditProfileView(),
-      binding: ProfileBinding(), // Share binding
+      binding: ProfileBinding(),
+    ),
+    
+    // Department Routes
+    GetPage(
+      name: _Paths.CREATE_DEPARTMENT,
+      page: () => const CreateDepartmentView(),
+      binding: DepartmentBinding(),
     ),
     GetPage(
-      name: _Paths.CHANGE_MY_PASSWORD,
-      page: () => const profile_password.ChangePasswordView(),
-      binding: ProfileBinding(), // Share binding
+      name: _Paths.DEPARTMENT_DETAIL,
+      // Pass binding? It uses DepartmentController.
+      // Usually better to have binding in detail if it's entry point, 
+      // but if we navigated from list, controller might be there.
+      // Assuming standalone or shared controller.
+      page: () => const DepartmentDetailView(),
+      binding: DepartmentBinding(),
+    ),
+    GetPage(
+      name: _Paths.DEPARTMENT_INFO,
+      page: () => const DepartmentInfoView(),
+      binding: DepartmentBinding(),
+    ),
+    GetPage(
+      name: _Paths.EDIT_DEPARTMENT,
+      page: () => const EditDepartmentView(),
+      binding: DepartmentBinding(),
     ),
   ];
 }

@@ -8,20 +8,24 @@ class AddTaskAssignChip extends GetView<AddTaskController> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: controller.assignMembers,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppTheme.primaryColor.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Text(
-          'All Member',
-          style: TextStyle(
-            color: AppTheme.primaryColor,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+    return Obx(
+      () => GestureDetector(
+        onTap: controller.assignMembers,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            controller.assignedMembers.value.isEmpty
+                ? 'All Member'
+                : controller.assignedMembers.value,
+            style: TextStyle(
+              color: AppTheme.primaryColor,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ),

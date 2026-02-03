@@ -14,11 +14,13 @@ class MemberList extends GetView<SelectMemberController> {
       itemBuilder: (context, index) {
         final member = controller.members[index];
         final memberId = member['id'] as String;
-        return MemberItem(
-          member: member,
-          isSelected: false,
-          onTap: () => controller.toggleMember(memberId),
-          showDivider: index < controller.members.length - 1,
+        return Obx(
+          () => MemberItem(
+            member: member,
+            isSelected: controller.isSelected(memberId),
+            onTap: () => controller.toggleMember(memberId),
+            showDivider: index < controller.members.length - 1,
+          ),
         );
       },
     );

@@ -2,8 +2,15 @@ import 'package:get/get.dart';
 
 class SelectMemberController extends GetxController {
   final RxSet<String> selectedMembers = <String>{}.obs;
+  final RxBool allMembersSelected = false.obs;
 
   final List<Map<String, dynamic>> members = [
+    {
+      'id': 'all',
+      'name': 'All Member',
+      'avatarColor': 0xFF0046BE,
+      'avatarText': 'AM',
+    },
     {
       'id': '1',
       'name': 'John Doe',
@@ -37,20 +44,44 @@ class SelectMemberController extends GetxController {
   ];
 
   void toggleMember(String id) {
-    if (selectedMembers.contains(id)) {
-      selectedMembers.remove(id);
+    if (id == 'all') {
+      if (allMembersSelected.value) {
+        selectedMembers.clear();
+        allMembersSelected.value = false;
+      } else {
+        for (var member in members) {
+          if (member['id'] != 'all') {
+            selectedMembers.add(member['id'] as String);
+          }
+        }
+        allMembersSelected.value = true;
+      }
     } else {
-      selectedMembers.add(id);
+      if (selectedMembers.contains(id)) {
+        selectedMembers.remove(id);
+      } else {
+        selectedMembers.add(id);
+      }
+      allMembersSelected.value = selectedMembers.length == members.length - 1;
     }
   }
 
-  bool isSelected(String id) => selectedMembers.contains(id);
+  bool isSelected(String id) {
+    if (id == 'all') {
+      return allMembersSelected.value;
+    }
+    return selectedMembers.contains(id);
+  }
 
   void confirmSelection() {
-    final names = members
-        .where((m) => selectedMembers.contains(m['id']))
-        .map((m) => m['name'] as String)
-        .join(', ');
-    Get.back(result: names.isEmpty ? '' : names);
+    if (allMembersSelected.value) {
+      Get.back(result: 'All Member');
+    } else {
+      final names = members
+          .where((m) => selectedMembers.contains(m['id']))
+          .map((m) => m['name'] as String)
+          .join(', ');
+      Get.back(result: names.isEmpty ? 'All Member' : names);
+    }
   }
 }

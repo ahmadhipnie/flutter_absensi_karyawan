@@ -10,10 +10,12 @@ import '../modules/task/bindings/add_task_binding.dart';
 import '../modules/task/bindings/select_member_binding.dart';
 import '../modules/task/bindings/task_detail_binding.dart';
 import '../modules/task/bindings/employee_detail_binding.dart';
+import '../modules/task/bindings/user_task_detail_binding.dart';
 import '../modules/task/views/add_task/add_task_view.dart';
 import '../modules/task/views/select_member/select_member_view.dart';
 import '../modules/task/views/detail_task/task_detail_view.dart';
 import '../modules/task/views/employee_detail/employee_detail_view.dart';
+import '../modules/task/views/user_task_detail/user_task_detail_view.dart';
 import '../modules/members/bindings/members_binding.dart';
 import '../modules/members/views/members_list_view.dart';
 import '../modules/members/views/member_detail_view.dart';
@@ -77,6 +79,11 @@ class AppPages {
       name: _Paths.EMPLOYEE_DETAIL,
       page: () => const EmployeeDetailView(),
       binding: EmployeeDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.USER_TASK_DETAIL,
+      page: () => const UserTaskDetailView(),
+      binding: UserTaskDetailBinding(),
     ),
     GetPage(
       name: _Paths.MEMBERS_LIST,

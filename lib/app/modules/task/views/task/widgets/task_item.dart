@@ -18,7 +18,7 @@ class TaskItem extends StatelessWidget {
         Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => Get.toNamed('/task-detail'),
+            onTap: () => controller.openTaskDetail(task),
             splashColor: AppTheme.primaryColor.withOpacity(0.05),
             highlightColor: AppTheme.primaryColor.withOpacity(0.03),
             borderRadius: BorderRadius.circular(8),

@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../dashboard/controllers/dashboard_controller.dart';
 
 class TaskController extends GetxController {
   // Observable states
   final selectedFilter = 'All'.obs;
   final scrollController = ScrollController();
+
+  // Get userRole from DashboardController
+  DashboardController? get _dashboardController {
+    try {
+      return Get.find<DashboardController>();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // User role from DashboardController: 'supervisor' or 'member'
+  RxString get userRole => _dashboardController?.userRole ?? 'member'.obs;
 
   // Filter options
   final List<String> filters = [
@@ -132,6 +145,20 @@ class TaskController extends GetxController {
   void onClose() {
     scrollController.dispose();
     super.onClose();
+  }
+
+  /// Check if current user is supervisor/admin
+  bool get isSupervisor => userRole.value == 'supervisor';
+
+  /// Navigate to task detail based on user role
+  /// Supervisor/Admin -> TaskDetailView (with tabs)
+  /// Member -> UserTaskDetailView (with status, upload, submit button)
+  void openTaskDetail(TaskModel task) {
+    if (userRole.value == 'supervisor') {
+      Get.toNamed('/task-detail', arguments: task);
+    } else {
+      Get.toNamed('/user-task-detail', arguments: task);
+    }
   }
 }
 

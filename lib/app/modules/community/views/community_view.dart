@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/community_controller.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../common/widgets/filter_chips.dart';
+import '../../../common/widgets/app_fab.dart';
 import 'widgets/chat_list_item.dart';
-import 'widgets/community_filter_chips.dart';
 import 'widgets/community_search_bar.dart';
 
 class CommunityView extends GetView<CommunityController> {
@@ -18,13 +19,20 @@ class CommunityView extends GetView<CommunityController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
-            const CommunityFilterChips(),
+            AppFilterChips(
+              selectedFilter: controller.selectedFilter,
+              filters: controller.filters,
+              onFilterSelected: controller.selectFilter,
+            ),
             const CommunitySearchBar(),
             Expanded(child: _buildChatList()),
           ],
         ),
       ),
-      floatingActionButton: _buildFAB(),
+      floatingActionButton: AppFAB(
+        heroTag: 'community_fab',
+        onPressed: controller.createNewChat,
+      ),
     );
   }
 
@@ -66,16 +74,5 @@ class CommunityView extends GetView<CommunityController> {
         },
       );
     });
-  }
-
-  Widget _buildFAB() {
-    return FloatingActionButton(
-      heroTag: 'community_fab',
-      onPressed: controller.createNewChat,
-      backgroundColor: AppTheme.primaryColor,
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
-      child: const Icon(Icons.add, color: Colors.white, size: 28),
-    );
   }
 }

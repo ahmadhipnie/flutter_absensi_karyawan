@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../data/models/task_item.dart';
 import '../../controllers/dashboard_controller.dart';
 import '../../../../core/theme/app_theme.dart';
 
@@ -63,7 +64,7 @@ class OngoingTaskSection extends GetView<DashboardController> {
     );
   }
 
-  Widget _buildTaskItem(TaskItem task) {
+  Widget _buildTaskItem(DashboardTaskItem task) {
     return GestureDetector(
       onTap: () => controller.openTask(task),
       child: Container(

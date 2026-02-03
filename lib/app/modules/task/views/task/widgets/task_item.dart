@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/task_controller.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../../core/theme/app_theme.dart';
+import '../../../controllers/task_controller.dart';
 
 class TaskItem extends StatelessWidget {
   final TaskModel task;
@@ -15,17 +15,24 @@ class TaskItem extends StatelessWidget {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              _buildIconContainer(),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildTaskInfo(controller),
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => Get.toNamed('/task-detail'),
+            splashColor: AppTheme.primaryColor.withOpacity(0.05),
+            highlightColor: AppTheme.primaryColor.withOpacity(0.03),
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildIconContainer(),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildTaskInfo(controller)),
+                ],
               ),
-            ],
+            ),
           ),
         ),
         if (showDivider) _buildDivider(),

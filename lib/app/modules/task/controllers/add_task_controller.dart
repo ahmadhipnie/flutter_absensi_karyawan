@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class AddTaskController extends GetxController {
+class TaskFormController extends GetxController {
+  // Mode parameters
+  final String? taskId;
+  final Map<String, dynamic>? existingTask;
+
+  TaskFormController({this.taskId, this.existingTask});
+
   final formKey = GlobalKey<FormState>();
 
   final subjectController = TextEditingController();
@@ -11,7 +17,29 @@ class AddTaskController extends GetxController {
   final locationController = TextEditingController();
 
   final selectedDate = Rx<DateTime?>(null);
-  final assignedMembers = <String>[].obs;
+  final assignedMembers = ''.obs;
+
+  /// Check if in edit mode
+  bool get isEditMode => taskId != null;
+
+  @override
+  void onInit() {
+    super.onInit();
+    // Pre-fill form fields when editing
+    if (isEditMode && existingTask != null) {
+      subjectController.text = existingTask!['subject'] ?? '';
+      descriptionController.text = existingTask!['description'] ?? '';
+      customerNameController.text = existingTask!['customerName'] ?? '';
+      locationController.text = existingTask!['location'] ?? '';
+      assignedMembers.value = existingTask!['assignedMembers'] ?? '';
+
+      // Parse and set due date
+      if (existingTask!['dueDate'] != null) {
+        selectedDate.value = DateTime.parse(existingTask!['dueDate']);
+        dueDateController.text = _formatDate(selectedDate.value!);
+      }
+    }
+  }
 
   /// Select due date
   Future<void> selectDueDate(BuildContext context) async {
@@ -56,17 +84,26 @@ class AddTaskController extends GetxController {
   }
 
   /// Assign members
-  void assignMembers() {
-    // TODO: Show member selection dialog
-    Get.snackbar('Assign', 'Member selection coming soon');
+  Future<void> assignMembers() async {
+    final result = await Get.toNamed('/select-member');
+    if (result != null && result is String) {
+      assignedMembers.value = result;
+      update();
+    }
   }
 
   /// Save task
   void saveTask() {
     if (formKey.currentState?.validate() ?? false) {
-      // TODO: Save task logic
-      Get.back();
-      Get.snackbar('Success', 'Task created successfully');
+      if (isEditMode) {
+        // TODO: Update task logic
+        Get.back();
+        Get.snackbar('Success', 'Task updated successfully');
+      } else {
+        // TODO: Create task logic
+        Get.back();
+        Get.snackbar('Success', 'Task created successfully');
+      }
     }
   }
 

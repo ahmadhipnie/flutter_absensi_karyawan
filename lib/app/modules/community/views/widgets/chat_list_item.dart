@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../common/widgets/user_avatar.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../controllers/community_controller.dart';
 
@@ -26,9 +27,7 @@ class ChatListItem extends StatelessWidget {
             children: [
               _buildAvatar(),
               const SizedBox(width: 12),
-              Expanded(
-                child: _buildChatContent(),
-              ),
+              Expanded(child: _buildChatContent()),
             ],
           ),
         ),
@@ -67,7 +66,7 @@ class ChatListItem extends StatelessWidget {
         Text(
           chat['timestamp'],
           style: const TextStyle(
-            color: Color(0xFF9E9E9E),
+            color: AppTheme.gray500,
             fontSize: 12,
             fontWeight: FontWeight.w400,
           ),
@@ -86,10 +85,9 @@ class ChatListItem extends StatelessWidget {
             style: TextStyle(
               color: chat['unreadCount'] > 0
                   ? Colors.black
-                  : const Color(0xFF757575),
+                  : AppTheme.gray600,
               fontSize: 13,
-              fontWeight:
-                  chat['unreadCount'] > 0 ? FontWeight.w500 : FontWeight.w400,
+              fontWeight: chat['unreadCount'] > 0 ? FontWeight.w500 : FontWeight.w400,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -109,53 +107,24 @@ class ChatListItem extends StatelessWidget {
       child: Icon(
         Icons.done_all,
         size: 16,
-        color: (chat['isRead'] ?? false)
-            ? AppTheme.primaryColor
-            : const Color(0xFF9E9E9E),
+        color: (chat['isRead'] ?? false) ? AppTheme.primaryColor : AppTheme.gray500,
       ),
     );
   }
 
   Widget _buildAvatar() {
-    if (chat['avatarImage'] != null) {
-      return Container(
-        width: 48,
-        height: 48,
-        decoration: const BoxDecoration(
-          color: Color(0xFFF5F5F5),
-          shape: BoxShape.circle,
-        ),
-        child: ClipOval(
-          child: Image.network(
-            chat['avatarImage'],
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => _buildAvatarText(),
-          ),
-        ),
-      );
-    }
-    return _buildAvatarText();
-  }
+    final avatarImage = chat['avatarImage'] as String?;
+    final avatarColor = chat['avatarColor'] as int?;
+    final avatarText = chat['avatarText'] as String?;
 
-  Widget _buildAvatarText() {
-    return Container(
-      width: 48,
-      height: 48,
-      decoration: BoxDecoration(
-        color: chat['avatarColor'] != null
-            ? Color(chat['avatarColor'])
-            : AppTheme.primaryColor,
-        shape: BoxShape.circle,
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        chat['avatarText'] ?? chat['name'][0].toUpperCase(),
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+    return UserAvatar(
+      name: chat['name'],
+      size: 48,
+      imageUrl: avatarImage?.isNotEmpty == true ? avatarImage : null,
+      backgroundColor: avatarColor ?? AppTheme.primaryColor.value,
+      textStyle: avatarText != null
+          ? const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)
+          : null,
     );
   }
 

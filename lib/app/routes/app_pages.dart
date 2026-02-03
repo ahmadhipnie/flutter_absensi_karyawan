@@ -42,6 +42,11 @@ class AppPages {
       binding: AddTaskBinding(),
     ),
     GetPage(
+      name: _Paths.EDIT_TASK,
+      page: () => const AddTaskView(),
+      binding: AddTaskBinding(),
+    ),
+    GetPage(
       name: _Paths.SELECT_MEMBER,
       page: () => const SelectMemberView(),
       binding: SelectMemberBinding(),

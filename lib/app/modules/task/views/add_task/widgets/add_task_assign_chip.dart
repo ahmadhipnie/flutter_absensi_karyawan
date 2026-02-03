@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../controllers/add_task_controller.dart';
 
-class AddTaskAssignChip extends GetView<AddTaskController> {
+class AddTaskAssignChip extends GetView<TaskFormController> {
   const AddTaskAssignChip({super.key});
 
   @override

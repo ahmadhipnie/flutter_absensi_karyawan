@@ -6,7 +6,7 @@ import 'add_task_form_field.dart';
 import 'add_task_label.dart';
 import 'add_task_assign_chip.dart';
 
-class AddTaskFirstCard extends GetView<AddTaskController> {
+class AddTaskFirstCard extends GetView<TaskFormController> {
   const AddTaskFirstCard({super.key});
 
   @override
@@ -46,7 +46,7 @@ class AddTaskFirstCard extends GetView<AddTaskController> {
   }
 }
 
-class AddTaskSecondCard extends GetView<AddTaskController> {
+class AddTaskSecondCard extends GetView<TaskFormController> {
   const AddTaskSecondCard({super.key});
 
   @override
@@ -69,7 +69,7 @@ class AddTaskSecondCard extends GetView<AddTaskController> {
   }
 }
 
-class AddTaskThirdCard extends GetView<AddTaskController> {
+class AddTaskThirdCard extends GetView<TaskFormController> {
   const AddTaskThirdCard({super.key});
 
   @override

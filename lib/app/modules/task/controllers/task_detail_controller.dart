@@ -109,7 +109,24 @@ class TaskDetailController extends GetxController
 
   /// Edit task
   void editTask() {
-    Get.snackbar('Edit Task', 'Edit functionality coming soon');
+    // Prepare task data for editing
+    final taskData = {
+      'subject': taskTitle.value,
+      'dueDate': dueDate.value.toIso8601String(),
+      'description': description.value,
+      'customerName': customerName.value,
+      'location': location.value,
+      'assignedMembers': 'All Member', // or get from assigned list
+    };
+
+    // Navigate to edit task with data
+    Get.toNamed(
+      '/edit-task',
+      arguments: {
+        'taskId': '1', // Use actual task ID
+        'taskData': taskData,
+      },
+    );
   }
 }
 

@@ -4,7 +4,7 @@ import '../../controllers/add_task_controller.dart';
 import 'widgets/add_task_app_bar.dart';
 import 'widgets/add_task_cards.dart';
 
-class AddTaskView extends GetView<AddTaskController> {
+class AddTaskView extends GetView<TaskFormController> {
   const AddTaskView({super.key});
 
   @override

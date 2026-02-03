@@ -11,7 +11,7 @@ class TaskView extends GetView<TaskController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Obx(() => Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       body: SafeArea(
         child: Column(
@@ -27,11 +27,13 @@ class TaskView extends GetView<TaskController> {
           ],
         ),
       ),
-      floatingActionButton: AppFAB(
-        heroTag: 'task_fab',
-        onPressed: () => Get.toNamed('/add-task'),
-      ),
-    );
+      floatingActionButton: controller.isSupervisor
+          ? AppFAB(
+              heroTag: 'task_fab',
+              onPressed: () => Get.toNamed('/add-task'),
+            )
+          : null,
+    ));
   }
 
   Widget _buildHeader() {

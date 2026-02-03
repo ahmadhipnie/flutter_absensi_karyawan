@@ -10,6 +10,7 @@ abstract class Routes {
   static const SELECT_MEMBER = _Paths.SELECT_MEMBER;
   static const TASK_DETAIL = _Paths.TASK_DETAIL;
   static const EMPLOYEE_DETAIL = _Paths.EMPLOYEE_DETAIL;
+  static const USER_TASK_DETAIL = _Paths.USER_TASK_DETAIL;
   static const MEMBERS_LIST = _Paths.MEMBERS_LIST;
   static const MEMBER_DETAIL = _Paths.MEMBER_DETAIL;
   static const CREATE_PROFILE = _Paths.CREATE_PROFILE;
@@ -27,6 +28,7 @@ abstract class _Paths {
   static const SELECT_MEMBER = '/select-member';
   static const TASK_DETAIL = '/task-detail';
   static const EMPLOYEE_DETAIL = '/employee-detail';
+  static const USER_TASK_DETAIL = '/user-task-detail';
   static const MEMBERS_LIST = '/members-list';
   static const MEMBER_DETAIL = '/member-detail';
   static const CREATE_PROFILE = '/create-profile';

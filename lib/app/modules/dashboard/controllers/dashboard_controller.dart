@@ -172,10 +172,6 @@ class DashboardController extends GetxController {
     Get.toNamed(Routes.MEMBERS_LIST);
   }
 
-  void openNotifications() => _showSnackbar('Notifications');
-  void openAttendance() => _showSnackbar('Attendance');
-  void openReport() => _showSnackbar('Report');
-  void openMembers() => _showSnackbar('Members');
   void createNewDepartment() => _showSnackbar('Create Department');
   void seeMoreTasks() => _showSnackbar('Tasks', 'Navigate to tasks...');
 

@@ -14,6 +14,11 @@ import '../modules/members/views/member_detail_view.dart';
 import '../modules/members/views/create_profile_view.dart';
 import '../modules/members/views/edit_profile_view.dart';
 import '../modules/members/views/change_password_view.dart';
+import '../modules/profile/bindings/profile_binding.dart';
+import '../modules/profile/views/profile_view.dart';
+import '../modules/profile/views/attendance_log_view.dart';
+import '../modules/profile/views/edit_profile_view.dart' as profile_edit;
+import '../modules/profile/views/change_password_view.dart' as profile_password;
 
 part 'app_routes.dart';
 
@@ -63,6 +68,26 @@ class AppPages {
     GetPage(
       name: _Paths.CHANGE_PASSWORD,
       page: () => const ChangePasswordView(),
+    ),
+    // Profile Routes
+    GetPage(
+      name: _Paths.PROFILE,
+      page: () => const ProfileView(),
+      binding: ProfileBinding(),
+    ),
+    GetPage(
+      name: _Paths.ATTENDANCE_LOG,
+      page: () => const AttendanceLogView(),
+    ),
+    GetPage(
+      name: _Paths.EDIT_MY_PROFILE,
+      page: () => const profile_edit.EditProfileView(),
+      binding: ProfileBinding(), // Share binding
+    ),
+    GetPage(
+      name: _Paths.CHANGE_MY_PASSWORD,
+      page: () => const profile_password.ChangePasswordView(),
+      binding: ProfileBinding(), // Share binding
     ),
   ];
 }

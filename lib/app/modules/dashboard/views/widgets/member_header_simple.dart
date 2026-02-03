@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/dashboard_controller.dart';
+import '../../../../routes/app_pages.dart';
 
 class MemberHeaderSimple extends GetView<DashboardController> {
   const MemberHeaderSimple({super.key});
@@ -40,18 +41,21 @@ class MemberHeaderSimple extends GetView<DashboardController> {
   }
 
   Widget _buildAvatar() {
-    return Container(
-      width: 64,
-      height: 64,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        color: Colors.white.withOpacity(0.3),
-      ),
-      child: const Icon(
-        Icons.person,
-        color: Colors.white,
-        size: 36,
+    return GestureDetector(
+      onTap: () => Get.toNamed(Routes.PROFILE),
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2),
+          color: Colors.white.withOpacity(0.3),
+        ),
+        child: const Icon(
+          Icons.person,
+          color: Colors.white,
+          size: 36,
+        ),
       ),
     );
   }

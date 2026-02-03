@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/models/department_model.dart';
+import '../../../data/models/task_item.dart';
 import '../../../routes/app_pages.dart';
 
 class DashboardController extends GetxController {
@@ -67,18 +69,18 @@ class DashboardController extends GetxController {
   ).obs;
 
   // Ongoing tasks for member
-  final ongoingTasks = <TaskItem>[
-    TaskItem(
+  final ongoingTasks = <DashboardTaskItem>[
+    DashboardTaskItem(
       id: '1',
       title: "Set the company's vision and strategic direction",
       dueDate: DateTime(2026, 1, 17, 23, 59),
     ),
-    TaskItem(
+    DashboardTaskItem(
       id: '2',
       title: 'Make high-level strategic decisions',
       dueDate: DateTime(2026, 1, 17, 23, 59),
     ),
-    TaskItem(
+    DashboardTaskItem(
       id: '3',
       title: 'Lead and oversee executive management',
       dueDate: DateTime(2026, 1, 17, 23, 59),
@@ -102,19 +104,15 @@ class DashboardController extends GetxController {
   }
 
   void _loadUserData() {
-    // Load user data from auth service
     final authService = _authService;
     if (authService != null) {
       final user = authService.currentUser;
       if (user != null) {
         userName.value = user['name'] ?? 'User';
-        // Determine role based on user data
-        // For demo, we'll toggle based on email or other criteria
       }
     }
   }
 
-  /// Toggle user role for demo purposes
   void toggleUserRole() {
     if (userRole.value == 'supervisor') {
       userRole.value = 'member';
@@ -125,45 +123,22 @@ class DashboardController extends GetxController {
     }
   }
 
-  /// Check if current user is supervisor
   bool get isSupervisor => userRole.value == 'supervisor';
 
-  /// Format current date
   String get formattedDate {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     final date = currentDate.value;
     return '${days[date.weekday - 1]}, ${date.day} ${months[date.month - 1]} ${date.year}';
   }
 
-  /// Format task due date
   String formatTaskDueDate(DateTime date) {
     final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec'
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     final hour = date.hour > 12 ? date.hour - 12 : date.hour;
     final amPm = date.hour >= 12 ? 'PM' : 'AM';
@@ -197,62 +172,30 @@ class DashboardController extends GetxController {
     Get.toNamed(Routes.MEMBERS_LIST);
   }
 
-  /// Create new department
-  void createNewDepartment() {
-    Get.snackbar('Create Department', 'Coming soon!',
-        snackPosition: SnackPosition.BOTTOM);
-  }
+  void createNewDepartment() => _showSnackbar('Create Department');
+  void seeMoreTasks() => _showSnackbar('Tasks', 'Navigate to tasks...');
 
-  /// Open department detail
-  void openDepartment(DepartmentModel department) {
-    Get.snackbar('Department', 'Opening ${department.name}...',
-        snackPosition: SnackPosition.BOTTOM);
-  }
+  void openDepartment(DepartmentModel department) =>
+      _showSnackbar('Department', 'Opening ${department.name}...');
 
-  /// Clock in action
   void clockIn() {
-    Get.snackbar('Clock In', 'Clock in successful!',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white);
+    Get.snackbar(
+      'Clock In',
+      'Clock in successful!',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+    );
   }
 
-  /// Open task detail
-  void openTask(TaskItem task) {
-    Get.snackbar('Task', 'Opening task: ${task.title}',
-        snackPosition: SnackPosition.BOTTOM);
+  void openTask(DashboardTaskItem task) =>
+      _showSnackbar('Task', 'Opening task: ${task.title}');
+
+  void _showSnackbar(String title, [String? message]) {
+    Get.snackbar(
+      title,
+      message ?? 'Coming soon!',
+      snackPosition: SnackPosition.BOTTOM,
+    );
   }
-
-  /// See more tasks
-  void seeMoreTasks() {
-    // Navigate to task tab
-    Get.snackbar('Tasks', 'Navigate to tasks...',
-        snackPosition: SnackPosition.BOTTOM);
-  }
-}
-
-/// Department model
-class DepartmentModel {
-  final String id;
-  final String name;
-  final String imageUrl;
-
-  DepartmentModel({
-    required this.id,
-    required this.name,
-    required this.imageUrl,
-  });
-}
-
-/// Task item model
-class TaskItem {
-  final String id;
-  final String title;
-  final DateTime dueDate;
-
-  TaskItem({
-    required this.id,
-    required this.title,
-    required this.dueDate,
-  });
 }

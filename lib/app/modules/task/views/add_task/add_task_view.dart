@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../controllers/add_task_controller.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../controllers/add_task_controller.dart';
 import 'widgets/add_task_app_bar.dart';
-import 'widgets/add_task_first_card.dart';
-import 'widgets/add_task_second_card.dart';
-import 'widgets/add_task_third_card.dart';
+import 'widgets/add_task_cards.dart';
 
-class AddTaskView extends GetView<AddTaskController> {
+class AddTaskView extends GetView<TaskFormController> {
   const AddTaskView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F3F8),
+      backgroundColor: AppTheme.gray100,
       appBar: const AddTaskAppBar(),
       body: SafeArea(
         child: SingleChildScrollView(

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/add_task_controller.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../../core/theme/app_theme.dart';
+import '../../../controllers/add_task_controller.dart';
 
 class AddTaskAppBar extends StatelessWidget implements PreferredSizeWidget {
   const AddTaskAppBar({super.key});
 
-  AddTaskController get controller => Get.find();
+  TaskFormController get controller => Get.find();
 
   @override
   Widget build(BuildContext context) {
@@ -14,12 +14,14 @@ class AddTaskAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        alignment: Alignment.centerRight,
+        icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
         onPressed: () => Get.back(),
       ),
-      title: const Text(
-        'Add Task',
-        style: TextStyle(
+      centerTitle: false,
+      title: Text(
+        controller.isEditMode ? 'Edit Task' : 'Add Task',
+        style: const TextStyle(
           color: Colors.black,
           fontSize: 20,
           fontWeight: FontWeight.w600,

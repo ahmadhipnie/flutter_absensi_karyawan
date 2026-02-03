@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../../core/theme/app_theme.dart';
 
 class AddTaskFormField extends StatelessWidget {
   final TextEditingController controller;
@@ -39,40 +39,40 @@ class AddTaskFormField extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(
-          color: Color(0xFF9E9E9E),
+          color: AppTheme.gray500,
           fontSize: 15,
           fontWeight: FontWeight.w400,
         ),
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: const Color(0xFF616161), size: 22)
+            ? Icon(prefixIcon, color: AppTheme.gray700, size: 22)
             : null,
         filled: true,
-        fillColor: isTransparent ? Colors.transparent : const Color(0xFFF5F5F5),
+        fillColor: isTransparent ? Colors.transparent : AppTheme.gray100,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           borderSide: isTransparent ? BorderSide.none : BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           borderSide: isTransparent ? BorderSide.none : BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
           borderSide: isTransparent
               ? BorderSide.none
               : BorderSide(color: AppTheme.primaryColor, width: 1),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          borderSide: const BorderSide(color: AppTheme.errorColor, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 1),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          borderSide: const BorderSide(color: AppTheme.errorColor, width: 1),
         ),
         contentPadding: EdgeInsets.symmetric(
-          horizontal: prefixIcon != null ? 0 : 16,
-          vertical: maxLines > 1 ? 14 : 16,
+          horizontal: prefixIcon != null ? 0 : AppTheme.paddingL,
+          vertical: maxLines > 1 ? 14 : AppTheme.paddingL,
         ),
       ),
     );

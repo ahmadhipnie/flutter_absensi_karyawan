@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/navigation_controller.dart';
 import '../../dashboard/views/dashboard_view.dart';
-import '../../task/views/task_view.dart';
+import '../../task/views/task/task_view.dart';
 import '../../community/views/community_view.dart';
 import 'widgets/bottom_nav_bar.dart';
 

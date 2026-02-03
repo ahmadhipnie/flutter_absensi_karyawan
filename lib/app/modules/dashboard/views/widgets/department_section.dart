@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../data/models/department_model.dart';
 import '../../controllers/dashboard_controller.dart';
 import '../../../../core/theme/app_theme.dart';
 

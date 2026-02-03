@@ -14,9 +14,11 @@ class AddTaskAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        alignment: Alignment.centerRight,
+        icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
         onPressed: () => Get.back(),
       ),
+      centerTitle: false,
       title: Text(
         controller.isEditMode ? 'Edit Task' : 'Add Task',
         style: const TextStyle(

@@ -12,9 +12,7 @@ class SelectMemberView extends GetView<SelectMemberController> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
-      body: const SafeArea(
-        child: MemberList(),
-      ),
+      body: const SafeArea(child: MemberList()),
     );
   }
 
@@ -23,13 +21,14 @@ class SelectMemberView extends GetView<SelectMemberController> {
       backgroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
+        alignment: Alignment.centerRight,
         icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
         onPressed: () => Get.back(),
       ),
       title: const Text(
         'Select Member',
         style: TextStyle(
-          color: Colors.black,
+          color: Color.fromARGB(255, 6, 5, 5),
           fontSize: 18,
           fontWeight: FontWeight.w600,
         ),
@@ -49,11 +48,7 @@ class SelectMemberView extends GetView<SelectMemberController> {
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.check,
-                  color: AppTheme.primaryColor,
-                  size: 16,
-                ),
+                Icon(Icons.check, color: AppTheme.primaryColor, size: 16),
                 const SizedBox(width: 4),
                 Text(
                   'Done',

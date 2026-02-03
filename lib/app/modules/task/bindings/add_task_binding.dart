@@ -10,10 +10,7 @@ class AddTaskBinding extends Bindings {
     final existingTask = args?['taskData'] as Map<String, dynamic>?;
 
     Get.lazyPut<TaskFormController>(
-      () => TaskFormController(
-        taskId: taskId,
-        existingTask: existingTask,
-      ),
+      () => TaskFormController(taskId: taskId, existingTask: existingTask),
     );
   }
 }

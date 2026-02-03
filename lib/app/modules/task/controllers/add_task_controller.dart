@@ -32,7 +32,7 @@ class TaskFormController extends GetxController {
       customerNameController.text = existingTask!['customerName'] ?? '';
       locationController.text = existingTask!['location'] ?? '';
       assignedMembers.value = existingTask!['assignedMembers'] ?? '';
-      
+
       // Parse and set due date
       if (existingTask!['dueDate'] != null) {
         selectedDate.value = DateTime.parse(existingTask!['dueDate']);

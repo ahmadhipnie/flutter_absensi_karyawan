@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../common/widgets/app_card_container.dart';
 import '../../../controllers/add_task_controller.dart';
 import 'add_task_form_field.dart';
 import 'add_task_label.dart';
 import 'add_task_assign_chip.dart';
-import 'add_task_card_container.dart';
 
 class AddTaskFirstCard extends GetView<AddTaskController> {
   const AddTaskFirstCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return AddTaskCardContainer(
+    return AppCardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -51,7 +51,7 @@ class AddTaskSecondCard extends GetView<AddTaskController> {
 
   @override
   Widget build(BuildContext context) {
-    return AddTaskCardContainer(
+    return AppCardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -74,7 +74,7 @@ class AddTaskThirdCard extends GetView<AddTaskController> {
 
   @override
   Widget build(BuildContext context) {
-    return AddTaskCardContainer(
+    return AppCardContainer(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -8,8 +8,10 @@ import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
 import '../modules/task/bindings/add_task_binding.dart';
 import '../modules/task/bindings/select_member_binding.dart';
+import '../modules/task/bindings/task_detail_binding.dart';
 import '../modules/task/views/add_task/add_task_view.dart';
 import '../modules/task/views/select_member/select_member_view.dart';
+import '../modules/task/views/detail_task/task_detail_view.dart';
 
 part 'app_routes.dart';
 
@@ -43,6 +45,11 @@ class AppPages {
       name: _Paths.SELECT_MEMBER,
       page: () => const SelectMemberView(),
       binding: SelectMemberBinding(),
+    ),
+    GetPage(
+      name: _Paths.TASK_DETAIL,
+      page: () => const TaskDetailView(),
+      binding: TaskDetailBinding(),
     ),
   ];
 }

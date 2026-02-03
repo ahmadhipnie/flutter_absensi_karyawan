@@ -7,6 +7,7 @@ abstract class Routes {
   static const MAIN = _Paths.MAIN;
   static const ADD_TASK = _Paths.ADD_TASK;
   static const SELECT_MEMBER = _Paths.SELECT_MEMBER;
+  static const TASK_DETAIL = _Paths.TASK_DETAIL;
 }
 
 abstract class _Paths {
@@ -16,4 +17,5 @@ abstract class _Paths {
   static const MAIN = '/main';
   static const ADD_TASK = '/add-task';
   static const SELECT_MEMBER = '/select-member';
+  static const TASK_DETAIL = '/task-detail';
 }

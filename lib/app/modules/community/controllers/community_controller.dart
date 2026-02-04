@@ -65,7 +65,7 @@ class CommunityController extends GetxController {
 
   /// Get filtered chats based on selected filter and search query
   List<Map<String, dynamic>> get filteredChats {
-    var result = chats.where((chat) {
+    final Iterable<Map<String, dynamic>> result = chats.where((chat) {
       // Filter by type
       if (selectedFilter.value != 'All' &&
           chat['type'] != selectedFilter.value) {
@@ -81,9 +81,9 @@ class CommunityController extends GetxController {
       }
 
       return true;
-    }).toList();
+    });
 
-    return result;
+    return result.toList();
   }
 
   /// Select filter

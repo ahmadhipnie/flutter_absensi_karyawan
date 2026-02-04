@@ -16,6 +16,8 @@ import '../modules/task/views/select_member/select_member_view.dart';
 import '../modules/task/views/detail_task/task_detail_view.dart';
 import '../modules/task/views/employee_detail/employee_detail_view.dart';
 import '../modules/task/views/user_task_detail/user_task_detail_view.dart';
+import '../modules/task/bindings/user_task_comment_binding.dart';
+import '../modules/task/views/user_task_comment/user_task_comment_view.dart';
 import '../modules/members/bindings/members_binding.dart';
 import '../modules/members/views/members_list_view.dart';
 import '../modules/members/views/member_detail_view.dart';
@@ -26,6 +28,7 @@ import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/profile/views/attendance_log_view.dart';
 import '../modules/profile/views/edit_profile_view.dart' as profile_edit;
+import '../modules/profile/views/change_password_view.dart' as profile_views;
 import '../modules/department/bindings/department_binding.dart';
 import '../modules/department/views/create_department_view.dart';
 import '../modules/department/views/department_detail_view.dart';
@@ -86,6 +89,11 @@ class AppPages {
       binding: UserTaskDetailBinding(),
     ),
     GetPage(
+      name: _Paths.USER_TASK_COMMENT,
+      page: () => const UserTaskCommentView(),
+      binding: UserTaskCommentBinding(),
+    ),
+    GetPage(
       name: _Paths.MEMBERS_LIST,
       page: () => const MembersListView(),
       binding: MembersBinding(),
@@ -112,7 +120,12 @@ class AppPages {
       page: () => const profile_edit.EditProfileView(),
       binding: ProfileBinding(),
     ),
-    
+    GetPage(
+      name: _Paths.CHANGE_MY_PASSWORD,
+      page: () => const profile_views.ChangePasswordView(),
+      binding: ProfileBinding(),
+    ),
+
     // Department Routes
     GetPage(
       name: _Paths.CREATE_DEPARTMENT,

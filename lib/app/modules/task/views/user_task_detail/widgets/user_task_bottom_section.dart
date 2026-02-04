@@ -36,22 +36,22 @@ class UserTaskBottomSection extends GetView<UserTaskDetailController> {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF6B7280),
+            color: Color(0xFF9E9E9E),
           ),
         ),
         TextButton(
           onPressed: () {},
           style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            minimumSize: const Size(60, 40),
+            tapTargetSize: MaterialTapTargetSize.padded,
           ),
           child: const Text(
             'Assign',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF6B7280),
+              color: Color(0xFF9E9E9E),
             ),
           ),
         ),

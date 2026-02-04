@@ -118,19 +118,22 @@ class UserTaskHeader extends GetView<UserTaskDetailController> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: 14),
-        Row(
-          children: [
-            const Icon(Icons.chat_bubble_outline, size: 18, color: Color(0xFF757575)),
-            const SizedBox(width: 8),
-            Obx(() => Text(
-                  '${controller.commentsCount.value} Comments',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black,
-                    fontWeight: FontWeight.w500,
-                  ),
-                )),
-          ],
+        InkWell(
+          onTap: () => Get.toNamed('/user-task-comment'),
+          child: Row(
+            children: [
+              const Icon(Icons.chat_bubble_outline, size: 18, color: Color(0xFF757575)),
+              const SizedBox(width: 8),
+              Obx(() => Text(
+                    '${controller.commentsCount.value} Comments',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  )),
+            ],
+          ),
         ),
       ],
     );

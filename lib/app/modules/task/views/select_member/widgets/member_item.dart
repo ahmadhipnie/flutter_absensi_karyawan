@@ -20,6 +20,7 @@ class MemberItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final avatarColor = member['avatarColor'] as int;
+    final isAllMember = member['id'] == 'all';
 
     return Column(
       children: [
@@ -34,11 +35,7 @@ class MemberItem extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Row(
                 children: [
-                  UserAvatar(
-                    name: member['name'] as String,
-                    size: 48,
-                    backgroundColor: avatarColor,
-                  ),
+                  _buildAvatar(isAllMember, avatarColor),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -58,6 +55,29 @@ class MemberItem extends StatelessWidget {
         ),
         if (showDivider) const SizedBox(height: 12),
       ],
+    );
+  }
+
+  Widget _buildAvatar(bool isAllMember, int avatarColor) {
+    if (isAllMember) {
+      return Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: Color(avatarColor),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          Icons.person_add,
+          color: Colors.white,
+          size: 24,
+        ),
+      );
+    }
+    return UserAvatar(
+      name: member['name'] as String,
+      size: 48,
+      backgroundColor: avatarColor,
     );
   }
 }

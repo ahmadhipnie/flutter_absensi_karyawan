@@ -152,8 +152,7 @@ class DashboardController extends GetxController {
 
   /// Navigate to notifications
   void openNotifications() {
-    Get.snackbar('Notifications', 'Coming soon!',
-        snackPosition: SnackPosition.BOTTOM);
+    Get.toNamed(Routes.NOTIFICATIONS);
   }
 
   /// Navigate to attendance

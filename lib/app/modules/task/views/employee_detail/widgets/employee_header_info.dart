@@ -28,7 +28,7 @@ class EmployeeHeaderInfo extends GetView<EmployeeDetailController> {
             () => Text(
               controller.employeeName.value,
               style: const TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.w700,
                 color: Colors.black,
               ),
@@ -75,7 +75,7 @@ class EmployeeHeaderInfo extends GetView<EmployeeDetailController> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.08),
+                  color: AppTheme.primaryColor.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -89,31 +89,26 @@ class EmployeeHeaderInfo extends GetView<EmployeeDetailController> {
                 () => Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
-                    vertical: 6,
+                    vertical: 8,
                   ),
                   decoration: BoxDecoration(
                     border: Border.all(color: const Color(0xFFE0E0E0)),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: DropdownButton<String>(
-                    value: controller.approvalStatus.value,
-                    isDense: true,
-                    underline: const SizedBox(),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Colors.black,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    icon: const Icon(Icons.keyboard_arrow_down, size: 18),
-                    items: controller.approvalOptions
-                        .map(
-                          (status) => DropdownMenuItem(
-                            value: status,
-                            child: Text(status),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: controller.changeApprovalStatus,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        controller.approvalStatus.value,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.keyboard_arrow_down, size: 18),
+                    ],
                   ),
                 ),
               ),

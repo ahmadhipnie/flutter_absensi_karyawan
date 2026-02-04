@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class UserTaskDetailController extends GetxController {
@@ -47,10 +48,137 @@ class UserTaskDetailController extends GetxController {
     }
   }
 
-  /// Upload work
+  /// Show upload options bottom sheet
+  void showUploadOptions() {
+    Get.bottomSheet(
+      Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE0E0E0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildUploadOption(
+                    icon: Icons.upload_file_outlined,
+                    label: 'Upload',
+                    onTap: () {
+                      Get.back();
+                      _addDummyFile('Upload');
+                    },
+                  ),
+                  _buildUploadOption(
+                    icon: Icons.camera_alt_outlined,
+                    label: 'Camera',
+                    onTap: () {
+                      Get.back();
+                      _addDummyFile('Camera');
+                    },
+                  ),
+                  _buildUploadOption(
+                    icon: Icons.link,
+                    label: 'Link',
+                    onTap: () {
+                      Get.back();
+                      _addDummyFile('Link');
+                    },
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
+  Widget _buildUploadOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 80,
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          children: [
+            // Icon dalam circle border
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFE0E0E0), width: 1.5),
+              ),
+              child: Icon(
+                icon,
+                size: 28,
+                color: const Color(0xFF616161),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Color(0xFF616161),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Add dummy file for UI demonstration
+  void _addDummyFile(String source) {
+    final fileNames = [
+      'Hasil Laporan Observasi A',
+      'Document Project.pdf',
+      'Report Final.docx',
+    ];
+    final fileTypes = ['PDF', 'DOCX', 'XLSX'];
+    
+    final index = uploadedFiles.length % fileNames.length;
+    
+    uploadedFiles.add({
+      'name': fileNames[index],
+      'type': fileTypes[index],
+      'source': source,
+    });
+  }
+
+  /// Upload work (legacy, now shows options)
   void uploadWork() {
-    // TODO: Implement file picker
-    Get.snackbar('Upload', 'File picker coming soon');
+    showUploadOptions();
+  }
+
+  /// Remove uploaded file
+  void removeFile(int index) {
+    if (index >= 0 && index < uploadedFiles.length) {
+      uploadedFiles.removeAt(index);
+    }
   }
 
   /// Submit work

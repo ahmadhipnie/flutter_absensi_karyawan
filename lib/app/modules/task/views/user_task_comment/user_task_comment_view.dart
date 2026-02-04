@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../controllers/user_task_comment_controller.dart';
 import '../../../../common/widgets/comment_input_widget.dart';
+import '../../controllers/user_task_comment_controller.dart';
 
 class UserTaskCommentView extends GetView<UserTaskCommentController> {
   const UserTaskCommentView({super.key});
@@ -26,6 +26,8 @@ class UserTaskCommentView extends GetView<UserTaskCommentController> {
           CommentInputWidget(
             controller: controller.commentController,
             onSend: controller.sendComment,
+            hintText: 'Type Here',
+            sendIconColor: const Color(0xFFE53935),
           ),
         ],
       ),

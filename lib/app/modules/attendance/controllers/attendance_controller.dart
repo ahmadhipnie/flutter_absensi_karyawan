@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import '../../../routes/app_pages.dart';
 
 class AttendanceController extends GetxController {
   final currentDate = DateTime.now().obs;
@@ -47,7 +48,30 @@ class AttendanceController extends GetxController {
   }
 
   void clockIn() {
-    // Implement clock in logic
+    Get.toNamed(Routes.TAKE_ATTENDANCE);
+  }
+
+  void viewEmployeeHistory(EmployeeAttendance employee) {
+    Get.toNamed(
+      Routes.ATTENDANCE_HISTORY_DETAIL,
+      arguments: {
+        'employeeName': employee.name,
+        'date': _getCurrentDate(),
+        'checkInTime': employee.checkInTime,
+        'photoUrl': employee.avatarUrl,
+        'notes': 'Work from office',
+        'location': workLocation.value,
+      },
+    );
+  }
+
+  String _getCurrentDate() {
+    final now = currentDate.value;
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${now.day} ${months[now.month - 1]} ${now.year}';
   }
 }
 

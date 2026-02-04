@@ -181,13 +181,7 @@ class DashboardController extends GetxController {
   }
 
   void clockIn() {
-    Get.snackbar(
-      'Clock In',
-      'Clock in successful!',
-      snackPosition: SnackPosition.BOTTOM,
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
+    Get.toNamed(Routes.TAKE_ATTENDANCE);
   }
 
   void openTask(DashboardTaskItem task) =>

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../routes/app_pages.dart';
 
 class CommunityController extends GetxController {
   final searchController = TextEditingController();
@@ -97,15 +98,23 @@ class CommunityController extends GetxController {
   }
 
   /// Open chat
-  void openChat(String chatId) {
-    // TODO: Navigate to chat detail
-    Get.snackbar('Chat', 'Opening chat: $chatId');
+  void openChat(Map<String, dynamic> chat) {
+    final isDept = chat['type'] == 'Department';
+    Get.toNamed(
+      '/chat-detail',
+      arguments: {
+        'chatId': chat['id'],
+        'name': chat['name'],
+        'type': chat['type'],
+        'subtitle': isDept ? '10 Members' : null,
+        'avatarUrl': chat['avatarImage'],
+      },
+    );
   }
 
   /// Create new chat
   void createNewChat() {
-    // TODO: Navigate to create chat
-    Get.snackbar('New Chat', 'Create new chat');
+    Get.toNamed(Routes.NEW_CHAT);
   }
 
   @override

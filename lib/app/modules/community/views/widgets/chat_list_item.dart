@@ -16,10 +16,10 @@ class ChatListItem extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () => controller.openChat(chat['id']),
+        onTap: () => controller.openChat(chat),
         borderRadius: BorderRadius.circular(8),
-        splashColor: AppTheme.primaryColor.withOpacity(0.05),
-        highlightColor: AppTheme.primaryColor.withOpacity(0.03),
+        splashColor: AppTheme.primaryColor.withValues(alpha: 0.05),
+        highlightColor: AppTheme.primaryColor.withValues(alpha: 0.03),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Row(

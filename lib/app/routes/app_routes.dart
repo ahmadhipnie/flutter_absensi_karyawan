@@ -24,6 +24,8 @@ abstract class Routes {
   static const ATTENDANCE = _Paths.ATTENDANCE;
   static const TAKE_ATTENDANCE = _Paths.TAKE_ATTENDANCE;
   static const ATTENDANCE_HISTORY_DETAIL = _Paths.ATTENDANCE_HISTORY_DETAIL;
+  static const CHAT_DETAIL = _Paths.CHAT_DETAIL;
+  static const NEW_CHAT = _Paths.NEW_CHAT;
 
   static const CREATE_DEPARTMENT = _Paths.CREATE_DEPARTMENT;
   static const EDIT_DEPARTMENT = _Paths.EDIT_DEPARTMENT;
@@ -61,6 +63,8 @@ abstract class _Paths {
   static const ATTENDANCE = '/attendance';
   static const TAKE_ATTENDANCE = '/take-attendance';
   static const ATTENDANCE_HISTORY_DETAIL = '/attendance-history-detail';
+  static const CHAT_DETAIL = '/chat-detail';
+  static const NEW_CHAT = '/new-chat';
 
   static const CREATE_DEPARTMENT = '/create-department';
   static const EDIT_DEPARTMENT = '/edit-department';

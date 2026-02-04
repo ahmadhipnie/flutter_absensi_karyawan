@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../routes/app_pages.dart';
 
 class AttendanceLogView extends StatelessWidget {
   const AttendanceLogView({super.key});
@@ -74,9 +75,9 @@ class AttendanceLogView extends StatelessWidget {
             // List
             _buildLogItem('17 Feb 2026', '08:00'),
             Divider(height: 1, color: Colors.grey[100]),
-            _buildLogItem('18 Feb 2026', '08:00'),
+            _buildLogItem('18 Feb 2026', '08:05'),
             Divider(height: 1, color: Colors.grey[100]),
-            _buildLogItem('19 Feb 2026', '08:00'),
+            _buildLogItem('19 Feb 2026', '07:58'),
             Divider(height: 1, color: Colors.grey[100]),
             _buildLogItem('20 Feb 2026', '08:00'),
           ],
@@ -118,34 +119,46 @@ class AttendanceLogView extends StatelessWidget {
   }
 
   Widget _buildLogItem(String date, String time) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            date,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[800],
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          Row(
-            children: [
-              Text(
-                time,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
-                ),
+    return InkWell(
+      onTap: () => Get.toNamed(
+        Routes.ATTENDANCE_HISTORY_DETAIL,
+        arguments: {
+          'date': date,
+          'checkInTime': time,
+          'photoUrl': '',
+          'notes': 'Work from office',
+          'location': 'Jl. Orchard Boulevard, Belian, Kec. Batam Kota',
+        },
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              date,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[800],
+                fontWeight: FontWeight.w600,
               ),
-              SizedBox(width: 8),
-              Icon(Icons.chevron_right, size: 20, color: Colors.grey[600]),
-            ],
-          ),
-        ],
+            ),
+            Row(
+              children: [
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[800],
+                  ),
+                ),
+                SizedBox(width: 8),
+                Icon(Icons.chevron_right, size: 20, color: Colors.grey[600]),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

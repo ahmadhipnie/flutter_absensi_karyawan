@@ -36,6 +36,7 @@ import '../modules/department/views/edit_department_view.dart';
 import '../modules/department/views/department_info_view.dart';
 import '../modules/attendance/bindings/attendance_binding.dart';
 import '../modules/attendance/views/attendance_view.dart';
+import '../modules/attendance/views/employee_attendance_log_view.dart';
 
 part 'app_routes.dart';
 
@@ -157,6 +158,10 @@ class AppPages {
       name: _Paths.ATTENDANCE,
       page: () => const AttendanceView(),
       binding: AttendanceBinding(),
+    ),
+    GetPage(
+      name: _Paths.EMPLOYEE_ATTENDANCE_LOG,
+      page: () => const EmployeeAttendanceLogView(),
     ),
   ];
 }

@@ -27,16 +27,21 @@ class TaskFormController extends GetxController {
     super.onInit();
     // Pre-fill form fields when editing
     if (isEditMode && existingTask != null) {
-      subjectController.text = existingTask!['subject'] ?? '';
-      descriptionController.text = existingTask!['description'] ?? '';
-      customerNameController.text = existingTask!['customerName'] ?? '';
-      locationController.text = existingTask!['location'] ?? '';
-      assignedMembers.value = existingTask!['assignedMembers'] ?? '';
+      final task = existingTask!;
+      subjectController.text = task['subject'] ?? '';
+      descriptionController.text = task['description'] ?? '';
+      customerNameController.text = task['customerName'] ?? '';
+      locationController.text = task['location'] ?? '';
+      assignedMembers.value = task['assignedMembers'] ?? '';
 
       // Parse and set due date
-      if (existingTask!['dueDate'] != null) {
-        selectedDate.value = DateTime.parse(existingTask!['dueDate']);
-        dueDateController.text = _formatDate(selectedDate.value!);
+      final dueDateStr = task['dueDate'];
+      if (dueDateStr != null && dueDateStr is String) {
+        final parsedDate = DateTime.tryParse(dueDateStr);
+        if (parsedDate != null) {
+          selectedDate.value = parsedDate;
+          dueDateController.text = _formatDate(parsedDate);
+        }
       }
     }
   }
@@ -53,7 +58,7 @@ class TaskFormController extends GetxController {
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(primary: Color(0xFF0046BE)),
           ),
-          child: child!,
+          child: child ?? const SizedBox(),
         );
       },
     );

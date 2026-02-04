@@ -42,6 +42,7 @@ class AppTheme {
   static const double paddingL = 16.0;
   static const double paddingXL = 20.0;
   static const double paddingXXL = 24.0;
+  static const double paddingXXXL = 32.0;
 
   // System UI Overlay Style
   static const SystemUiOverlayStyle systemUiOverlayStyle = SystemUiOverlayStyle(
@@ -253,4 +254,24 @@ class AppTheme {
       ),
     );
   }
+}
+
+/// Spacing widgets for consistent gaps throughout the app.
+class AppSpacing {
+  AppSpacing._();
+
+  static const SizedBox hXS = SizedBox(height: AppTheme.paddingXS);
+  static const SizedBox hS = SizedBox(height: AppTheme.paddingS);
+  static const SizedBox hM = SizedBox(height: AppTheme.paddingM);
+  static const SizedBox hL = SizedBox(height: AppTheme.paddingL);
+  static const SizedBox hXL = SizedBox(height: AppTheme.paddingXL);
+  static const SizedBox hXXL = SizedBox(height: AppTheme.paddingXXL);
+  static const SizedBox hXXXL = SizedBox(height: AppTheme.paddingXXXL);
+
+  static const SizedBox wXS = SizedBox(width: AppTheme.paddingXS);
+  static const SizedBox wS = SizedBox(width: AppTheme.paddingS);
+  static const SizedBox wM = SizedBox(width: AppTheme.paddingM);
+  static const SizedBox wL = SizedBox(width: AppTheme.paddingL);
+  static const SizedBox wXL = SizedBox(width: AppTheme.paddingXL);
+  static const SizedBox wXXL = SizedBox(width: AppTheme.paddingXXL);
 }

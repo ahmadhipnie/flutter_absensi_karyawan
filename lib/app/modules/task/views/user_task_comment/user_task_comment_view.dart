@@ -64,6 +64,9 @@ class UserTaskCommentView extends GetView<UserTaskCommentController> {
                 ? NetworkImage(comment.avatarUrl!)
                 : null,
             backgroundColor: const Color(0xFFE0E0E0),
+            onBackgroundImageError: comment.avatarUrl != null
+                ? (_, __) {}
+                : null,
             child: comment.avatarUrl == null
                 ? const Icon(Icons.person, color: Colors.white, size: 24)
                 : null,

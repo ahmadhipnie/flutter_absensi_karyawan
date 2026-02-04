@@ -28,6 +28,7 @@ import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/profile/views/attendance_log_view.dart';
 import '../modules/profile/views/edit_profile_view.dart' as profile_edit;
+import '../modules/profile/views/change_password_view.dart' as profile_views;
 import '../modules/department/bindings/department_binding.dart';
 import '../modules/department/views/create_department_view.dart';
 import '../modules/department/views/department_detail_view.dart';
@@ -119,7 +120,12 @@ class AppPages {
       page: () => const profile_edit.EditProfileView(),
       binding: ProfileBinding(),
     ),
-    
+    GetPage(
+      name: _Paths.CHANGE_MY_PASSWORD,
+      page: () => const profile_views.ChangePasswordView(),
+      binding: ProfileBinding(),
+    ),
+
     // Department Routes
     GetPage(
       name: _Paths.CREATE_DEPARTMENT,

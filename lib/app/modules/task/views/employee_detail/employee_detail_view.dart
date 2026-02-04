@@ -31,7 +31,7 @@ class EmployeeDetailView extends GetView<EmployeeDetailController> {
               ),
             ),
           ),
-          _buildPrivateCommentInput(),
+          _buildPrivateCommentInput(context),
         ],
       ),
     );
@@ -48,14 +48,14 @@ class EmployeeDetailView extends GetView<EmployeeDetailController> {
     );
   }
 
-  Widget _buildPrivateCommentInput() {
+  Widget _buildPrivateCommentInput(BuildContext context) {
     return Container(
       color: Colors.white,
       padding: EdgeInsets.only(
         left: 16,
         right: 16,
         top: 16,
-        bottom: MediaQuery.of(Get.context!).viewInsets.bottom + 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
       ),
       child: SafeArea(
         child: CommentInputWidget(

@@ -172,17 +172,25 @@ class _EditProfileViewState extends State<EditProfileView> {
               _buildDropdown(
                 value: _selectedDepartment,
                 items: _departments,
-                onChanged: (val) => setState(() => _selectedDepartment = val!),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedDepartment = val);
+                  }
+                },
               ),
-              
-              SizedBox(height: 16),
-              
+
+              const SizedBox(height: 16),
+
               // User Type Dropdown
               _buildLabel('User Type'),
               _buildDropdown(
                 value: _selectedUserType,
                 items: _userTypes,
-                onChanged: (val) => setState(() => _selectedUserType = val!),
+                onChanged: (val) {
+                  if (val != null) {
+                    setState(() => _selectedUserType = val);
+                  }
+                },
               ),
               
               SizedBox(height: 16),

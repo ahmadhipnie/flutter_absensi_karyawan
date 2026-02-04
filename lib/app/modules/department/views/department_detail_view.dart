@@ -64,7 +64,7 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                     children: [
                       Container(
                         width: 50,
-                        height: 50,
+                        height: 60,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
                           image: const DecorationImage(
@@ -116,7 +116,7 @@ class DepartmentDetailView extends GetView<DepartmentController> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 50),
           // Tabs
           Container(
             color: Colors.white,

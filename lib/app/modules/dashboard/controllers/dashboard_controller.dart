@@ -158,8 +158,7 @@ class DashboardController extends GetxController {
 
   /// Navigate to attendance
   void openAttendance() {
-    Get.snackbar('Attendance', 'Coming soon!',
-        snackPosition: SnackPosition.BOTTOM);
+    Get.toNamed(Routes.ATTENDANCE);
   }
 
   /// Navigate to report

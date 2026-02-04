@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/dashboard_controller.dart';
-import '../../../../core/theme/app_theme.dart';
 
 class QuickActionMenu extends GetView<DashboardController> {
   const QuickActionMenu({super.key});
@@ -14,17 +13,17 @@ class QuickActionMenu extends GetView<DashboardController> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _buildActionItem(
-            icon: Icons.calendar_month_outlined,
+            assetName: 'assets/icon/icon_attendance.png',
             label: 'Attendance',
             onTap: controller.openAttendance,
           ),
           _buildActionItem(
-            icon: Icons.pie_chart_outline,
+            assetName: 'assets/icon/icon_report.png',
             label: 'Report',
             onTap: controller.openReport,
           ),
           _buildActionItem(
-            icon: Icons.people_outline,
+            assetName: 'assets/icon/icon_members.png',
             label: 'Members',
             onTap: controller.openMembers,
           ),
@@ -34,7 +33,7 @@ class QuickActionMenu extends GetView<DashboardController> {
   }
 
   Widget _buildActionItem({
-    required IconData icon,
+    required String assetName,
     required String label,
     required VoidCallback onTap,
   }) {
@@ -58,10 +57,10 @@ class QuickActionMenu extends GetView<DashboardController> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              color: AppTheme.primaryColor,
-              size: 40,
+            Image.asset(
+              assetName,
+              width: 40,
+              height: 40,
             ),
             const SizedBox(height: 8),
             Text(

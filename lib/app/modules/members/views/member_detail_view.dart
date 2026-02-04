@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/member_model.dart';
 import '../../../common/widgets/app_back_button.dart';
-import '../../../core/theme/app_theme.dart';
 import './widgets/member_profile_header.dart';
 import './widgets/member_attendance_log_section.dart';
 import './widgets/member_task_section.dart';

@@ -9,25 +9,34 @@ class DashboardHeader extends GetView<DashboardController> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      decoration: const BoxDecoration(
-        color: AppTheme.primaryColor,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
+    return Stack(
+      children: [
+        Column(
           children: [
-            _buildProfileRow(),
-            const SizedBox(height: 20),
-            _buildSearchBar(),
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 48),
+              decoration: const BoxDecoration(
+                color: AppTheme.primaryColor,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              child: SafeArea(
+                bottom: false,
+                child: _buildProfileRow(),
+              ),
+            ),
+            const SizedBox(height: 24),
           ],
         ),
-      ),
+        Positioned(
+          bottom: 0,
+          left: 20,
+          right: 20,
+          child: _buildSearchBar(),
+        ),
+      ],
     );
   }
 
@@ -105,12 +114,23 @@ class DashboardHeader extends GetView<DashboardController> {
   }
 
   Widget _buildSearchBar() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        height: 48,
-        color: Colors.white,
-        child: TextField(
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          height: 48,
+          color: Colors.white,
+          child: TextField(
           controller: controller.searchController,
           onChanged: controller.onSearchChanged,
           decoration: const InputDecoration(
@@ -121,12 +141,13 @@ class DashboardHeader extends GetView<DashboardController> {
             ),
             prefixIcon: Icon(
               Icons.search,
-              color: Color(0xFF9E9E9E),
+              color: AppTheme.primaryColor,
             ),
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           ),
         ),
+      ),
       ),
     );
   }

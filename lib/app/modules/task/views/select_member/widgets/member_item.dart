@@ -28,8 +28,8 @@ class MemberItem extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            splashColor: AppTheme.primaryColor.withOpacity(0.05),
-            highlightColor: AppTheme.primaryColor.withOpacity(0.03),
+            splashColor: AppTheme.primaryColor.withValues(alpha: 0.05),
+            highlightColor: AppTheme.primaryColor.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(8),
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -41,7 +41,7 @@ class MemberItem extends StatelessWidget {
                     child: Text(
                       member['name'] as String,
                       style: const TextStyle(
-                        color: Colors.black,
+                        color: AppTheme.gray900,
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
                       ),

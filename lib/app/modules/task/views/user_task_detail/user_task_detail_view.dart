@@ -16,6 +16,7 @@ class UserTaskDetailView extends GetView<UserTaskDetailController> {
       appBar: _buildAppBar(),
       body: Column(
         children: [
+          // Main content yang bisa scroll
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -26,11 +27,14 @@ class UserTaskDetailView extends GetView<UserTaskDetailController> {
                   UserTaskDescription(),
                   SizedBox(height: 24),
                   UserTaskInfo(),
+                  // Spacer untuk scroll saat bottom section besar
+                  SizedBox(height: 100),
                 ],
               ),
             ),
           ),
-          const UserTaskBottomSection(),
+          // Bottom section dengan max height constraint
+          const _BottomSectionWrapper(),
         ],
       ),
     );
@@ -44,6 +48,23 @@ class UserTaskDetailView extends GetView<UserTaskDetailController> {
         icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
         onPressed: () => Get.back(),
       ),
+    );
+  }
+}
+
+/// Wrapper untuk bottom section dengan max height constraint
+class _BottomSectionWrapper extends GetView<UserTaskDetailController> {
+  const _BottomSectionWrapper();
+
+  @override
+  Widget build(BuildContext context) {
+    final maxHeight = MediaQuery.of(context).size.height * 0.45; // Max 45% screen height
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: maxHeight,
+      ),
+      child: const UserTaskBottomSection(),
     );
   }
 }

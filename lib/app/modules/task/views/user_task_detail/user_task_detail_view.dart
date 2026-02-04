@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../common/widgets/app_back_button.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../controllers/user_task_detail_controller.dart';
 import 'widgets/user_task_header.dart';
 import 'widgets/user_task_description.dart';
@@ -12,7 +14,7 @@ class UserTaskDetailView extends GetView<UserTaskDetailController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F3F8),
+      backgroundColor: AppTheme.gray100,
       appBar: _buildAppBar(),
       body: Column(
         children: [
@@ -44,10 +46,7 @@ class UserTaskDetailView extends GetView<UserTaskDetailController> {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
-        onPressed: () => Get.back(),
-      ),
+      leading: const AppBackButton(),
     );
   }
 }

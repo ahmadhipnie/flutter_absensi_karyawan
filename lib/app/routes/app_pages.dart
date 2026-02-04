@@ -36,6 +36,10 @@ import '../modules/department/views/edit_department_view.dart';
 import '../modules/department/views/department_info_view.dart';
 import '../modules/attendance/bindings/attendance_binding.dart';
 import '../modules/attendance/views/attendance_view.dart';
+import '../modules/attendance/bindings/attendance_history_detail_binding.dart';
+import '../modules/attendance/views/attendance_history_detail_view.dart';
+import '../modules/take_attendance/bindings/take_attendance_binding.dart';
+import '../modules/take_attendance/views/take_attendance_view.dart';
 import '../modules/attendance/views/employee_attendance_log_view.dart';
 
 part 'app_routes.dart';
@@ -158,6 +162,16 @@ class AppPages {
       name: _Paths.ATTENDANCE,
       page: () => const AttendanceView(),
       binding: AttendanceBinding(),
+    ),
+    GetPage(
+      name: _Paths.TAKE_ATTENDANCE,
+      page: () => const TakeAttendanceView(),
+      binding: TakeAttendanceBinding(),
+    ),
+    GetPage(
+      name: _Paths.ATTENDANCE_HISTORY_DETAIL,
+      page: () => const AttendanceHistoryDetailView(),
+      binding: AttendanceHistoryDetailBinding(),
     ),
     GetPage(
       name: _Paths.EMPLOYEE_ATTENDANCE_LOG,

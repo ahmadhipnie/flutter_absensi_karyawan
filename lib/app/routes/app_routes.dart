@@ -22,6 +22,9 @@ abstract class Routes {
   static const EDIT_MY_PROFILE = _Paths.EDIT_MY_PROFILE;
   static const CHANGE_MY_PASSWORD = _Paths.CHANGE_MY_PASSWORD;
   static const ATTENDANCE = _Paths.ATTENDANCE;
+  static const TAKE_ATTENDANCE = _Paths.TAKE_ATTENDANCE;
+  static const ATTENDANCE_HISTORY_DETAIL = _Paths.ATTENDANCE_HISTORY_DETAIL;
+
   static const CREATE_DEPARTMENT = _Paths.CREATE_DEPARTMENT;
   static const EDIT_DEPARTMENT = _Paths.EDIT_DEPARTMENT;
   static const DEPARTMENT_DETAIL = _Paths.DEPARTMENT_DETAIL;
@@ -51,6 +54,9 @@ abstract class _Paths {
   static const EDIT_MY_PROFILE = '/edit-my-profile';
   static const CHANGE_MY_PASSWORD = '/change-my-password';
   static const ATTENDANCE = '/attendance';
+  static const TAKE_ATTENDANCE = '/take-attendance';
+  static const ATTENDANCE_HISTORY_DETAIL = '/attendance-history-detail';
+
   static const CREATE_DEPARTMENT = '/create-department';
   static const EDIT_DEPARTMENT = '/edit-department';
   static const DEPARTMENT_DETAIL = '/department-detail';

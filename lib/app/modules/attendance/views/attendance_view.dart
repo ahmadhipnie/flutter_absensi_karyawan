@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../routes/app_pages.dart';
 import '../controllers/attendance_controller.dart';
 import 'widgets/attendance_header_background.dart';
 import 'widgets/attendance_card.dart';
@@ -16,10 +17,7 @@ class AttendanceView extends GetView<AttendanceController> {
       appBar: AppBar(
         title: const Text(
           'Attendance',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: AppTheme.primaryColor,

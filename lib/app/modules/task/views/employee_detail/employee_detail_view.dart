@@ -12,26 +12,35 @@ class EmployeeDetailView extends GetView<EmployeeDetailController> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+
     return Scaffold(
       backgroundColor: AppTheme.gray100,
+      resizeToAvoidBottomInset: true,
       appBar: _buildAppBar(),
       body: Column(
         children: [
+          // Main content yang bisa scroll
           Expanded(
             child: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  EmployeeHeaderInfo(),
-                  SizedBox(height: 24),
-                  EmployeeOutputSection(),
-                  SizedBox(height: 24),
-                  EmployeeCommentsSection(),
+                children: [
+                  const EmployeeHeaderInfo(),
+                  const SizedBox(height: 8),
+                  const EmployeeOutputSection(),
+                  const SizedBox(height: 8),
+                  // Comments dengan min height agar terlihat memanjang
+                  EmployeeCommentsSection(
+                    minHeight: MediaQuery.of(context).size.height * 0.4,
+                  ),
+                  // Space untuk scroll saat keyboard muncul
+                  SizedBox(height: bottomPadding),
                 ],
               ),
             ),
           ),
-          _buildPrivateCommentInput(context),
+          // Private Comment Input fixed di bottom
+          _buildPrivateCommentInput(),
         ],
       ),
     );
@@ -48,23 +57,12 @@ class EmployeeDetailView extends GetView<EmployeeDetailController> {
     );
   }
 
-  Widget _buildPrivateCommentInput(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
-      ),
-      child: SafeArea(
-        child: CommentInputWidget(
-          controller: controller.commentController,
-          onSend: controller.sendPrivateComment,
-          hintText: 'This task needs more precision',
-          sendIconColor: const Color(0xFF0046BE),
-        ),
-      ),
+  Widget _buildPrivateCommentInput() {
+    return CommentInputWidget(
+      controller: controller.commentController,
+      onSend: controller.sendPrivateComment,
+      hintText: 'This task needs more precision',
+      sendIconColor: const Color(0xFF0046BE),
     );
   }
 }

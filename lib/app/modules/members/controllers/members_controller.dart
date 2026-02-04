@@ -1,11 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/member_model.dart';
 import '../../../routes/app_pages.dart';
 
 class MembersController extends GetxController {
+  final searchController = TextEditingController();
   final members = <MemberModel>[].obs;
   final isLoading = false.obs;
   final selectedDepartment = 'All'.obs;
+  final searchQuery = ''.obs;
 
   final List<String> departments = [
     'All',
@@ -73,10 +76,30 @@ class MembersController extends GetxController {
 
   // Getter untuk filtered members - TIDAK dipanggil di dalam Obx
   List<MemberModel> getFilteredMembers() {
-    if (selectedDepartment.value == 'All') {
-      return members.toList();
+    var filtered = members.toList();
+
+    // Filter by department
+    if (selectedDepartment.value != 'All') {
+      filtered = filtered
+          .where((m) => m.department == selectedDepartment.value)
+          .toList();
     }
-    return members.where((m) => m.department == selectedDepartment.value).toList();
+
+    // Filter by search query
+    if (searchQuery.value.isNotEmpty) {
+      final query = searchQuery.value.toLowerCase();
+      filtered = filtered.where((m) {
+        return m.name.toLowerCase().contains(query) ||
+            m.email.toLowerCase().contains(query) ||
+            m.department.toLowerCase().contains(query);
+      }).toList();
+    }
+
+    return filtered;
+  }
+
+  void onSearchChanged(String value) {
+    searchQuery.value = value;
   }
 
   void filterByDepartment(String department) {
@@ -98,5 +121,11 @@ class MembersController extends GetxController {
   void deleteMember(String memberId) {
     members.removeWhere((m) => m.id == memberId);
     Get.snackbar('Success', 'Member deleted successfully');
+  }
+
+  @override
+  void onClose() {
+    searchController.dispose();
+    super.onClose();
   }
 }

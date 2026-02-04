@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../common/widgets/user_avatar.dart';
+import '../../../../../common/widgets/user_avatar.dart';
+import '../../../../../core/theme/app_theme.dart';
 
 class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   const ChatAppBar({

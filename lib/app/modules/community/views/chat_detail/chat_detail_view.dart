@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../core/theme/app_theme.dart';
-import '../controllers/chat_detail_controller.dart';
-import '../widgets/chat_app_bar.dart';
-import '../widgets/chat_input_field.dart';
-import '../widgets/chat_message_bubble.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../controllers/chat_detail_controller.dart';
+import 'widgets/chat_app_bar.dart';
+import 'widgets/chat_input_field.dart';
+import 'widgets/chat_message_bubble.dart';
 
 class ChatDetailView extends GetView<ChatDetailController> {
   const ChatDetailView({super.key});

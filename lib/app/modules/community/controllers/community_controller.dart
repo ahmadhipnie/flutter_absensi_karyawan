@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../routes/app_pages.dart';
 
 class CommunityController extends GetxController {
   final searchController = TextEditingController();
@@ -113,8 +114,7 @@ class CommunityController extends GetxController {
 
   /// Create new chat
   void createNewChat() {
-    // TODO: Navigate to create chat
-    Get.snackbar('New Chat', 'Create new chat');
+    Get.toNamed(Routes.NEW_CHAT);
   }
 
   @override

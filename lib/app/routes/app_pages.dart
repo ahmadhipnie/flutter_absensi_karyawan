@@ -42,7 +42,9 @@ import '../modules/take_attendance/bindings/take_attendance_binding.dart';
 import '../modules/take_attendance/views/take_attendance_view.dart';
 import '../modules/attendance/views/employee_attendance_log_view.dart';
 import '../modules/community/bindings/chat_detail_binding.dart';
-import '../modules/community/views/chat_detail_view.dart';
+import '../modules/community/views/chat_detail/chat_detail_view.dart';
+import '../modules/community/bindings/new_chat_binding.dart';
+import '../modules/community/views/new_chat/new_chat_view.dart';
 
 part 'app_routes.dart';
 
@@ -183,6 +185,11 @@ class AppPages {
       name: _Paths.CHAT_DETAIL,
       page: () => const ChatDetailView(),
       binding: ChatDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.NEW_CHAT,
+      page: () => const NewChatView(),
+      binding: NewChatBinding(),
     ),
   ];
 }

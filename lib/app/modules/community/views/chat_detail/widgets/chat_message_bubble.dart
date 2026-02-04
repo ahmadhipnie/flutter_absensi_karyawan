@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../common/widgets/user_avatar.dart';
-import '../../../data/models/chat_message_model.dart';
+import '../../../../../common/widgets/user_avatar.dart';
+import '../../../../../core/theme/app_theme.dart';
+import '../../../../../data/models/chat_message_model.dart';
 
 class ChatMessageBubble extends StatelessWidget {
   const ChatMessageBubble({

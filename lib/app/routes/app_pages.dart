@@ -34,6 +34,8 @@ import '../modules/department/views/create_department_view.dart';
 import '../modules/department/views/department_detail_view.dart';
 import '../modules/department/views/edit_department_view.dart';
 import '../modules/department/views/department_info_view.dart';
+import '../modules/attendance/bindings/attendance_binding.dart';
+import '../modules/attendance/views/attendance_view.dart';
 
 part 'app_routes.dart';
 
@@ -150,6 +152,11 @@ class AppPages {
       name: _Paths.EDIT_DEPARTMENT,
       page: () => const EditDepartmentView(),
       binding: DepartmentBinding(),
+    ),
+    GetPage(
+      name: _Paths.ATTENDANCE,
+      page: () => const AttendanceView(),
+      binding: AttendanceBinding(),
     ),
   ];
 }

@@ -29,6 +29,7 @@ abstract class Routes {
   static const EDIT_DEPARTMENT = _Paths.EDIT_DEPARTMENT;
   static const DEPARTMENT_DETAIL = _Paths.DEPARTMENT_DETAIL;
   static const DEPARTMENT_INFO = _Paths.DEPARTMENT_INFO;
+  static const EMPLOYEE_ATTENDANCE_LOG = _Paths.EMPLOYEE_ATTENDANCE_LOG;
 }
 
 abstract class _Paths {
@@ -60,4 +61,5 @@ abstract class _Paths {
   static const EDIT_DEPARTMENT = '/edit-department';
   static const DEPARTMENT_DETAIL = '/department-detail';
   static const DEPARTMENT_INFO = '/department-info';
+  static const EMPLOYEE_ATTENDANCE_LOG = '/employee-attendance-log';
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../routes/app_pages.dart';
 import '../controllers/attendance_controller.dart';
 
 class AttendanceView extends GetView<AttendanceController> {
@@ -13,10 +14,7 @@ class AttendanceView extends GetView<AttendanceController> {
       appBar: AppBar(
         title: const Text(
           'Attendance',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         backgroundColor: AppTheme.primaryColor,
@@ -89,7 +87,10 @@ class AttendanceView extends GetView<AttendanceController> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.green.shade50,
                   borderRadius: BorderRadius.circular(20),
@@ -110,18 +111,24 @@ class AttendanceView extends GetView<AttendanceController> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Obx(() => Text(
-                      '${controller.workStartTime.value} AM - ${controller.workEndTime.value} PM',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    )),
+                Obx(
+                  () => Text(
+                    '${controller.workStartTime.value} AM - ${controller.workEndTime.value} PM',
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () => _showEditTimeDialog(context),
-                  child: const Icon(Icons.edit, color: Colors.redAccent, size: 20),
+                  child: const Icon(
+                    Icons.edit,
+                    color: Colors.redAccent,
+                    size: 20,
+                  ),
                 ),
               ],
             ),
@@ -144,14 +151,16 @@ class AttendanceView extends GetView<AttendanceController> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Obx(() => Text(
-                          controller.workLocation.value,
-                          style: TextStyle(
-                            color: Colors.grey.shade600,
-                            fontSize: 13,
-                            height: 1.4,
-                          ),
-                        )),
+                    Obx(
+                      () => Text(
+                        controller.workLocation.value,
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -162,7 +171,7 @@ class AttendanceView extends GetView<AttendanceController> {
             width: double.infinity,
             height: 48,
             child: ElevatedButton(
-              onPressed: controller.clockIn,
+              onPressed: () => Get.toNamed(Routes.TAKE_ATTENDANCE),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primaryColor,
                 shape: RoundedRectangleBorder(
@@ -171,10 +180,7 @@ class AttendanceView extends GetView<AttendanceController> {
               ),
               child: const Text(
                 'Clock In',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -194,16 +200,16 @@ class AttendanceView extends GetView<AttendanceController> {
             children: [
               const Text(
                 'Employee Attendance Log',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              Text(
-                'See More',
-                style: TextStyle(
-                  color: Colors.orange.shade700,
-                  fontWeight: FontWeight.w500,
+              GestureDetector(
+                onTap: () => (),
+                child: Text(
+                  'See More',
+                  style: TextStyle(
+                    color: Colors.orange.shade700,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
@@ -220,16 +226,16 @@ class AttendanceView extends GetView<AttendanceController> {
   Widget _buildTabs() {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey, width: 0.5),
+        border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
+      ),
+      child: Obx(
+        () => Row(
+          children: [
+            _buildTabItem('Sudah Clock In', true),
+            _buildTabItem('Belum Clock In', false),
+          ],
         ),
       ),
-      child: Obx(() => Row(
-            children: [
-              _buildTabItem('Sudah Clock In', true),
-              _buildTabItem('Belum Clock In', false),
-            ],
-          )),
     );
   }
 
@@ -266,7 +272,7 @@ class AttendanceView extends GetView<AttendanceController> {
       final employees = controller.showClockedIn.value
           ? controller.employeesClockedIn
           : controller.employeesNotClockedIn;
-      
+
       if (employees.isEmpty) {
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 20),
@@ -288,6 +294,15 @@ class AttendanceView extends GetView<AttendanceController> {
           final employee = employees[index];
           return ListTile(
             contentPadding: EdgeInsets.zero,
+            onTap: () => Get.toNamed(
+              Routes.ATTENDANCE_HISTORY_DETAIL,
+              arguments: {
+                'date': 'Wed, 14 Jan 2026',
+                'photoUrl': employee.avatarUrl,
+                'notes': 'Work',
+                'location': controller.workLocation.value,
+              },
+            ),
             leading: CircleAvatar(
               radius: 24,
               backgroundColor: Colors.blue.shade100,
@@ -332,10 +347,7 @@ class AttendanceView extends GetView<AttendanceController> {
               children: [
                 const Text(
                   'Edit Work Hours',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 IconButton(
                   onPressed: () => Get.back(),
@@ -346,13 +358,9 @@ class AttendanceView extends GetView<AttendanceController> {
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(
-                  child: _buildTimeInput('Clock In Time', '08:00'),
-                ),
+                Expanded(child: _buildTimeInput('Clock In Time', '08:00')),
                 const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTimeInput('Clock Out Time', '17:00'),
-                ),
+                Expanded(child: _buildTimeInput('Clock Out Time', '17:00')),
               ],
             ),
             const SizedBox(height: 32),
@@ -386,10 +394,7 @@ class AttendanceView extends GetView<AttendanceController> {
       children: [
         Text(
           label,
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
         ),
         const SizedBox(height: 8),
         Container(
@@ -400,15 +405,13 @@ class AttendanceView extends GetView<AttendanceController> {
           ),
           child: Row(
             children: [
-              Icon(Icons.access_time_filled,
-                  color: Colors.grey.shade600, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                ),
+              Icon(
+                Icons.access_time_filled,
+                color: Colors.grey.shade600,
+                size: 20,
               ),
+              const SizedBox(width: 8),
+              Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
             ],
           ),
         ),

@@ -33,6 +33,7 @@ class EmployeeList extends GetView<AttendanceController> {
           final employee = employees[index];
           return ListTile(
             contentPadding: EdgeInsets.zero,
+            onTap: () => controller.viewEmployeeHistory(employee),
             leading: CircleAvatar(
               radius: 24,
               backgroundColor: Colors.blue.shade100,

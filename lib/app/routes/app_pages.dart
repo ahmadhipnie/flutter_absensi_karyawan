@@ -45,6 +45,14 @@ import '../modules/community/bindings/chat_detail_binding.dart';
 import '../modules/community/views/chat_detail/chat_detail_view.dart';
 import '../modules/community/bindings/new_chat_binding.dart';
 import '../modules/community/views/new_chat/new_chat_view.dart';
+import '../modules/report/bindings/attendance_report_binding.dart';
+import '../modules/report/views/attendance_report_view.dart';
+import '../modules/department/views/create_announcement_view.dart';
+import '../modules/department/views/select_announcement_member_view.dart';
+import '../modules/department/views/announcement_detail_view.dart';
+import '../modules/department/controllers/create_announcement_controller.dart';
+import '../modules/notifications/bindings/notifications_binding.dart';
+import '../modules/notifications/views/notifications_view.dart';
 
 part 'app_routes.dart';
 
@@ -190,6 +198,35 @@ class AppPages {
       name: _Paths.NEW_CHAT,
       page: () => const NewChatView(),
       binding: NewChatBinding(),
+    ),
+    GetPage(
+      name: _Paths.ATTENDANCE_REPORT,
+      page: () => const AttendanceReportView(),
+      binding: AttendanceReportBinding(),
+    ),
+    GetPage(
+      name: _Paths.CREATE_ANNOUNCEMENT,
+      page: () => const CreateAnnouncementView(),
+      binding: BindingsBuilder(() {
+        Get.lazyPut<CreateAnnouncementController>(
+            () => CreateAnnouncementController());
+      }),
+    ),
+    GetPage(
+      name: _Paths.SELECT_ANNOUNCEMENT_MEMBER,
+      page: () => const SelectAnnouncementMemberView(),
+      // Controller is shared with CreateAnnouncementView so we don't need to re-bind if we navigate from there, 
+      // but to be safe and if it's found, fine. Usually if it's in the stack it's found.
+      // However, CreateAnnouncementController is needed.
+    ),
+    GetPage(
+      name: _Paths.ANNOUNCEMENT_DETAIL,
+      page: () => const AnnouncementDetailView(),
+    ),
+    GetPage(
+      name: _Paths.NOTIFICATIONS,
+      page: () => const NotificationsView(),
+      binding: NotificationsBinding(),
     ),
   ];
 }

@@ -97,9 +97,18 @@ class CommunityController extends GetxController {
   }
 
   /// Open chat
-  void openChat(String chatId) {
-    // TODO: Navigate to chat detail
-    Get.snackbar('Chat', 'Opening chat: $chatId');
+  void openChat(Map<String, dynamic> chat) {
+    final isDept = chat['type'] == 'Department';
+    Get.toNamed(
+      '/chat-detail',
+      arguments: {
+        'chatId': chat['id'],
+        'name': chat['name'],
+        'type': chat['type'],
+        'subtitle': isDept ? '10 Members' : null,
+        'avatarUrl': chat['avatarImage'],
+      },
+    );
   }
 
   /// Create new chat

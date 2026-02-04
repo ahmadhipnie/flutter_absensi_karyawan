@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../../../../../core/theme/app_theme.dart';
 
 class EditTaskButton extends StatelessWidget {

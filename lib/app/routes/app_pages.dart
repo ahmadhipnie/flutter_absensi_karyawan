@@ -41,6 +41,8 @@ import '../modules/attendance/views/attendance_history_detail_view.dart';
 import '../modules/take_attendance/bindings/take_attendance_binding.dart';
 import '../modules/take_attendance/views/take_attendance_view.dart';
 import '../modules/attendance/views/employee_attendance_log_view.dart';
+import '../modules/community/bindings/chat_detail_binding.dart';
+import '../modules/community/views/chat_detail_view.dart';
 
 part 'app_routes.dart';
 
@@ -176,6 +178,11 @@ class AppPages {
     GetPage(
       name: _Paths.EMPLOYEE_ATTENDANCE_LOG,
       page: () => const EmployeeAttendanceLogView(),
+    ),
+    GetPage(
+      name: _Paths.CHAT_DETAIL,
+      page: () => const ChatDetailView(),
+      binding: ChatDetailBinding(),
     ),
   ];
 }

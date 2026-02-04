@@ -34,6 +34,9 @@ migrate_working_dir/
 /build/
 /coverage/
 CONTEXT.md
+AGENTS.md
+CLAUDE.md
+GEMINI.md
 
 # Symbolication related
 app.*.symbols

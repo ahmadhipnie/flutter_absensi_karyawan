@@ -30,6 +30,11 @@ abstract class Routes {
   static const DEPARTMENT_DETAIL = _Paths.DEPARTMENT_DETAIL;
   static const DEPARTMENT_INFO = _Paths.DEPARTMENT_INFO;
   static const EMPLOYEE_ATTENDANCE_LOG = _Paths.EMPLOYEE_ATTENDANCE_LOG;
+  static const ATTENDANCE_REPORT = _Paths.ATTENDANCE_REPORT;
+  static const CREATE_ANNOUNCEMENT = _Paths.CREATE_ANNOUNCEMENT;
+  static const SELECT_ANNOUNCEMENT_MEMBER = _Paths.SELECT_ANNOUNCEMENT_MEMBER;
+  static const ANNOUNCEMENT_DETAIL = _Paths.ANNOUNCEMENT_DETAIL;
+  static const NOTIFICATIONS = _Paths.NOTIFICATIONS;
 }
 
 abstract class _Paths {
@@ -62,4 +67,12 @@ abstract class _Paths {
   static const DEPARTMENT_DETAIL = '/department-detail';
   static const DEPARTMENT_INFO = '/department-info';
   static const EMPLOYEE_ATTENDANCE_LOG = '/employee-attendance-log';
+  static const ATTENDANCE_REPORT = '/attendance-report';
+  static const CREATE_ANNOUNCEMENT = '/create-announcement';
+  static const SELECT_ANNOUNCEMENT_MEMBER = '/select-announcement-member';
+  static const ANNOUNCEMENT_DETAIL = '/announcement-detail';
+  static const NOTIFICATIONS = '/notifications';
 }
+
+
+

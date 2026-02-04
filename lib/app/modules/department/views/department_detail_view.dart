@@ -207,40 +207,43 @@ class DepartmentDetailView extends GetView<DepartmentController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Announcement Card
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: const Color(0xFFE5E7EB)),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.campaign,
-                    color: AppTheme.primaryColor,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                const Expanded(
-                  child: Text(
-                    'Announce Something to your team',
-                    style: TextStyle(
-                      color: Color(0xFF9CA3AF),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w400,
+          GestureDetector(
+            onTap: () => Get.toNamed(Routes.CREATE_ANNOUNCEMENT),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: const Color(0xFFE5E7EB)),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.campaign,
+                      color: AppTheme.primaryColor,
+                      size: 20,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Text(
+                      'Announce Something to your team',
+                      style: TextStyle(
+                        color: Color(0xFF9CA3AF),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 20),
@@ -251,72 +254,75 @@ class DepartmentDetailView extends GetView<DepartmentController> {
             itemCount: 5,
             separatorBuilder: (c, i) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
-              return Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFF3F4F6)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEEF2FF),
-                        borderRadius: BorderRadius.circular(8),
+              return GestureDetector(
+                onTap: () => Get.toNamed(Routes.ANNOUNCEMENT_DETAIL),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFF3F4F6)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEEF2FF),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.description_outlined,
+                          color: AppTheme.primaryColor.withOpacity(0.6),
+                          size: 20,
+                        ),
                       ),
-                      child: Icon(
-                        Icons.description_outlined,
-                        color: AppTheme.primaryColor.withOpacity(0.6),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            'Lorem ipsum dolor sit amet',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: Color(0xFF1F2937),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Lorem ipsum dolor sit amet',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                                color: Color(0xFF1F2937),
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'by Alsaa Cantikk',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF9CA3AF),
+                            SizedBox(height: 4),
+                            Text(
+                              'by Alsaa Cantikk',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF9CA3AF),
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 6),
-                          Text(
-                            'ed ut perspiciatis unde omnis iste natus error...',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Color(0xFF6B7280),
+                            SizedBox(height: 6),
+                            Text(
+                              'ed ut perspiciatis unde omnis iste natus error...',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF6B7280),
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      '09.10',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF9CA3AF),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '09.10',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF9CA3AF),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },

@@ -38,6 +38,9 @@ AGENTS.md
 CLAUDE.md
 GEMINI.md
 
+# Environment variables
+.env
+
 # Symbolication related
 app.*.symbols
 

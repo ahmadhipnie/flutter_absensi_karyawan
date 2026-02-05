@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
+import 'app/core/config/app_config.dart';
 import 'app/core/theme/app_theme.dart';
 import 'app/routes/app_pages.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await AppConfig.loadEnv();
 
   // Set system UI overlay style
   SystemChrome.setSystemUIOverlayStyle(AppTheme.systemUiOverlayStyle);

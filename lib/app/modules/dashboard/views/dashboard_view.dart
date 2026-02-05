@@ -19,26 +19,22 @@ class DashboardView extends GetView<DashboardController> {
       ),
     );
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
-      body: Obx(() {
-        return controller.isSupervisor
-            ? const SupervisorDashboard()
-            : const MemberDashboard();
-      }),
-      floatingActionButton: FloatingActionButton.small(
-        heroTag: 'dashboard_fab', // Add unique hero tag
-        onPressed: () {
-          controller.toggleUserRole();
-        },
-        backgroundColor: Colors.grey[800],
-        child: Obx(
-          () => Icon(
-            controller.isSupervisor ? Icons.person : Icons.supervisor_account,
-            color: Colors.white,
-            size: 20,
-          ),
-        ),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (bool didPop) async {
+        if (didPop) return;
+        final shouldExit = await controller.handleWillPop();
+        if (shouldExit) {
+          SystemNavigator.pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
+        body: Obx(() {
+          return controller.isSupervisor
+              ? const SupervisorDashboard()
+              : const MemberDashboard();
+        }),
       ),
     );
   }

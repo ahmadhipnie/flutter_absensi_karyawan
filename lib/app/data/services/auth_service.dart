@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/login_response_model.dart';
 import '../models/user_model.dart';
@@ -12,13 +15,38 @@ class AuthService extends GetxService {
   final _currentUser = Rxn<UserModel>();
   String? _token;
 
+  // Keys for shared preferences
+  static const String _tokenKey = 'auth_token';
+  static const String _userKey = 'auth_user';
+
   bool get isLoggedIn => _isLoggedIn.value;
   UserModel? get currentUser => _currentUser.value;
   String? get token => _token;
 
   Future<AuthService> init() async {
-    // Check saved session from secure storage
-    // TODO: Implement secure storage for token persistence
+    // Load saved session from shared preferences
+    final prefs = await SharedPreferences.getInstance();
+    final savedToken = prefs.getString(_tokenKey);
+    final savedUserJson = prefs.getString(_userKey);
+
+    if (savedToken != null) {
+      _token = savedToken;
+      _isLoggedIn.value = true;
+
+      // Parse user from JSON if available
+      if (savedUserJson != null) {
+        try {
+          _currentUser.value = UserModel.fromJson(jsonDecode(savedUserJson));
+        } catch (_) {
+          // If parsing fails, clear invalid user data
+          _currentUser.value = null;
+        }
+      }
+
+      // Update API provider with token
+      _apiProvider.setAuthToken(savedToken);
+    }
+
     return this;
   }
 
@@ -32,10 +60,7 @@ class AuthService extends GetxService {
     try {
       final response = await _apiProvider.post(
         '/users/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
 
       if (response.statusCode == 200) {
@@ -45,14 +70,12 @@ class AuthService extends GetxService {
           _currentUser.value = loginResponse.data;
           _isLoggedIn.value = true;
 
-          // TODO: Save token to secure storage if API returns token
-          // if (loginResponse.data?.token != null) {
-          //   _token = loginResponse.data!.token;
-          //   await secureStorage.write(
-          //     key: 'auth_token',
-          //     value: _token,
-          //   );
-          // }
+          // Save token
+          if (loginResponse.token != null) {
+            _token = loginResponse.token;
+            _apiProvider.setAuthToken(loginResponse.token!);
+            await _saveSession(loginResponse.token!);
+          }
 
           return loginResponse;
         }
@@ -63,6 +86,13 @@ class AuthService extends GetxService {
 
       return null;
     } on DioException catch (e) {
+      // Debug print
+      print('=== DIO ERROR ===');
+      print('Type: ${e.type}');
+      print('Message: ${e.message}');
+      print('Response: ${e.response}');
+      print('Error: ${e.error}');
+
       // Re-throw with message for controller to handle
       String errorMessage = 'Login failed';
 
@@ -77,13 +107,31 @@ class AuthService extends GetxService {
           e.type == DioExceptionType.receiveTimeout) {
         errorMessage = 'Connection timeout. Please check your internet.';
       } else if (e.type == DioExceptionType.connectionError) {
-        errorMessage = 'No internet connection';
+        errorMessage = 'Connection error. Check your internet.';
       }
 
       throw errorMessage;
     } catch (e) {
       throw 'An unexpected error occurred: ${e.toString()}';
     }
+  }
+
+  /// Save session to shared preferences
+  Future<void> _saveSession(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+
+    // Save user data as JSON
+    if (_currentUser.value != null) {
+      await prefs.setString(_userKey, jsonEncode(_currentUser.value!.toJson()));
+    }
+  }
+
+  /// Clear session from shared preferences
+  Future<void> _clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+    await prefs.remove(_userKey);
   }
 
   /// Logout user
@@ -97,13 +145,16 @@ class AuthService extends GetxService {
       _isLoggedIn.value = false;
       _token = null;
 
-      // TODO: Clear secure storage
-      // await secureStorage.delete(key: 'auth_token');
+      // Clear API provider token
+      _apiProvider.clearAuthToken();
+
+      // Clear shared preferences
+      await _clearSession();
     } catch (e) {
       Get.snackbar(
         'Error',
         'Logout failed: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     }
   }

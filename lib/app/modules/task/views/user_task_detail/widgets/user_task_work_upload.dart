@@ -18,16 +18,11 @@ class UserTaskWorkUpload extends GetView<UserTaskDetailController> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF757575),
+                color: Colors.black,
               ),
             ),
             TextButton(
               onPressed: () {},
-              style: TextButton.styleFrom(
-                padding: EdgeInsets.zero,
-                minimumSize: const Size(50, 30),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
               child: const Text(
                 'Assign',
                 style: TextStyle(
@@ -42,12 +37,11 @@ class UserTaskWorkUpload extends GetView<UserTaskDetailController> {
         const SizedBox(height: 12),
         InkWell(
           onTap: controller.uploadWork,
-          borderRadius: BorderRadius.circular(8),
           child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,

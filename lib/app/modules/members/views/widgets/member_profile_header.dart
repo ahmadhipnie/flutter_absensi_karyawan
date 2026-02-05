@@ -8,21 +8,18 @@ class MemberProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasValidUrl = member.avatarUrl != null && member.avatarUrl!.isNotEmpty;
     return Center(
       child: Column(
         children: [
           CircleAvatar(
             radius: 40,
             backgroundColor: Colors.grey.shade100,
-            backgroundImage: member.avatarUrl != null
-                ? NetworkImage(member.avatarUrl!)
-                : null,
-            child: member.avatarUrl == null
+            backgroundImage: hasValidUrl ? NetworkImage(member.avatarUrl!) : null,
+            child: !hasValidUrl
                 ? const Icon(Icons.person, size: 40, color: Colors.grey)
                 : null,
-            onBackgroundImageError: member.avatarUrl != null
-                ? (_, __) {}
-                : null,
+            onBackgroundImageError: hasValidUrl ? (_, __) {} : null,
           ),
           const SizedBox(height: 16),
           Text(

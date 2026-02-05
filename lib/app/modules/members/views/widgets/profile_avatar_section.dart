@@ -13,6 +13,7 @@ class ProfileAvatarSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasValidUrl = avatarUrl != null && avatarUrl!.isNotEmpty;
     return Center(
       child: Stack(
         children: [
@@ -25,11 +26,11 @@ class ProfileAvatarSection extends StatelessWidget {
             child: CircleAvatar(
               radius: 50,
               backgroundColor: Colors.grey.shade100,
-              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-              child: avatarUrl == null
+              backgroundImage: hasValidUrl ? NetworkImage(avatarUrl!) : null,
+              child: !hasValidUrl
                   ? const Icon(Icons.person, size: 40, color: Colors.grey)
                   : null,
-              onBackgroundImageError: avatarUrl != null
+              onBackgroundImageError: hasValidUrl
                   ? (_, __) {}
                   : null,
             ),

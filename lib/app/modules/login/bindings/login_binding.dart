@@ -5,8 +5,10 @@ import '../controllers/login_controller.dart';
 class LoginBinding extends Bindings {
   @override
   void dependencies() {
-    // Initialize AuthService as singleton if not already initialized
-    Get.lazyPut<AuthService>(() => AuthService(), fenix: true);
+    // Initialize AuthService as permanent singleton (persists across navigation)
+    if (!Get.isRegistered<AuthService>()) {
+      Get.put<AuthService>(AuthService(), permanent: true);
+    }
 
     // Initialize LoginController
     Get.lazyPut<LoginController>(() => LoginController());

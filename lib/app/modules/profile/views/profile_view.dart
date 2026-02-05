@@ -42,11 +42,11 @@ class ProfileView extends GetView<ProfileController> {
               onChangePasswordTap: () => Get.toNamed(Routes.CHANGE_MY_PASSWORD),
             ),
           ),
-          const Positioned(
+          Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: ProfileAvatar(avatarUrl: 'https://i.pravatar.cc/300?img=5'),
+            child: Obx(() => ProfileAvatar(avatarUrl: controller.avatarUrl.value)),
           ),
         ],
       ),

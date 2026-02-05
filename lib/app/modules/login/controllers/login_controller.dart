@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
 import '../../../data/services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 
@@ -61,39 +62,23 @@ class LoginController extends GetxController {
     try {
       isLoading.value = true;
 
-      final success = await _authService.login(
+      final response = await _authService.login(
         email: emailController.text.trim(),
         password: passwordController.text,
       );
 
-      if (success) {
-        Get.snackbar(
-          'Success',
-          'Login successful!',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+      if (response != null && response.success) {
+        _showSuccessSnackbar(response.message);
 
         // Navigate to main layout with bottom nav
         Get.offAllNamed(Routes.MAIN);
       } else {
-        Get.snackbar(
-          'Login Failed',
-          'Invalid email or password',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        // Login failed but got response (wrong credentials)
+        _showErrorSnackbar(response?.message ?? 'Login failed');
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'An error occurred: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      // Exception from AuthService (network error, etc.)
+      _showErrorSnackbar(e.toString());
     } finally {
       isLoading.value = false;
     }
@@ -102,10 +87,34 @@ class LoginController extends GetxController {
   /// Navigate to forgot password screen
   void goToForgotPassword() {
     // TODO: Implement forgot password navigation
+    _showInfoSnackbar('Forgot password feature coming soon');
+  }
+
+  void _showSuccessSnackbar(String message) {
+    Get.snackbar(
+      'Success',
+      message,
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+    );
+  }
+
+  void _showErrorSnackbar(String message) {
+    Get.snackbar(
+      'Error',
+      message,
+      snackPosition: SnackPosition.TOP,
+      backgroundColor: Colors.red,
+      colorText: Colors.white,
+    );
+  }
+
+  void _showInfoSnackbar(String message) {
     Get.snackbar(
       'Info',
-      'Forgot password feature coming soon',
-      snackPosition: SnackPosition.BOTTOM,
+      message,
+      snackPosition: SnackPosition.TOP,
     );
   }
 }

@@ -19,8 +19,8 @@ class DashboardController extends GetxController {
   final userRole = 'member'.obs;
 
   // User info
-  final userName = 'Alsaa Cantikk'.obs;
-  final userPosition = 'Chief Executive Officer'.obs;
+  final userName = ''.obs;
+  final userPosition = ''.obs;
   final userAvatar = ''.obs;
 
   // Current date info
@@ -108,7 +108,9 @@ class DashboardController extends GetxController {
     if (authService != null) {
       final user = authService.currentUser;
       if (user != null) {
-        userName.value = user['name'] ?? 'User';
+        userName.value = user.email.split('@')[0];
+        userRole.value = user.role;
+        userPosition.value = user.role;
       }
     }
   }
@@ -155,6 +157,20 @@ class DashboardController extends GetxController {
     Get.toNamed(Routes.NOTIFICATIONS);
   }
 
+  /// Navigate to profile
+  void openProfile() {
+    Get.toNamed(Routes.PROFILE);
+  }
+
+  /// Logout user
+  void logout() async {
+    final authService = _authService;
+    if (authService != null) {
+      await authService.logout();
+    }
+    Get.offAllNamed(Routes.LOGIN);
+  }
+
   /// Navigate to attendance
   void openAttendance() {
     Get.toNamed(Routes.ATTENDANCE);
@@ -191,7 +207,7 @@ class DashboardController extends GetxController {
     Get.snackbar(
       title,
       message ?? 'Coming soon!',
-      snackPosition: SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.TOP,
     );
   }
 }

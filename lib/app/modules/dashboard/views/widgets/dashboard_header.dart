@@ -47,6 +47,7 @@ class DashboardHeader extends GetView<DashboardController> {
         const SizedBox(width: 12),
         Expanded(child: _buildUserInfo()),
         _buildNotificationButton(),
+        _buildLogoutButton(),
       ],
     );
   }
@@ -108,6 +109,20 @@ class DashboardHeader extends GetView<DashboardController> {
           Icons.notifications_outlined,
           color: Colors.white,
           size: 28,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return GestureDetector(
+      onTap: controller.logout,
+      child: Container(
+        padding: const EdgeInsets.all(8),
+        child: const Icon(
+          Icons.logout,
+          color: Colors.white,
+          size: 24,
         ),
       ),
     );

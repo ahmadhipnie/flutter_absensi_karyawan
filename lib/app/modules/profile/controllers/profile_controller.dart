@@ -1,21 +1,36 @@
 import 'package:get/get.dart';
+import '../../../data/services/auth_service.dart';
+import '../../../routes/app_pages.dart';
 
 class ProfileController extends GetxController {
-  final userRole = 'Supervisor'.obs; // Or 'Member', inherited from auth/dashboard
-  final userName = 'Alsaa Cantikk'.obs;
-  final email = 'alsaacantikk464@gmail.com'.obs;
-  
+  final AuthService _authService = Get.find<AuthService>();
+
+  final userRole = ''.obs;
+  final userName = ''.obs;
+  final email = ''.obs;
+  final avatarUrl = ''.obs;
+
   // For Member specific
-  final department = 'UI/UX Designer'.obs;
+  final department = ''.obs;
 
   @override
   void onInit() {
     super.onInit();
-    // TODO: Load real user data
+    _loadUserData();
   }
-  
-  void logout() {
-    // TODO: Implement logout
-    Get.offAllNamed('/splash');
+
+  void _loadUserData() {
+    final user = _authService.currentUser;
+    if (user != null) {
+      userName.value = user.email.split('@')[0];
+      email.value = user.email;
+      userRole.value = user.role;
+      department.value = user.role;
+    }
+  }
+
+  void logout() async {
+    await _authService.logout();
+    Get.offAllNamed(Routes.LOGIN);
   }
 }

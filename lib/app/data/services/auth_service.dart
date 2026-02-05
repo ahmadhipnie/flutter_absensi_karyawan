@@ -1,61 +1,101 @@
+import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 
+import '../models/login_response_model.dart';
+import '../models/user_model.dart';
+import '../providers/api_provider.dart';
+
 class AuthService extends GetxService {
+  final ApiProvider _apiProvider = ApiProvider();
+
   final _isLoggedIn = false.obs;
-  final _currentUser = Rxn<Map<String, dynamic>>();
+  final _currentUser = Rxn<UserModel>();
+  String? _token;
 
   bool get isLoggedIn => _isLoggedIn.value;
-  Map<String, dynamic>? get currentUser => _currentUser.value;
+  UserModel? get currentUser => _currentUser.value;
+  String? get token => _token;
 
   Future<AuthService> init() async {
-    // Initialize service, check saved session, etc.
+    // Check saved session from secure storage
+    // TODO: Implement secure storage for token persistence
     return this;
   }
 
   /// Login with email and password
-  /// Returns true if login successful, false otherwise
-  Future<bool> login({required String email, required String password}) async {
+  /// Returns LoginResponseModel if successful, null if failed
+  /// Throws exception with error message - Controller should handle UI feedback
+  Future<LoginResponseModel?> login({
+    required String email,
+    required String password,
+  }) async {
     try {
-      // Simulate API call delay
-      await Future.delayed(const Duration(seconds: 2));
+      final response = await _apiProvider.post(
+        '/users/login',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
 
-      // TODO: Replace with actual API call
-      // Example: final response = await apiClient.post('/auth/login', {
-      //   'email': email,
-      //   'password': password,
-      // });
+      if (response.statusCode == 200) {
+        final loginResponse = LoginResponseModel.fromJson(response.data);
 
-      // Mock validation - replace with actual API response
-      if (email.isNotEmpty && password.length >= 6) {
-        _currentUser.value = {'id': '1', 'email': email, 'name': 'User Name'};
-        _isLoggedIn.value = true;
+        if (loginResponse.success && loginResponse.data != null) {
+          _currentUser.value = loginResponse.data;
+          _isLoggedIn.value = true;
 
-        // TODO: Save token to secure storage
-        // await secureStorage.write(key: 'auth_token', value: token);
+          // TODO: Save token to secure storage if API returns token
+          // if (loginResponse.data?.token != null) {
+          //   _token = loginResponse.data!.token;
+          //   await secureStorage.write(
+          //     key: 'auth_token',
+          //     value: _token,
+          //   );
+          // }
 
-        return true;
+          return loginResponse;
+        }
+
+        // Login failed but got response - return response so controller can handle message
+        return loginResponse;
       }
 
-      return false;
+      return null;
+    } on DioException catch (e) {
+      // Re-throw with message for controller to handle
+      String errorMessage = 'Login failed';
+
+      if (e.response != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        } else {
+          errorMessage = 'Error: ${e.response!.statusCode}';
+        }
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'No internet connection';
+      }
+
+      throw errorMessage;
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        'Login failed: ${e.toString()}',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return false;
+      throw 'An unexpected error occurred: ${e.toString()}';
     }
   }
 
   /// Logout user
   Future<void> logout() async {
     try {
-      // TODO: Call API to invalidate token
-      // await apiClient.post('/auth/logout');
+      // TODO: Call API to invalidate token if needed
+      // await _apiProvider.post('/users/logout');
 
       // Clear local data
       _currentUser.value = null;
       _isLoggedIn.value = false;
+      _token = null;
 
       // TODO: Clear secure storage
       // await secureStorage.delete(key: 'auth_token');

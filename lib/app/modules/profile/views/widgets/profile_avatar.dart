@@ -10,6 +10,7 @@ class ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasValidUrl = avatarUrl != null && avatarUrl!.isNotEmpty;
     return Center(
       child: Container(
         padding: const EdgeInsets.all(4),
@@ -20,8 +21,8 @@ class ProfileAvatar extends StatelessWidget {
         child: CircleAvatar(
           radius: 40,
           backgroundColor: Colors.grey.shade200,
-          backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-          child: avatarUrl == null
+          backgroundImage: hasValidUrl ? NetworkImage(avatarUrl!) : null,
+          child: !hasValidUrl
               ? const Icon(Icons.person, size: 40, color: Colors.grey)
               : null,
         ),

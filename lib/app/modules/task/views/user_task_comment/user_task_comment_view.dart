@@ -62,14 +62,14 @@ class UserTaskCommentView extends GetView<UserTaskCommentController> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundImage: comment.avatarUrl != null
+            backgroundImage: comment.avatarUrl != null && comment.avatarUrl!.isNotEmpty
                 ? NetworkImage(comment.avatarUrl!)
                 : null,
             backgroundColor: const Color(0xFFE0E0E0),
-            onBackgroundImageError: comment.avatarUrl != null
+            onBackgroundImageError: comment.avatarUrl != null && comment.avatarUrl!.isNotEmpty
                 ? (_, __) {}
                 : null,
-            child: comment.avatarUrl == null
+            child: comment.avatarUrl == null || comment.avatarUrl!.isEmpty
                 ? const Icon(Icons.person, color: Colors.white, size: 24)
                 : null,
           ),

@@ -94,6 +94,7 @@ class DashboardController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _lastBackPressedTime = null;
     _loadUserData();
   }
 
@@ -108,7 +109,7 @@ class DashboardController extends GetxController {
     if (authService != null) {
       final user = authService.currentUser;
       if (user != null) {
-        userName.value = user.email.split('@')[0];
+        userName.value = user.displayName;
         userRole.value = user.role;
         userPosition.value = user.role;
       }
@@ -202,6 +203,24 @@ class DashboardController extends GetxController {
 
   void openTask(DashboardTaskItem task) =>
       _showSnackbar('Task', 'Opening task: ${task.title}');
+
+  // Double back to exit
+  DateTime? _lastBackPressedTime;
+
+  Future<bool> handleWillPop() async {
+    final currentTime = DateTime.now();
+    final canExit = _lastBackPressedTime != null &&
+        currentTime.difference(_lastBackPressedTime!) < const Duration(seconds: 2);
+
+    _lastBackPressedTime = currentTime;
+
+    if (canExit) {
+      return true;
+    }
+
+    _showSnackbar('Exit', 'Press back again to exit');
+    return false;
+  }
 
   void _showSnackbar(String title, [String? message]) {
     Get.snackbar(

@@ -1,36 +1,56 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
+import '../../core/config/app_config.dart';
 
 class ApiProvider {
-  static const String _baseUrl = 'https://api-absensi.hftech.web.id/api';
-
   late final Dio _dio;
+  String? _authToken;
 
   ApiProvider() {
     _dio = Dio(
       BaseOptions(
-        baseUrl: _baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 10),
+        baseUrl: AppConfig.apiBaseUrl,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        sendTimeout: const Duration(seconds: 15),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          'User-Agent': 'TalentaAttendance/1.0.0 (Flutter)',
         },
       ),
     );
 
-    // Add interceptors for logging (optional, for debugging)
+    // Add interceptor for logging in debug mode
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        LogInterceptor(
+          requestBody: true,
+          responseBody: true,
+          requestHeader: true,
+          error: true,
+        ),
+      );
+    }
+
+    // Add interceptor to attach auth token
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          // Log request
+          // Attach auth token if available
+          if (_authToken != null && _authToken!.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $_authToken';
+          }
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          // Log response
           return handler.next(response);
         },
         onError: (error, handler) {
-          // Log error
+          // Handle 401 Unauthorized - token expired
+          if (error.response?.statusCode == 401) {
+            // TODO: Trigger logout or refresh token
+          }
           return handler.next(error);
         },
       ),
@@ -38,6 +58,16 @@ class ApiProvider {
   }
 
   Dio get dio => _dio;
+
+  /// Set authentication token
+  void setAuthToken(String token) {
+    _authToken = token;
+  }
+
+  /// Clear authentication token
+  void clearAuthToken() {
+    _authToken = null;
+  }
 
   /// POST request
   Future<Response> post(

@@ -8,6 +8,7 @@ import '../../members/controllers/members_controller.dart';
 import '../../members/views/widgets/member_list_item.dart';
 import '../../../data/services/user_service.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/department_task_model.dart';
 
 class DepartmentDetailView extends GetView<DepartmentController> {
   const DepartmentDetailView({Key? key}) : super(key: key);
@@ -291,101 +292,199 @@ class DepartmentDetailView extends GetView<DepartmentController> {
   }
 
   Widget _buildTaskTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+    return Obx(() {
+      if (controller.isLoadingTasks.value) {
+        return const Center(child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: CircularProgressIndicator(),
+        ));
+      }
+
+      if (controller.departmentTasks.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.assignment_outlined, size: 48, color: Colors.grey.shade300),
+              const SizedBox(height: 12),
+              Text(
+                'No tasks assigned yet',
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return RefreshIndicator(
+        onRefresh: controller.fetchDepartmentTasks,
+        child: ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: controller.departmentTasks.length,
+          separatorBuilder: (c, i) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final task = controller.departmentTasks[index];
+            return _buildTaskItem(task);
+          },
+        ),
+      );
+    });
+  }
+
+  Widget _buildTaskItem(DepartmentTaskModel task) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF3F4F6)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 5,
-            separatorBuilder: (c, i) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              return GestureDetector(
-                onTap: () {
-                  // TODO: Implement Task Detail navigation
-                  Get.showSnackbar(GetSnackBar(
-                    title: 'TODO',
-                    message: 'Task detail not implemented yet',
-                    backgroundColor: Colors.orange,
-                    duration: const Duration(seconds: 2),
-                  ));
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFF3F4F6)),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEEF2FF),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.description_outlined,
-                          color: AppTheme.primaryColor.withOpacity(0.6),
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Lorem ipsum dolor sit amet',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
-                                color: Color(0xFF1F2937),
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              'by Alsaa Cantikk',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Color(0xFF9CA3AF),
-                              ),
-                            ),
-                            SizedBox(height: 6),
-                            Text(
-                              'ed ut perspiciatis unde omnis iste natus error...',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6B7280),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        '09.10',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Color(0xFF9CA3AF),
-                        ),
-                      ),
-                    ],
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              );
-            },
+                child: Icon(
+                  Icons.assignment_outlined,
+                  color: AppTheme.primaryColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.taskSubject,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        color: Color(0xFF1F2937),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Assigned to: ${task.username}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _buildStatusBadge(task.status),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade400),
+                  const SizedBox(width: 6),
+                  Text(
+                    _formatDate(task.dueDate),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+              if (task.location.isNotEmpty)
+                Row(
+                  children: [
+                    Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade400),
+                    const SizedBox(width: 4),
+                    Text(
+                      task.location,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildStatusBadge(String status) {
+    Color bgColor;
+    Color textColor;
+    String label = status;
+
+    switch (status.toLowerCase()) {
+      case 'completed':
+        bgColor = Colors.green.shade50;
+        textColor = Colors.green.shade700;
+        break;
+      case 'pending':
+        bgColor = Colors.orange.shade50;
+        textColor = Colors.orange.shade700;
+        break;
+      case 'in_progress':
+        bgColor = Colors.blue.shade50;
+        textColor = Colors.blue.shade700;
+        label = 'In Progress';
+        break;
+      default:
+        bgColor = Colors.grey.shade100;
+        textColor = Colors.grey.shade700;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label.capitalizeFirst ?? label,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(String dateStr) {
+    if (dateStr.isEmpty) return '-';
+    try {
+      final date = DateTime.parse(dateStr);
+      final months = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      ];
+      return '${date.day} ${months[date.month - 1]} ${date.year}';
+    } catch (e) {
+      return dateStr;
+    }
   }
 
   Widget _buildMembersTab() {

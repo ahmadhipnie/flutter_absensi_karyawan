@@ -23,12 +23,14 @@ class ChatService extends GetxService {
   Future<CreateConversationResponse?> createConversation({
     required String type,
     String? title,
+    String? description,
     required List<int> participantIds,
   }) async {
     try {
       final request = CreateConversationRequest(
         type: type,
         title: title,
+        description: description,
         participantIds: participantIds,
       );
 
@@ -73,11 +75,13 @@ class ChatService extends GetxService {
   /// Create a group conversation
   Future<CreateConversationResponse?> createGroupConversation({
     required String title,
+    String? description,
     required List<int> participantIds,
   }) async {
     return createConversation(
       type: 'group',
       title: title,
+      description: description,
       participantIds: participantIds,
     );
   }

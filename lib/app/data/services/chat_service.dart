@@ -101,16 +101,19 @@ class ChatService extends GetxService {
 
   /// Get messages for a conversation
   /// GET /conversations/{conversationId}/messages
-  Future<List<ChatMessage>> getMessages(int conversationId) async {
+  Future<List<ChatMessage>> getMessages(int conversationId, {String? myUserId}) async {
     try {
       final response = await _apiProvider.get('/conversations/$conversationId/messages');
 
       if (response.statusCode == 200) {
         final data = response.data;
-        if (data['success'] == true && data['data'] is Map) {
-          final messagesData = data['data']['messages'] as List? ?? [];
+        if (data['success'] == true && data['data'] is List) {
+          final messagesData = data['data'] as List;
           return messagesData
-              .map((item) => ChatMessage.fromJson(item as Map<String, dynamic>))
+              .map((item) => ChatMessage.fromJson(
+                    item as Map<String, dynamic>,
+                    myUserId: myUserId,
+                  ))
               .toList();
         }
       }
@@ -121,22 +124,52 @@ class ChatService extends GetxService {
     }
   }
 
+  /// Get only the last message for a conversation (for preview in list)
+  /// Returns the last message, or null if no messages
+  Future<ChatMessage?> getLastMessage(int conversationId, {String? myUserId}) async {
+    try {
+      final response = await _apiProvider.get('/conversations/$conversationId/messages');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] is List) {
+          final messagesData = data['data'] as List;
+          if (messagesData.isNotEmpty) {
+            // Get the last message (list is ordered by created_at descending from API)
+            return ChatMessage.fromJson(
+              messagesData.first as Map<String, dynamic>,
+              myUserId: myUserId,
+            );
+          }
+        }
+      }
+
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Send a message to a conversation
   /// POST /conversations/{conversationId}/messages
   Future<ChatMessage?> sendMessage({
     required int conversationId,
     required String message,
+    required String myUserId,
   }) async {
     try {
       final response = await _apiProvider.post(
         '/conversations/$conversationId/messages',
-        data: {'message': message},
+        data: {'message_text': message},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          return ChatMessage.fromJson(data['data'] as Map<String, dynamic>);
+          return ChatMessage.fromJson(
+            data['data'] as Map<String, dynamic>,
+            myUserId: myUserId,
+          );
         }
       }
 

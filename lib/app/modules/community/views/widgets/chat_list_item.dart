@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../common/widgets/user_avatar.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/conversation_model.dart';
+import '../../../../data/services/auth_service.dart';
 import '../../../../utils/date_helper.dart';
 import '../../controllers/community_controller.dart';
 
@@ -10,6 +11,24 @@ class ChatListItem extends StatelessWidget {
   final ConversationModel chat;
 
   const ChatListItem({super.key, required this.chat});
+
+  // Get current user ID
+  String? get myUserId {
+    try {
+      final authService = Get.find<AuthService>();
+      return authService.currentUser?.id.toString();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Get display name with current user context
+  String get chatDisplayName {
+    if (myUserId != null) {
+      return chat.displayNameWithId(myUserId!);
+    }
+    return chat.displayName;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +73,7 @@ class ChatListItem extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            chat.displayName,
+            chatDisplayName, // Use computed property
             style: const TextStyle(
               color: Colors.black,
               fontSize: 15,
@@ -104,7 +123,7 @@ class ChatListItem extends StatelessWidget {
 
   Widget _buildAvatar() {
     return UserAvatar(
-      name: chat.displayName,
+      name: chatDisplayName, // Use computed property
       size: 48,
       backgroundColor: AppTheme.primaryColor.value,
     );
@@ -157,8 +176,17 @@ class ChatListItem extends StatelessWidget {
   }
 
   String _getLastMessagePreview() {
-    // Since API doesn't provide last_message in list response,
-    // show a placeholder based on unread count
+    // Use actual last message if available
+    if (chat.lastMessage != null) {
+      final lm = chat.lastMessage!;
+      if (lm.isFromMe) {
+        return 'You: ${lm.text}';
+      } else {
+        return lm.text;
+      }
+    }
+
+    // Fallback to placeholder based on unread count
     if (chat.unreadCount > 0) {
       return '${chat.unreadCount} new message${chat.unreadCount > 1 ? 's' : ''}';
     }

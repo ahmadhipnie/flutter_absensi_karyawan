@@ -1,8 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/chat_message_model.dart';
+import '../../../data/services/chat_service.dart';
+import '../../../data/services/auth_service.dart';
 
 class ChatDetailController extends GetxController {
+  final ChatService _chatService = Get.find<ChatService>();
+
+  // Lazy initialization of AuthService
+  AuthService? get _authService {
+    try {
+      return Get.find<AuthService>();
+    } catch (e) {
+      return null;
+    }
+  }
+
   final messageController = TextEditingController();
   final scrollController = ScrollController();
 
@@ -15,6 +28,19 @@ class ChatDetailController extends GetxController {
 
   final messages = <ChatMessage>[].obs;
   final isLoading = false.obs;
+  final isSending = false.obs;
+
+  // Get current user ID
+  String? get myUserId {
+    final user = _authService?.currentUser;
+    return user?.id.toString();
+  }
+
+  // Get current user name
+  String get myUserName {
+    final user = _authService?.currentUser;
+    return user?.displayName ?? 'Me';
+  }
 
   @override
   void onInit() {
@@ -34,77 +60,91 @@ class ChatDetailController extends GetxController {
 
   bool get isGroupChat => chatType == 'Department';
 
-  void _loadMessages() {
-    // Dummy data untuk UI
-    if (isGroupChat) {
-      messages.value = [
-        ChatMessage(
-          id: '1',
-          text: 'Hello team! Please ensure that all ongoing and upcoming community initiatives are clearly documented, including objectives, timelines, and assigned PICs.',
-          senderId: 'me',
-          senderName: 'Me',
-          timestamp: DateTime.now(),
-          isMe: true,
-        ),
-        ChatMessage(
-          id: '2',
-          text: 'Noted, thank you.',
-          senderId: '2',
-          senderName: 'Bambang',
-          senderAvatar: null,
-          timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-          isMe: false,
-        ),
-        ChatMessage(
-          id: '3',
-          text: 'Please also include measurable outcomes or KPIs where possible, so we can better evaluate the impact of each initiative.',
-          senderId: '3',
-          senderName: 'Basuki',
-          senderAvatar: null,
-          timestamp: DateTime.now().subtract(const Duration(minutes: 3)),
-          isMe: false,
-        ),
-      ];
-    } else {
-      messages.value = [
-        ChatMessage(
-          id: '1',
-          text: 'Please share the first update by the end of this week so we can review it together in the next executive meeting.',
-          senderId: 'me',
-          senderName: 'Me',
-          timestamp: DateTime.now(),
-          isMe: true,
-        ),
-        ChatMessage(
-          id: '2',
-          text: "Will do. We'll make sure the update is ready and shared before the deadline.",
-          senderId: '2',
-          senderName: 'Basuki',
-          senderAvatar: avatarUrl,
-          timestamp: DateTime.now().subtract(const Duration(minutes: 5)),
-          isMe: false,
-        ),
-      ];
+  /// Load messages from API
+  Future<void> _loadMessages() async {
+    if (myUserId == null) return;
+
+    try {
+      isLoading.value = true;
+      final conversationId = int.tryParse(chatId);
+      if (conversationId == null) return;
+
+      final messageList = await _chatService.getMessages(
+        conversationId,
+        myUserId: myUserId,
+      );
+
+      // API returns newest first, reverse so newest is at bottom
+      final reversedList = messageList.reversed.toList();
+
+      messages.value = reversedList;
+    } catch (e) {
+      print('Error loading messages: $e');
+    } finally {
+      isLoading.value = false;
     }
+
+    _scrollToBottom();
   }
 
-  void sendMessage() {
+  /// Send message via API
+  Future<void> sendMessage() async {
     final text = messageController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || myUserId == null) return;
 
-    final newMessage = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+    // Clear input first
+    messageController.clear();
+
+    // Optimistically add message to UI
+    final tempMessage = ChatMessage(
+      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
       text: text,
-      senderId: 'me',
-      senderName: 'Me',
+      senderId: myUserId!,
+      senderName: myUserName,
       timestamp: DateTime.now(),
       isMe: true,
     );
 
-    messages.add(newMessage);
-    messageController.clear();
+    messages.add(tempMessage);
+    _scrollToBottom();
 
-    // Scroll to bottom
+    // Send to API
+    try {
+      isSending.value = true;
+      final conversationId = int.tryParse(chatId);
+      if (conversationId == null) return;
+
+      final sentMessage = await _chatService.sendMessage(
+        conversationId: conversationId,
+        message: text,
+        myUserId: myUserId!,
+      );
+
+      if (sentMessage != null) {
+        // Remove temp message and add the real one
+        messages.remove(tempMessage);
+        messages.add(sentMessage);
+      } else {
+        // API returned null, remove temp message
+        messages.remove(tempMessage);
+        Get.snackbar('Error', 'Failed to send message');
+      }
+    } catch (e) {
+      print('Error sending message: $e');
+      // Remove temp message on error
+      messages.remove(tempMessage);
+      Get.snackbar('Error', 'Failed to send message');
+    } finally {
+      isSending.value = false;
+    }
+  }
+
+  /// Refresh messages (pull-to-refresh)
+  Future<void> refresh() async {
+    await _loadMessages();
+  }
+
+  void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
       if (scrollController.hasClients) {
         scrollController.animateTo(

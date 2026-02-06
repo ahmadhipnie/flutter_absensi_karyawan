@@ -25,10 +25,10 @@ class ChatMessage {
 
     return ChatMessage(
       id: json['id']?.toString() ?? '',
-      text: json['message'] ?? json['text'] ?? '',
+      text: json['message_text'] ?? json['message'] ?? json['text'] ?? '',
       senderId: senderId,
       senderName: json['sender_name'] ?? json['username'] ?? 'Unknown',
-      senderAvatar: json['sender_avatar'] ?? json['avatar_url'],
+      senderAvatar: json['sender_avatar'] ?? json['avatar_url'] ?? json['photo_profile'],
       timestamp: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),

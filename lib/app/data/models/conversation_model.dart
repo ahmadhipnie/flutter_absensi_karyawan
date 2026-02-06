@@ -1,3 +1,18 @@
+/// Simple class to hold last message preview
+class LastMessagePreview {
+  final String text;
+  final String senderName;
+  final DateTime timestamp;
+  final bool isFromMe;
+
+  LastMessagePreview({
+    required this.text,
+    required this.senderName,
+    required this.timestamp,
+    this.isFromMe = false,
+  });
+}
+
 class ParticipantModel {
   final int id;
   final int conversationId;
@@ -57,6 +72,7 @@ class ConversationModel {
   final DateTime updatedAt;
   final int unreadCount;
   final List<ParticipantModel> participants;
+  final LastMessagePreview? lastMessage;
 
   ConversationModel({
     required this.id,
@@ -66,7 +82,22 @@ class ConversationModel {
     required this.updatedAt,
     required this.unreadCount,
     required this.participants,
+    this.lastMessage,
   });
+
+  /// Create a copy with last message updated
+  ConversationModel copyWithLastMessage(LastMessagePreview? lastMessage) {
+    return ConversationModel(
+      id: id,
+      title: title,
+      type: type,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      unreadCount: unreadCount,
+      participants: participants,
+      lastMessage: lastMessage,
+    );
+  }
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     final participantsList = json['participants'] as List? ?? [];
@@ -97,14 +128,15 @@ class ConversationModel {
 
   /// Get display name for the conversation
   /// For private chat, use the other participant's name
+  /// Note: Use displayNameWithId() for proper logic with current user context
   String get displayName {
     if (title != null && title!.isNotEmpty) {
       return title!;
     }
 
     if (type == 'private' && participants.isNotEmpty) {
-      // For private chat, find the other participant (not me)
-      // For now, return the first participant's name
+      // For private chat, return the first participant's name
+      // Note: Use displayNameWithId() for proper logic with current user
       final otherParticipant = participants.firstWhere(
         (p) => p.role != 'admin',
         orElse: () => participants.first,
@@ -115,11 +147,43 @@ class ConversationModel {
     return 'Conversation';
   }
 
+  /// Get display name for the conversation with current user context
+  /// For private chat, use the OTHER participant's name (not current user)
+  String displayNameWithId(String currentUserId) {
+    if (type == 'private' && participants.isNotEmpty) {
+      // For private chat, ALWAYS use the other participant's name (ignore title)
+      final otherParticipant = participants.firstWhere(
+        (p) => p.userId.toString() != currentUserId,
+        orElse: () => participants.first,
+      );
+      return otherParticipant.displayName;
+    }
+
+    // For group chat or if no participants, use title
+    if (title != null && title!.isNotEmpty) {
+      return title!;
+    }
+
+    return 'Conversation';
+  }
+
   /// Get subtitle for the conversation
   String get subtitle {
     if (type == 'private') {
       final participant = participants.firstWhere(
         (p) => p.role != 'admin',
+        orElse: () => participants.first,
+      );
+      return participant.email;
+    }
+    return '${participants.length} members';
+  }
+
+  /// Get subtitle for the conversation with current user context
+  String subtitleWithId(String currentUserId) {
+    if (type == 'private') {
+      final participant = participants.firstWhere(
+        (p) => p.userId.toString() != currentUserId,
         orElse: () => participants.first,
       );
       return participant.email;

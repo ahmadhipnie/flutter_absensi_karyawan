@@ -9,7 +9,8 @@ import '../models/user_model.dart';
 import '../providers/api_provider.dart';
 
 class AuthService extends GetxService {
-  final ApiProvider _apiProvider = ApiProvider();
+  // Use singleton ApiProvider
+  ApiProvider get _apiProvider => ApiProvider.instance;
 
   final _isLoggedIn = false.obs;
   final _currentUser = Rxn<UserModel>();

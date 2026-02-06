@@ -3,7 +3,6 @@ import 'package:get/get.dart';
 import '../controllers/members_controller.dart';
 import 'widgets/member_list_item.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../common/widgets/filter_chips.dart';
 
 class MembersListView extends GetView<MembersController> {
   const MembersListView({super.key});
@@ -33,15 +32,6 @@ class MembersListView extends GetView<MembersController> {
       body: SafeArea(
         child: Column(
           children: [
-            // Search Bar
-            _buildSearchBar(),
-
-            // Filter Chips
-            AppFilterChips(
-              selectedFilter: controller.selectedDepartment,
-              filters: controller.departments,
-              onFilterSelected: controller.filterByDepartment,
-            ),
             
             const SizedBox(height: 8),
 
@@ -100,9 +90,9 @@ class MembersListView extends GetView<MembersController> {
                 // ignore: unused_local_variable
                 final query = controller.searchQuery.value;
                 
-                final members = controller.getFilteredMembers();
+                final users = controller.getFilteredUsers();
                 
-                if (members.isEmpty) {
+                if (users.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -120,7 +110,7 @@ class MembersListView extends GetView<MembersController> {
                 
                 return ListView.separated(
                   padding: const EdgeInsets.only(bottom: 24),
-                  itemCount: members.length,
+                  itemCount: users.length,
                   separatorBuilder: (context, index) => Divider(
                     height: 1,
                     thickness: 1,
@@ -129,7 +119,7 @@ class MembersListView extends GetView<MembersController> {
                     endIndent: 20,
                   ),
                   itemBuilder: (context, index) {
-                    return MemberListItem(member: members[index]);
+                    return MemberListItem(user: users[index]);
                   },
                 );
               }),
@@ -140,40 +130,40 @@ class MembersListView extends GetView<MembersController> {
     );
   }
 
-  Widget _buildSearchBar() {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-      height: 44,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: TextField(
-        controller: controller.searchController,
-        onChanged: controller.onSearchChanged,
-        style: const TextStyle(fontSize: 14, color: Colors.black),
-        decoration: const InputDecoration(
-          prefixIcon: Icon(
-            Icons.search,
-            color: AppTheme.primaryColor,
-            size: 22,
-          ),
-          hintText: 'Search Members',
-          hintStyle: TextStyle(
-            color: Color(0xFF9E9E9E),
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-          ),
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-          isDense: true,
-        ),
-      ),
-    );
-  }
+  // Widget _buildSearchBar() {
+  //   return Container(
+  //     margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+  //     height: 44,
+  //     decoration: BoxDecoration(
+  //       color: const Color(0xFFF5F5F5),
+  //       borderRadius: BorderRadius.circular(12),
+  //     ),
+  //     child: TextField(
+  //       controller: controller.searchController,
+  //       onChanged: controller.onSearchChanged,
+  //       style: const TextStyle(fontSize: 14, color: Colors.black),
+  //       decoration: const InputDecoration(
+  //         prefixIcon: Icon(
+  //           Icons.search,
+  //           color: AppTheme.primaryColor,
+  //           size: 22,
+  //         ),
+  //         hintText: 'Search Members',
+  //         hintStyle: TextStyle(
+  //           color: Color(0xFF9E9E9E),
+  //           fontSize: 14,
+  //           fontWeight: FontWeight.w400,
+  //         ),
+  //         border: InputBorder.none,
+  //         enabledBorder: InputBorder.none,
+  //         focusedBorder: InputBorder.none,
+  //         contentPadding: EdgeInsets.symmetric(
+  //           horizontal: 16,
+  //           vertical: 12,
+  //         ),
+  //         isDense: true,
+  //       ),
+  //     ),
+  //   );
+  // }
 }

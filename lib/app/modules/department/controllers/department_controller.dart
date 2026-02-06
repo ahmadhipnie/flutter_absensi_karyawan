@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../../../data/services/department_service.dart';
 import '../../../data/models/department_model.dart';
+import '../../../data/models/department_task_model.dart';
 import '../../members/controllers/members_controller.dart';
 
 class DepartmentController extends GetxController with GetSingleTickerProviderStateMixin {
@@ -21,10 +22,12 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
 
   // Observable states
   final isLoading = false.obs;
+  final isLoadingTasks = false.obs;
   final selectedImage = Rxn<File>();
   
   // Current department data (for detail/edit/info views)
   final department = Rxn<DepartmentModel>();
+  final departmentTasks = <DepartmentTaskModel>[].obs;
 
   @override
   void onInit() {
@@ -40,6 +43,11 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
     
     // Fetch members data to ensure it's fresh
     _fetchMembersData();
+
+    // Fetch department tasks if department is loaded
+    if (department.value != null) {
+      fetchDepartmentTasks();
+    }
   }
   
   /// Fetch members data to ensure member count is accurate
@@ -52,6 +60,22 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
       }
     } catch (e) {
       print('Error fetching members: $e');
+    }
+  }
+
+  /// Fetch department tasks
+  Future<void> fetchDepartmentTasks() async {
+    if (department.value == null) return;
+    
+    try {
+      isLoadingTasks.value = true;
+      final tasks = await _departmentService.getDepartmentTasks(department.value!.id);
+      departmentTasks.assignAll(tasks);
+    } catch (e) {
+      print('Error fetching department tasks: $e');
+      // Optionally show snackbar for task fetch error, or just log it
+    } finally {
+      isLoadingTasks.value = false;
     }
   }
 

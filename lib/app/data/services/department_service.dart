@@ -3,11 +3,50 @@ import 'package:get/get.dart' hide FormData, MultipartFile;
 import 'dart:io';
 import '../models/departments_response_model.dart';
 import '../models/department_model.dart';
+import '../models/department_task_model.dart';
 import '../providers/api_provider.dart';
 
 class DepartmentService extends GetxService {
   // Use singleton ApiProvider
   ApiProvider get _apiProvider => ApiProvider.instance;
+
+  /// Get tasks for a department
+  Future<List<DepartmentTaskModel>> getDepartmentTasks(int departmentId) async {
+    try {
+      final response = await _apiProvider.get('/tasks/department/$departmentId/assignments');
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        if (responseData['success'] == true) {
+          final List<dynamic> data = responseData['data'] ?? [];
+          return data.map((json) => DepartmentTaskModel.fromJson(json)).toList();
+        }
+        throw responseData['message'] ?? 'Failed to load department tasks';
+      }
+
+      throw 'Failed to load department tasks: ${response.statusCode}';
+    } on DioException catch (e) {
+      print('=== DEPARTMENT TASKS API ERROR ===');
+      print('Type: ${e.type}');
+      print('Message: ${e.message}');
+      print('Response: ${e.response}');
+
+      String errorMessage = 'Failed to load department tasks';
+
+      if (e.response != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        } else {
+          errorMessage = 'Error: ${e.response!.statusCode}';
+        }
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      throw 'An unexpected error occurred: ${e.toString()}';
+    }
+  }
 
   /// Get all departments
   /// Returns List<DepartmentModel> if successful

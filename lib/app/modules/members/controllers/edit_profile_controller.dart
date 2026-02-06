@@ -3,18 +3,17 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
+import '../../../data/models/user_model.dart';
 import '../../../data/services/user_service.dart';
-import '../../../data/services/department_service.dart';
-import '../../../data/models/department_model.dart';
 
-class CreateProfileController extends GetxController {
+class EditProfileController extends GetxController {
   final UserService _userService = UserService();
-  final DepartmentService _departmentService = DepartmentService();
   final ImagePicker _picker = ImagePicker();
 
   // Form controllers
-  final nameController = TextEditingController();
-  final emailController = TextEditingController();
+  late TextEditingController nameController;
+  late TextEditingController emailController;
+  late TextEditingController phoneController;
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
@@ -23,168 +22,34 @@ class CreateProfileController extends GetxController {
 
   // Observable states
   final isLoading = false.obs;
-  final departments = <DepartmentModel>[].obs;
-  final selectedDepartment = Rxn<DepartmentModel>();
-  final selectedRole = 'member'.obs; // 'member' or 'supervisor'
   final selectedImage = Rxn<File>();
+  late String selectedRole;
+  late UserModel user;
 
   final List<String> roles = ['member', 'supervisor'];
 
   @override
   void onInit() {
     super.onInit();
-    loadDepartments();
+    
+    // Get user from arguments
+    user = Get.arguments as UserModel;
+    
+    // Initialize controllers
+    nameController = TextEditingController(text: user.username);
+    emailController = TextEditingController(text: user.email);
+    phoneController = TextEditingController(text: user.phone ?? '');
+    selectedRole = user.role;
   }
 
   @override
   void onClose() {
     nameController.dispose();
     emailController.dispose();
+    phoneController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
     super.onClose();
-  }
-
-  /// Load departments from API
-  Future<void> loadDepartments() async {
-    try {
-      final departmentsList = await _departmentService.getDepartments();
-      departments.value = departmentsList;
-      
-      // Set first department as default if available
-      if (departmentsList.isNotEmpty) {
-        selectedDepartment.value = departmentsList.first;
-      }
-    } catch (e) {
-      print('Error loading departments: $e');
-      // Show error but don't block UI
-    }
-  }
-
-  /// Validate form
-  String? validateName(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter name';
-    }
-    if (value.length < 3) {
-      return 'Name must be at least 3 characters';
-    }
-    return null;
-  }
-
-  String? validateEmail(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter email';
-    }
-    if (!GetUtils.isEmail(value)) {
-      return 'Please enter a valid email';
-    }
-    return null;
-  }
-
-  String? validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please enter password';
-    }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-    return null;
-  }
-
-  String? validateConfirmPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Please confirm password';
-    }
-    if (value != passwordController.text) {
-      return 'Passwords do not match';
-    }
-    return null;
-  }
-
-  /// Create new user
-  Future<void> createUser() async {
-    // Validate form
-    if (!formKey.currentState!.validate()) {
-      print('❌ Form validation failed');
-      return;
-    }
-
-    print('✅ Form validated, starting user creation...');
-
-    try {
-      isLoading.value = true;
-      print('⏳ Loading started...');
-
-      final newUser = await _userService.registerUser(
-        email: emailController.text.trim(),
-        username: nameController.text.trim(),
-        password: passwordController.text,
-        role: selectedRole.value,
-        departmentId: selectedDepartment.value?.id,
-        photoFile: selectedImage.value,
-      );
-
-      print('✅ User created successfully: ${newUser.displayName}');
-
-      // Set loading false before any UI operations
-      isLoading.value = false;
-      print('✅ Loading stopped');
-
-      // Use Get.off to replace current route instead of Get.back
-      // This ensures we navigate away from create profile
-      print('� Navigating back to members list...');
-      
-      // Go back first
-      Get.back(result: true);
-      
-      // Then show success message after navigation
-      await Future.delayed(const Duration(milliseconds: 300));
-      
-      Get.showSnackbar(
-        GetSnackBar(
-          title: 'Success',
-          message: 'User "${newUser.displayName}" has been created successfully',
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 3),
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          isDismissible: true,
-          dismissDirection: DismissDirection.horizontal,
-        ),
-      );
-      
-      print('✅ Success notification shown');
-    } catch (e) {
-      print('❌ Error creating user: $e');
-      
-      // Set loading false
-      isLoading.value = false;
-      
-      // Show error message
-      Get.showSnackbar(
-        GetSnackBar(
-          title: 'Error',
-          message: 'Failed to create user: ${e.toString()}',
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 4),
-          margin: const EdgeInsets.all(16),
-          borderRadius: 8,
-          isDismissible: true,
-          dismissDirection: DismissDirection.horizontal,
-        ),
-      );
-    }
-  }
-
-  /// Set selected department
-  void setDepartment(DepartmentModel? department) {
-    selectedDepartment.value = department;
-  }
-
-  /// Set selected role
-  void setRole(String role) {
-    selectedRole.value = role;
   }
 
   /// Pick image from gallery
@@ -328,5 +193,72 @@ class CreateProfileController extends GetxController {
         ),
       ),
     );
+  }
+
+  /// Update user profile
+  Future<void> updateProfile() async {
+    if (!formKey.currentState!.validate()) {
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+
+      // Call API to update user profile
+      final updatedUser = await _userService.updateUser(
+        userId: user.id,
+        email: emailController.text.trim(),
+        username: nameController.text.trim(),
+        role: selectedRole,
+        departmentId: user.departmentId,
+        phone: phoneController.text.trim(),
+        photoFile: selectedImage.value,
+      );
+
+      // Set loading false before navigation
+      isLoading.value = false;
+
+      // Go back first
+      Get.back(result: true);
+
+      // Then show success message after navigation
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      Get.showSnackbar(
+        GetSnackBar(
+          title: 'Success',
+          message: 'Profile "${updatedUser.displayName}" updated successfully',
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          isDismissible: true,
+          dismissDirection: DismissDirection.horizontal,
+        ),
+      );
+    } catch (e) {
+      // Set loading false
+      isLoading.value = false;
+
+      Get.showSnackbar(
+        GetSnackBar(
+          title: 'Error',
+          message: 'Failed to update profile: ${e.toString()}',
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          isDismissible: true,
+          dismissDirection: DismissDirection.horizontal,
+        ),
+      );
+      print('Error updating profile: $e');
+    }
+  }
+
+  /// Set role
+  void setRole(String role) {
+    selectedRole = role;
+    update();
   }
 }

@@ -110,6 +110,14 @@ class DashboardController extends GetxController {
     }
   }
 
+  /// Pull-to-refresh handler
+  Future<void> onRefresh() async {
+    _loadUserData();
+    if (isSupervisor) {
+      await loadDepartments();
+    }
+  }
+
   void toggleUserRole() {
     if (userRole.value == 'supervisor') {
       userRole.value = 'member';
@@ -181,14 +189,24 @@ class DashboardController extends GetxController {
     Get.toNamed(Routes.MEMBERS_LIST);
   }
 
-  void createNewDepartment() {
-    Get.toNamed(Routes.CREATE_DEPARTMENT);
+  void createNewDepartment() async {
+    final result = await Get.toNamed(Routes.CREATE_DEPARTMENT);
+    
+    // Refresh departments list if department was created
+    if (result == true) {
+      loadDepartments();
+    }
   }
 
   void seeMoreTasks() => _showSnackbar('Tasks', 'Navigate to tasks...');
 
-  void openDepartment(DepartmentModel department) {
-    Get.toNamed(Routes.DEPARTMENT_DETAIL, arguments: department);
+  void openDepartment(DepartmentModel department) async {
+    final result = await Get.toNamed(Routes.DEPARTMENT_DETAIL, arguments: department);
+    
+    // Refresh departments if data was changed (edit/delete)
+    if (result == true) {
+      loadDepartments();
+    }
   }
 
   void clockIn() {

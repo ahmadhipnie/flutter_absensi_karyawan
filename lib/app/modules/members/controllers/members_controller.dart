@@ -83,8 +83,13 @@ class MembersController extends GetxController {
     selectedDepartment.value = department;
   }
 
-  void goToMemberDetail(UserModel user) {
-    Get.toNamed(Routes.MEMBER_DETAIL, arguments: user);
+  void goToMemberDetail(UserModel user) async {
+    final result = await Get.toNamed(Routes.MEMBER_DETAIL, arguments: user);
+    
+    // Refresh list if user was deleted
+    if (result == true) {
+      fetchUsers();
+    }
   }
 
   void goToCreateProfile() async {

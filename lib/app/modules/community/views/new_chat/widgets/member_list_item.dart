@@ -29,7 +29,7 @@ class MemberListItem extends StatelessWidget {
             const SizedBox(width: AppTheme.paddingM),
             Expanded(
               child: Text(
-                member.name,
+                member.displayName,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -59,7 +59,7 @@ class _MemberAvatar extends StatelessWidget {
       height: _avatarSize,
       child: member.avatarUrl != null
           ? _NetworkAvatar(member: member)
-          : _InitialsAvatar(name: member.name),
+          : _InitialsAvatar(name: member.displayName),
     );
   }
 }
@@ -76,7 +76,7 @@ class _NetworkAvatar extends StatelessWidget {
         member.avatarUrl!,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return _InitialsAvatar(name: member.name);
+          return _InitialsAvatar(name: member.displayName);
         },
       ),
     );

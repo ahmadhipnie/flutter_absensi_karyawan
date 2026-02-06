@@ -1,9 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../data/services/chat_service.dart';
 import '../models/member_model.dart';
 import '../../../routes/app_pages.dart';
 
 class MembersController extends GetxController {
+  final ChatService _chatService = Get.find<ChatService>();
+
   final searchController = TextEditingController();
   final members = <MemberModel>[].obs;
   final isLoading = false.obs;
@@ -18,63 +22,72 @@ class MembersController extends GetxController {
     'Mobile Developer',
   ];
 
+  // Polling timer
+  Timer? _pollTimer;
+
+  // Polling interval (30 seconds)
+  static const Duration _pollInterval = Duration(seconds: 30);
+
   @override
   void onInit() {
     super.onInit();
     fetchMembers();
+    _startPolling();
   }
 
-  void fetchMembers() {
-    isLoading.value = true;
-    
-    // Dummy data
-    members.value = [
-      MemberModel(
-        id: '1',
-        name: 'Sarah Johnson',
-        email: 'sarah.j@company.com',
-        department: 'UI/UX Designer',
-        userType: 'Member',
-        createdAt: DateTime.now().subtract(Duration(days: 30)),
-      ),
-      MemberModel(
-        id: '2',
-        name: 'Michael Chen',
-        email: 'michael.c@company.com',
-        department: 'Backend Developer',
-        userType: 'Supervisor',
-        createdAt: DateTime.now().subtract(Duration(days: 60)),
-      ),
-      MemberModel(
-        id: '3',
-        name: 'Emily Davis',
-        email: 'emily.d@company.com',
-        department: 'Frontend Developer',
-        userType: 'Member',
-        createdAt: DateTime.now().subtract(Duration(days: 45)),
-      ),
-      MemberModel(
-        id: '4',
-        name: 'John Smith',
-        email: 'john.s@company.com',
-        department: 'Mobile Developer',
-        userType: 'Member',
-        createdAt: DateTime.now().subtract(Duration(days: 15)),
-      ),
-      MemberModel(
-        id: '5',
-        name: 'Lisa Anderson',
-        email: 'lisa.a@company.com',
-        department: 'UI/UX Designer',
-        userType: 'Member',
-        createdAt: DateTime.now().subtract(Duration(days: 20)),
-      ),
-    ];
-    
-    isLoading.value = false;
+  @override
+  void onClose() {
+    _stopPolling();
+    searchController.dispose();
+    super.onClose();
   }
 
-  // Getter untuk filtered members - TIDAK dipanggil di dalam Obx
+  /// Start smart polling
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(_pollInterval, (_) {
+      fetchMembers(silent: true);
+    });
+  }
+
+  /// Stop smart polling
+  void _stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
+  /// Pause polling
+  void pausePolling() {
+    _stopPolling();
+  }
+
+  /// Resume polling
+  void resumePolling() {
+    _startPolling();
+  }
+
+  /// Fetch members from API
+  Future<void> fetchMembers({bool silent = false}) async {
+    try {
+      if (!silent) isLoading.value = true;
+
+      final result = await _chatService.getUsers();
+      members.assignAll(result);
+    } catch (e) {
+      if (!silent) {
+        Get.snackbar('Error', 'Failed to load members');
+      }
+    } finally {
+      if (!silent) isLoading.value = false;
+    }
+  }
+
+  /// Refresh members (manual refresh)
+  Future<void> refresh() async {
+    await fetchMembers();
+  }
+
+  // Getter untuk filtered members
   List<MemberModel> getFilteredMembers() {
     var filtered = members.toList();
 
@@ -89,7 +102,7 @@ class MembersController extends GetxController {
     if (searchQuery.value.isNotEmpty) {
       final query = searchQuery.value.toLowerCase();
       filtered = filtered.where((m) {
-        return m.name.toLowerCase().contains(query) ||
+        return m.displayName.toLowerCase().contains(query) ||
             m.email.toLowerCase().contains(query) ||
             m.department.toLowerCase().contains(query);
       }).toList();
@@ -107,6 +120,7 @@ class MembersController extends GetxController {
   }
 
   void goToMemberDetail(MemberModel member) {
+    pausePolling(); // Stop polling saat buka detail
     Get.toNamed(Routes.MEMBER_DETAIL, arguments: member);
   }
 
@@ -115,17 +129,17 @@ class MembersController extends GetxController {
   }
 
   void goToEditProfile(MemberModel member) {
+    pausePolling(); // Stop polling saat buka edit
     Get.toNamed(Routes.EDIT_PROFILE, arguments: member);
   }
 
-  void deleteMember(String memberId) {
-    members.removeWhere((m) => m.id == memberId);
-    Get.snackbar('Success', 'Member deleted successfully');
+  /// Resume polling when back from detail page
+  void onResume() {
+    resumePolling();
   }
 
-  @override
-  void onClose() {
-    searchController.dispose();
-    super.onClose();
+  void deleteMember(String memberId) {
+    members.removeWhere((m) => m.id.toString() == memberId);
+    Get.snackbar('Success', 'Member deleted successfully');
   }
 }

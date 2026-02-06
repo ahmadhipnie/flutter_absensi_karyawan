@@ -55,23 +55,36 @@ class CommunityView extends GetView<CommunityController> {
       final chats = controller.filteredChats;
 
       if (chats.isEmpty) {
-        return const Center(
-          child: Text(
-            'No conversations found',
-            style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 16),
+        return RefreshIndicator(
+          onRefresh: controller.refresh,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: MediaQuery.of(Get.context!).size.height - 200,
+              child: const Center(
+                child: Text(
+                  'No conversations found',
+                  style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 16),
+                ),
+              ),
+            ),
           ),
         );
       }
 
-      return ListView.separated(
-        controller: controller.scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        itemCount: chats.length,
-        separatorBuilder: (context, index) =>
-            const Divider(height: 1, thickness: 1, color: Color(0xFFF5F5F5)),
-        itemBuilder: (context, index) {
-          return ChatListItem(chat: chats[index]);
-        },
+      return RefreshIndicator(
+        onRefresh: controller.refresh,
+        child: ListView.separated(
+          controller: controller.scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          itemCount: chats.length,
+          separatorBuilder: (context, index) =>
+              const Divider(height: 1, thickness: 1, color: Color(0xFFF5F5F5)),
+          itemBuilder: (context, index) {
+            return ChatListItem(chat: chats[index]);
+          },
+        ),
       );
     });
   }

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../common/widgets/user_avatar.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../data/models/conversation_model.dart';
+import '../../../../utils/date_helper.dart';
 import '../../controllers/community_controller.dart';
 
 class ChatListItem extends StatelessWidget {
-  final Map<String, dynamic> chat;
+  final ConversationModel chat;
 
   const ChatListItem({super.key, required this.chat});
 
@@ -52,7 +54,7 @@ class ChatListItem extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            chat['name'],
+            chat.displayName,
             style: const TextStyle(
               color: Colors.black,
               fontSize: 15,
@@ -64,7 +66,7 @@ class ChatListItem extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          chat['timestamp'],
+          _formatTimestamp(chat.updatedAt),
           style: const TextStyle(
             color: AppTheme.gray500,
             fontSize: 12,
@@ -76,55 +78,35 @@ class ChatListItem extends StatelessWidget {
   }
 
   Widget _buildMessageRow() {
+    final hasUnread = chat.unreadCount > 0;
+
     return Row(
       children: [
-        if (chat['isSentByMe'] ?? false) _buildReadStatus(),
         Expanded(
           child: Text(
-            chat['message'],
+            _getLastMessagePreview(),
             style: TextStyle(
-              color: chat['unreadCount'] > 0
-                  ? Colors.black
-                  : AppTheme.gray600,
+              color: hasUnread ? Colors.black : AppTheme.gray600,
               fontSize: 13,
-              fontWeight: chat['unreadCount'] > 0 ? FontWeight.w500 : FontWeight.w400,
+              fontWeight: hasUnread ? FontWeight.w500 : FontWeight.w400,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (chat['unreadCount'] > 0) ...[
+        if (hasUnread) ...[
           const SizedBox(width: 8),
-          _buildUnreadBadge(chat['unreadCount']),
+          _buildUnreadBadge(chat.unreadCount),
         ],
       ],
     );
   }
 
-  Widget _buildReadStatus() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 4),
-      child: Icon(
-        Icons.done_all,
-        size: 16,
-        color: (chat['isRead'] ?? false) ? AppTheme.primaryColor : AppTheme.gray500,
-      ),
-    );
-  }
-
   Widget _buildAvatar() {
-    final avatarImage = chat['avatarImage'] as String?;
-    final avatarColor = chat['avatarColor'] as int?;
-    final avatarText = chat['avatarText'] as String?;
-
     return UserAvatar(
-      name: chat['name'],
+      name: chat.displayName,
       size: 48,
-      imageUrl: avatarImage?.isNotEmpty == true ? avatarImage : null,
-      backgroundColor: avatarColor ?? AppTheme.primaryColor.value,
-      textStyle: avatarText != null
-          ? const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600)
-          : null,
+      backgroundColor: AppTheme.primaryColor.value,
     );
   }
 
@@ -138,7 +120,7 @@ class ChatListItem extends StatelessWidget {
       constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
       alignment: Alignment.center,
       child: Text(
-        count.toString(),
+        count > 99 ? '99+' : count.toString(),
         style: const TextStyle(
           color: Colors.white,
           fontSize: 11,
@@ -146,5 +128,40 @@ class ChatListItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatTimestamp(DateTime dateTime) {
+    final now = DateHelper.nowWib();
+    final difference = now.difference(dateTime);
+
+    // Today: show time only
+    if (DateHelper.isTodayWib(dateTime)) {
+      final hour = dateTime.hour.toString().padLeft(2, '0');
+      final minute = dateTime.minute.toString().padLeft(2, '0');
+      return '$hour:$minute';
+    }
+
+    // Yesterday: show "Yesterday"
+    if (DateHelper.isYesterdayWib(dateTime)) {
+      return 'Yesterday';
+    }
+
+    // This week: show day name
+    if (difference.inDays < 7) {
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return days[dateTime.weekday - 1];
+    }
+
+    // Older: show date
+    return DateHelper.formatDateWib(dateTime);
+  }
+
+  String _getLastMessagePreview() {
+    // Since API doesn't provide last_message in list response,
+    // show a placeholder based on unread count
+    if (chat.unreadCount > 0) {
+      return '${chat.unreadCount} new message${chat.unreadCount > 1 ? 's' : ''}';
+    }
+    return 'No messages yet';
   }
 }

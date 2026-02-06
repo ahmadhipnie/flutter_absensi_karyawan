@@ -49,10 +49,9 @@ class _MemberList extends StatelessWidget {
       itemCount: members.length,
       itemBuilder: (context, index) {
         final member = members[index];
-        final isSupervisor = index == 0;
         return MemberListItem(
           member: member,
-          isSupervisor: isSupervisor,
+          isSupervisor: member.isSupervisor,
           onTap: () => onTapMember(member),
         );
       },

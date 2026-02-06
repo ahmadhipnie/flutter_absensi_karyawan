@@ -23,7 +23,7 @@ class MemberProfileHeader extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            member.name,
+            member.displayName,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,

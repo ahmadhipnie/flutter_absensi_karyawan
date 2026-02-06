@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../data/models/task_model.dart' as data_model;
 import '../../../controllers/task_controller.dart';
 import 'task_item.dart';
 
@@ -9,7 +10,7 @@ class TaskList extends GetView<TaskController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final tasks = controller.filteredTasks;
+      final tasks = controller.groupedTasks;
 
       if (tasks.isEmpty) {
         return _buildEmptyState();
@@ -38,7 +39,7 @@ class TaskList extends GetView<TaskController> {
     );
   }
 
-  Widget _buildMonthSection(String month, List<TaskModel> monthTasks) {
+  Widget _buildMonthSection(String month, List<data_model.TaskModel> monthTasks) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -1,8 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:get/get.dart' show GetxService;
 import '../../core/config/app_config.dart';
 
-class ApiProvider {
+class ApiProvider extends GetxService {
   late final Dio _dio;
   String? _authToken;
 

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -19,35 +20,42 @@ class AttendancePhotoSection extends GetView<TakeAttendanceController> {
       child: Stack(
         fit: StackFit.expand,
         children: [
+          // Photo or placeholder
           Obx(
-            () => controller.hasPhoto.value
-                ? Image.asset(
-                    'assets/images/placeholder_photo.png',
+            () => controller.hasPhoto.value && controller.photoFile.value != null
+                ? Image.file(
+                    controller.photoFile.value!,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return _buildPlaceholder();
-                    },
                   )
                 : _buildPlaceholder(),
           ),
+          // Button at bottom
           Positioned(
             left: 16,
             right: 16,
             bottom: 16,
-            child: ElevatedButton.icon(
-              onPressed: controller.retakePhoto,
-              icon: const Icon(Icons.refresh, size: 20),
-              label: const Text(
-                'Retake Photo',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            child: Obx(
+              () => ElevatedButton.icon(
+                onPressed: controller.takePhoto,
+                icon: Icon(
+                  controller.hasPhoto.value ? Icons.refresh : Icons.camera_alt,
+                  size: 20,
+                ),
+                label: Text(
+                  controller.hasPhoto.value ? 'Retake Photo' : 'Take Photo',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  ),
                 ),
               ),
             ),
@@ -60,12 +68,23 @@ class AttendancePhotoSection extends GetView<TakeAttendanceController> {
   Widget _buildPlaceholder() {
     return Container(
       color: AppTheme.gray100,
-      child: Center(
-        child: Icon(
-          Icons.camera_alt,
-          size: 60,
-          color: AppTheme.gray400,
-        ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.camera_alt,
+            size: 60,
+            color: AppTheme.gray400,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Tap button below to take photo',
+            style: TextStyle(
+              color: AppTheme.gray500,
+              fontSize: 14,
+            ),
+          ),
+        ],
       ),
     );
   }

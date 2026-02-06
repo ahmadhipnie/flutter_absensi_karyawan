@@ -93,12 +93,15 @@ class _TaskDetailDescriptionCard extends GetView<TaskDetailController> {
           ),
           const SizedBox(height: 8),
           Obx(
-            () => Text(
-              controller.description.value,
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                height: 1.5,
+            () => SizedBox(
+              width: double.infinity,
+              child: Text(
+                controller.description.value,
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
               ),
             ),
           ),

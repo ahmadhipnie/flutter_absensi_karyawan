@@ -107,6 +107,8 @@ class ChatInputField extends StatelessWidget {
                                 fontSize: 15,
                               ),
                               border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
                               contentPadding:
                                   const EdgeInsets.symmetric(vertical: 14),
                             ),

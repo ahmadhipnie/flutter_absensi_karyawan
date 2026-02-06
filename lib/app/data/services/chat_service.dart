@@ -233,21 +233,31 @@ class ChatService extends GetxService {
   }
 
   /// Leave a conversation
-  /// POST /conversations/{conversationId}/leave
-  Future<bool> leaveConversation(int conversationId) async {
+  /// DELETE /conversations/{conversationId}/leave
+  /// Returns a tuple: (success, message)
+  Future<(bool success, String message)> leaveConversation(int conversationId) async {
     try {
-      final response = await _apiProvider.post('/conversations/$conversationId/leave');
+      final path = 'conversations/$conversationId/leave';
+      
+      final response = await _apiProvider.delete(path);
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      if (response.statusCode == 200) {
         final data = response.data;
         if (data is Map && data['success'] == true) {
-          return true;
+          final message = data['message'] as String? ?? 'Berhasil keluar dari conversation';
+          return (true, message);
         }
       }
 
-      return false;
+      return (false, 'Failed to leave conversation');
+    } on dio.DioException catch (e) {
+      String errorMessage = 'Failed to leave conversation';
+      if (e.response != null && e.response!.data is Map) {
+        errorMessage = e.response!.data['message'] ?? errorMessage;
+      }
+      return (false, errorMessage);
     } catch (e) {
-      return false;
+      return (false, 'An error occurred: ${e.toString()}');
     }
   }
 }

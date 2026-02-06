@@ -277,7 +277,7 @@ class ChatDetailController extends GetxController {
     final confirmed = await Get.dialog<bool>(
       AlertDialog(
         title: const Text('Leave Conversation'),
-        content: Text('Are you sure you want to leave this conversation?'),
+        content: const Text('Are you sure you want to leave this conversation?'),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
@@ -294,17 +294,23 @@ class ChatDetailController extends GetxController {
 
     if (confirmed != true) return;
 
+    print('DEBUG: chatId from arguments: $chatId');
     final conversationId = int.tryParse(chatId);
-    if (conversationId == null) return;
+    print('DEBUG: parsed conversationId: $conversationId');
+    
+    if (conversationId == null) {
+      Get.snackbar('Error', 'Invalid conversation ID');
+      return;
+    }
 
-    final success = await _chatService.leaveConversation(conversationId);
+    final (success, message) = await _chatService.leaveConversation(conversationId);
 
     if (success) {
       // Go back to community list and refresh
       Get.back(result: 'left');
-      Get.snackbar('Success', 'Left conversation');
+      Get.snackbar('Success', message);
     } else {
-      Get.snackbar('Error', 'Failed to leave conversation');
+      Get.snackbar('Error', message);
     }
   }
 

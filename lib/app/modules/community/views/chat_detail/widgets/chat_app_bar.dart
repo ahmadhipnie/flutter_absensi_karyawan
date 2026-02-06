@@ -9,6 +9,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.isGroupChat,
     this.subtitle,
     this.avatarUrl,
+    this.onLeaveConversation,
     super.key,
   });
 
@@ -16,6 +17,7 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isGroupChat;
   final String? subtitle;
   final String? avatarUrl;
+  final VoidCallback? onLeaveConversation;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -33,6 +35,33 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: isGroupChat
           ? _buildGroupTitle()
           : _buildPersonalTitle(),
+      actions: isGroupChat ? [_buildPopupMenu()] : null,
+    );
+  }
+
+  Widget _buildPopupMenu() {
+    return PopupMenuButton<String>(
+      icon: const Icon(Icons.more_vert, color: Colors.black),
+      onSelected: (value) {
+        if (value == 'leave') {
+          onLeaveConversation?.call();
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem<String>(
+          value: 'leave',
+          child: Row(
+            children: [
+              Icon(Icons.exit_to_app, color: Colors.red, size: 20),
+              SizedBox(width: AppTheme.paddingM),
+              Text(
+                'Leave conversation',
+                style: TextStyle(color: Colors.red),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

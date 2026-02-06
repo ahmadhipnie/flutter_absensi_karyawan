@@ -210,4 +210,44 @@ class ChatService extends GetxService {
       return [];
     }
   }
+
+  /// Delete a message (only own messages)
+  /// DELETE /conversations/messages/{messageId}
+  Future<bool> deleteMessage(String messageId) async {
+    try {
+      final response = await _apiProvider.delete('/conversations/messages/$messageId');
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        final data = response.data;
+        if (data is Map && data['success'] == true) {
+          return true;
+        }
+        // Also return true for 204 No Content
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Leave a conversation
+  /// POST /conversations/{conversationId}/leave
+  Future<bool> leaveConversation(int conversationId) async {
+    try {
+      final response = await _apiProvider.post('/conversations/$conversationId/leave');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        if (data is Map && data['success'] == true) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
 }

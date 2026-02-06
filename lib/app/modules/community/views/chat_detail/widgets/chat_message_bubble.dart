@@ -9,16 +9,21 @@ class ChatMessageBubble extends StatelessWidget {
   const ChatMessageBubble({
     required this.message,
     required this.isGroupChat,
+    this.onDelete,
     super.key,
   });
 
   final ChatMessage message;
   final bool isGroupChat;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
     if (message.isMe) {
-      return _MyMessageBubble(message: message);
+      return _MyMessageBubble(
+        message: message,
+        onDelete: onDelete,
+      );
     }
     return _OtherMessageBubble(
       message: message,
@@ -28,29 +33,73 @@ class ChatMessageBubble extends StatelessWidget {
 }
 
 class _MyMessageBubble extends StatelessWidget {
-  const _MyMessageBubble({required this.message});
+  const _MyMessageBubble({
+    required this.message,
+    this.onDelete,
+  });
 
   final ChatMessage message;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
     final hasImage = message.hasImage;
 
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Container(
-        margin: const EdgeInsets.only(left: 64, bottom: AppTheme.paddingM),
-        constraints: const BoxConstraints(maxWidth: 280),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (hasImage) ...[
-              _buildImageBubble(),
-              if (message.text.isNotEmpty) const SizedBox(height: 8),
-            ],
-            if (message.text.isNotEmpty)
-              _buildTextBubble(),
+    final bubbleContent = Container(
+      margin: const EdgeInsets.only(left: 64, bottom: AppTheme.paddingM),
+      constraints: const BoxConstraints(maxWidth: 280),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (hasImage) ...[
+            _buildImageBubble(),
+            if (message.text.isNotEmpty) const SizedBox(height: 8),
           ],
+          if (message.text.isNotEmpty)
+            _buildTextBubble(),
+        ],
+      ),
+    );
+
+    // Add long press for delete if onDelete is provided
+    if (onDelete != null) {
+      return GestureDetector(
+        onLongPress: () => _showDeleteOptions(context),
+        child: bubbleContent,
+      );
+    }
+
+    return bubbleContent;
+  }
+
+  void _showDeleteOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.delete, color: Colors.red),
+                title: const Text('Delete Message', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Get.back();
+                  onDelete?.call();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.cancel),
+                title: const Text('Cancel'),
+                onTap: () => Get.back(),
+              ),
+            ],
+          ),
         ),
       ),
     );

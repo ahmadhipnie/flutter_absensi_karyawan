@@ -210,6 +210,47 @@ class ChatDetailController extends GetxController {
     await _loadMessages();
   }
 
+  /// Delete a message (only own messages)
+  Future<void> deleteMessage(ChatMessage message) async {
+    if (!message.isMe) {
+      Get.snackbar('Error', 'You can only delete your own messages');
+      return;
+    }
+
+    // Show confirmation dialog
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Delete Message'),
+        content: const Text('Are you sure you want to delete this message?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    // Remove from UI immediately
+    messages.remove(message);
+
+    // Call API
+    final success = await _chatService.deleteMessage(message.id);
+
+    if (!success) {
+      // Failed, add back to list
+      messages.add(message);
+      Get.snackbar('Error', 'Failed to delete message');
+    }
+  }
+
   void _scrollToBottom() {
     Future.delayed(const Duration(milliseconds: 100), () {
       if (scrollController.hasClients) {
@@ -228,6 +269,43 @@ class ChatDetailController extends GetxController {
 
   void startVoiceCall() {
     Get.snackbar('Voice Call', 'Starting voice call with $chatName...');
+  }
+
+  /// Leave conversation
+  Future<void> leaveConversation() async {
+    // Show confirmation dialog
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('Leave Conversation'),
+        content: Text('Are you sure you want to leave this conversation?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Leave'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final conversationId = int.tryParse(chatId);
+    if (conversationId == null) return;
+
+    final success = await _chatService.leaveConversation(conversationId);
+
+    if (success) {
+      // Go back to community list and refresh
+      Get.back(result: 'left');
+      Get.snackbar('Success', 'Left conversation');
+    } else {
+      Get.snackbar('Error', 'Failed to leave conversation');
+    }
   }
 
   String get formattedDate {

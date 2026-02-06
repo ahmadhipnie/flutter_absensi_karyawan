@@ -154,7 +154,7 @@ class CommunityController extends GetxController {
     searchQuery.value = value;
   }
 
-  /// Open chat
+  /// Open chat (pause polling while in chat detail)
   void openChat(ConversationModel conversation) {
     // Get display name with current user context
     final displayName = myUserId != null
@@ -174,7 +174,12 @@ class CommunityController extends GetxController {
         'subtitle': subtitle,
         'conversation': conversation,
       },
-    );
+    )?.then((result) {
+      // Refresh if user left the conversation
+      if (result == 'left') {
+        fetchConversations();
+      }
+    });
   }
 
   /// Create new chat

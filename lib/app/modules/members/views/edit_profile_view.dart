@@ -8,42 +8,6 @@ class EditProfileView extends GetView<EditProfileController> {
   const EditProfileView({super.key});
 
   @override
-  State<EditProfileView> createState() => _EditProfileViewState();
-}
-
-class _EditProfileViewState extends State<EditProfileView> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _phoneController;
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  
-  late String _selectedRole;
-  
-  final List<String> _roles = ['member', 'supervisor'];
-
-  @override
-  void initState() {
-    super.initState();
-    final UserModel user = Get.arguments as UserModel;
-    _nameController = TextEditingController(text: user.username ?? '');
-    _emailController = TextEditingController(text: user.email);
-    _phoneController = TextEditingController(text: user.phone ?? '');
-    _selectedRole = user.role;
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -53,10 +17,10 @@ class _EditProfileViewState extends State<EditProfileView> {
         centerTitle: false,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
           onPressed: () => Get.back(),
         ),
-        title: Text(
+        title: const Text(
           'Edit Profile',
           style: TextStyle(
             color: Colors.black,
@@ -71,42 +35,42 @@ class _EditProfileViewState extends State<EditProfileView> {
               child: SizedBox(
                 height: 36,
                 child: Obx(() => ElevatedButton.icon(
-                  onPressed: controller.isLoading.value ? null : controller.updateProfile,
-                  icon: controller.isLoading.value
-                      ? const SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF003AE6)),
-                          ),
-                        )
-                      : Icon(Icons.edit_square, size: 16, color: AppTheme.primaryColor),
-                  label: Text(
-                    controller.isLoading.value ? 'Updating...' : 'Update', 
-                    style: TextStyle(
-                      color: AppTheme.primaryColor, 
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    )
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                  ),
-                )),
+                      onPressed: controller.isLoading.value ? null : controller.updateProfile,
+                      icon: controller.isLoading.value
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF003AE6)),
+                              ),
+                            )
+                          : const Icon(Icons.edit_square, size: 16, color: AppTheme.primaryColor),
+                      label: Text(
+                        controller.isLoading.value ? 'Updating...' : 'Update',
+                        style: const TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                    )),
               ),
             ),
           )
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Form(
           key: controller.formKey,
           child: Column(
@@ -117,12 +81,12 @@ class _EditProfileViewState extends State<EditProfileView> {
                 final selectedImage = controller.selectedImage.value;
                 final currentPhotoUrl = controller.user.photoProfile;
                 final photoUrl = AppConfig.getProfilePhotoUrl(currentPhotoUrl);
-                
+
                 return Center(
                   child: Stack(
                     children: [
                       Container(
-                        padding: EdgeInsets.all(2),
+                        padding: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(color: Colors.grey.shade200, width: 1),
@@ -132,15 +96,11 @@ class _EditProfileViewState extends State<EditProfileView> {
                           backgroundColor: Colors.grey.shade100,
                           backgroundImage: selectedImage != null
                               ? FileImage(selectedImage) as ImageProvider
-                              : (photoUrl != null
-                                  ? NetworkImage(photoUrl)
-                                  : null),
+                              : (photoUrl != null ? NetworkImage(photoUrl) : null),
                           child: (selectedImage == null && photoUrl == null)
                               ? const Icon(Icons.person, size: 40, color: Colors.grey)
                               : null,
-                          onBackgroundImageError: (photoUrl != null)
-                              ? (_, __) {}
-                              : null,
+                          onBackgroundImageError: (exception, stackTrace) {},
                         ),
                       ),
                       Positioned(
@@ -149,13 +109,13 @@ class _EditProfileViewState extends State<EditProfileView> {
                         child: GestureDetector(
                           onTap: controller.showImagePickerOptions,
                           child: Container(
-                            padding: EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: AppTheme.primaryColor,
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 3),
                             ),
-                            child: Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
                           ),
                         ),
                       ),
@@ -163,9 +123,9 @@ class _EditProfileViewState extends State<EditProfileView> {
                   ),
                 );
               }),
-              
-              SizedBox(height: 32),
-              
+
+              const SizedBox(height: 32),
+
               // Name Field
               _buildLabel('Username'),
               _buildTextField(
@@ -173,9 +133,9 @@ class _EditProfileViewState extends State<EditProfileView> {
                 hint: 'Enter username',
                 validator: (value) => value?.isEmpty == true ? 'Please enter username' : null,
               ),
-              
-              SizedBox(height: 16),
-              
+
+              const SizedBox(height: 16),
+
               // Email Field
               _buildLabel('Email'),
               _buildTextField(
@@ -184,9 +144,9 @@ class _EditProfileViewState extends State<EditProfileView> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) => !GetUtils.isEmail(value ?? '') ? 'Invalid email' : null,
               ),
-              
-              SizedBox(height: 16),
-              
+
+              const SizedBox(height: 16),
+
               // Phone Field
               _buildLabel('Phone'),
               _buildTextField(
@@ -210,9 +170,9 @@ class _EditProfileViewState extends State<EditProfileView> {
                   },
                 ),
               ),
-              
-              SizedBox(height: 16),
-              
+
+              const SizedBox(height: 16),
+
               // Create Password
               _buildLabel('Create Password (Optional)'),
               _buildTextField(
@@ -220,9 +180,9 @@ class _EditProfileViewState extends State<EditProfileView> {
                 isPassword: true,
                 hint: '•••••••',
               ),
-              
-              SizedBox(height: 16),
-              
+
+              const SizedBox(height: 16),
+
               // Confirm Password
               _buildLabel('Confirm Password'),
               _buildTextField(
@@ -236,15 +196,15 @@ class _EditProfileViewState extends State<EditProfileView> {
                   return null;
                 },
               ),
-              
-              SizedBox(height: 32),
+
+              const SizedBox(height: 32),
             ],
           ),
         ),
       ),
     );
   }
-  
+
   Widget _buildLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -276,7 +236,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -306,7 +266,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       decoration: InputDecoration(
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.grey.shade300),

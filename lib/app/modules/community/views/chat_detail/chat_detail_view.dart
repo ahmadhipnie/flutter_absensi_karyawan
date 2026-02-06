@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../controllers/chat_detail_controller.dart';
 import 'widgets/chat_app_bar.dart';
@@ -43,14 +44,56 @@ class ChatDetailView extends GetView<ChatDetailController> {
               },
             )),
           ),
-          ChatInputField(
+          Obx(() => ChatInputField(
             controller: controller.messageController,
             onSend: controller.sendMessage,
-            onCameraTap: () {
-              // TODO: Open camera
-            },
-          ),
+            selectedImage: controller.selectedImage.value,
+            onRemoveImage: controller.clearSelectedImage,
+            isUploadingImage: controller.isUploadingImage.value,
+            onCameraTap: () => _showImageSourceBottomSheet(context),
+          )),
         ],
+      ),
+    );
+  }
+
+  void _showImageSourceBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () {
+                Get.back();
+                controller.pickImage(source: ImageSource.gallery);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () {
+                Get.back();
+                controller.pickImage(source: ImageSource.camera);
+              },
+            ),
+            if (controller.selectedImage.value != null)
+              ListTile(
+                leading: const Icon(Icons.close, color: Colors.red),
+                title: const Text('Remove Image', style: TextStyle(color: Colors.red)),
+                onTap: () {
+                  Get.back();
+                  controller.clearSelectedImage();
+                },
+              ),
+          ],
+        ),
       ),
     );
   }

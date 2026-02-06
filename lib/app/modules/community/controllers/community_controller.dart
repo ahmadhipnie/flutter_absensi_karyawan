@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/services/chat_service.dart';
@@ -30,12 +29,6 @@ class CommunityController extends GetxController {
   // Conversation list from API
   final conversations = <ConversationModel>[].obs;
 
-  // Polling timer
-  Timer? _pollTimer;
-
-  // Polling interval (30 seconds)
-  static const Duration _pollInterval = Duration(seconds: 30);
-
   // Get current user ID
   String? get myUserId {
     final user = _authService?.currentUser;
@@ -46,39 +39,13 @@ class CommunityController extends GetxController {
   void onInit() {
     super.onInit();
     fetchConversations();
-    _startPolling();
   }
 
   @override
   void onClose() {
-    _stopPolling();
     searchController.dispose();
     scrollController.dispose();
     super.onClose();
-  }
-
-  /// Start smart polling
-  void _startPolling() {
-    _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(_pollInterval, (_) {
-      fetchConversations(silent: true);
-    });
-  }
-
-  /// Stop smart polling
-  void _stopPolling() {
-    _pollTimer?.cancel();
-    _pollTimer = null;
-  }
-
-  /// Pause polling (e.g., when user opens chat detail)
-  void pausePolling() {
-    _stopPolling();
-  }
-
-  /// Resume polling (e.g., when user back from chat detail)
-  void resumePolling() {
-    _startPolling();
   }
 
   /// Refresh conversations (manual refresh via pull-to-refresh or button)
@@ -185,10 +152,8 @@ class CommunityController extends GetxController {
     searchQuery.value = value;
   }
 
-  /// Open chat (pause polling while in chat detail)
+  /// Open chat
   void openChat(ConversationModel conversation) {
-    pausePolling(); // Stop polling saat buka chat
-
     // Get display name with current user context
     final displayName = myUserId != null
         ? conversation.displayNameWithId(myUserId!)
@@ -208,11 +173,6 @@ class CommunityController extends GetxController {
         'conversation': conversation,
       },
     );
-  }
-
-  /// Resume polling when back from chat detail
-  void onResume() {
-    resumePolling();
   }
 
   /// Create new chat

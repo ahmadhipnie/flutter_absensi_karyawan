@@ -1,9 +1,13 @@
-import 'package:dio/dio.dart';
+import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 import '../models/conversation_model.dart';
 import '../models/chat_message_model.dart';
 import '../models/user_model.dart';
 import '../providers/api_provider.dart';
+
+// Typedefs to avoid conflict with GetX
+typedef DioFormData = dio.FormData;
+typedef DioMultipartFile = dio.MultipartFile;
 
 class ChatService extends GetxService {
   late final ApiProvider _apiProvider;
@@ -38,7 +42,7 @@ class ChatService extends GetxService {
       }
 
       return null;
-    } on DioException catch (e) {
+    } on dio.DioException catch (e) {
       String errorMessage = 'Failed to create conversation';
 
       if (e.response != null) {
@@ -152,15 +156,22 @@ class ChatService extends GetxService {
 
   /// Send a message to a conversation
   /// POST /conversations/{conversationId}/messages
+  /// If imagePath is provided, sends as multipart/form-data (image upload)
   Future<ChatMessage?> sendMessage({
     required int conversationId,
     required String message,
     required String myUserId,
+    String? imagePath,
   }) async {
     try {
       final response = await _apiProvider.post(
         '/conversations/$conversationId/messages',
-        data: {'message_text': message},
+        data: imagePath != null
+            ? DioFormData.fromMap({
+                'message_text': message,
+                'image': await DioMultipartFile.fromFile(imagePath),
+              })
+            : {'message_text': message},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {

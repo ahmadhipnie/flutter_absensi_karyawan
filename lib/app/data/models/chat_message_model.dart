@@ -6,6 +6,8 @@ class ChatMessage {
   final String? senderAvatar;
   final DateTime timestamp;
   final bool isMe;
+  final String? image; // Image filename
+  final String messageType; // 'text' or 'image'
 
   ChatMessage({
     required this.id,
@@ -15,7 +17,18 @@ class ChatMessage {
     this.senderAvatar,
     required this.timestamp,
     required this.isMe,
+    this.image,
+    this.messageType = 'text',
   });
+
+  /// Get full image URL
+  String? get imageUrl {
+    if (image == null || image!.isEmpty) return null;
+    return 'https://api-absensi.hftech.web.id/api/assets/message_images/$image';
+  }
+
+  /// Check if message has image
+  bool get hasImage => image != null && image!.isNotEmpty;
 
   /// Create from API JSON
   factory ChatMessage.fromJson(Map<String, dynamic> json, {String? myUserId}) {
@@ -33,6 +46,8 @@ class ChatMessage {
           ? DateTime.parse(json['created_at'] as String)
           : DateTime.now(),
       isMe: isMe,
+      image: json['image'] as String?,
+      messageType: json['message_type'] as String? ?? 'text',
     );
   }
 
@@ -42,6 +57,8 @@ class ChatMessage {
     required String myUserId,
     required String myName,
     String? myAvatar,
+    String? image,
+    String messageType = 'text',
   }) {
     return ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -51,6 +68,8 @@ class ChatMessage {
       senderAvatar: myAvatar,
       timestamp: DateTime.now(),
       isMe: true,
+      image: image,
+      messageType: messageType,
     );
   }
 
@@ -63,6 +82,27 @@ class ChatMessage {
       'sender_avatar': senderAvatar,
       'timestamp': timestamp.toIso8601String(),
       'is_me': isMe,
+      'image': image,
+      'message_type': messageType,
     };
+  }
+
+  /// Create an image message placeholder (while uploading)
+  factory ChatMessage.placeholderImage({
+    required String text,
+    required String myUserId,
+    required String myName,
+    required String localImagePath,
+  }) {
+    return ChatMessage(
+      id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
+      text: text,
+      senderId: myUserId,
+      senderName: myName,
+      timestamp: DateTime.now(),
+      isMe: true,
+      image: localImagePath, // Temporary local path
+      messageType: 'image',
+    );
   }
 }

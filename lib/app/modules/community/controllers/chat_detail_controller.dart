@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../data/models/chat_message_model.dart';
 import '../../../data/services/chat_service.dart';
 import '../../../data/services/auth_service.dart';
@@ -29,6 +32,11 @@ class ChatDetailController extends GetxController {
   final messages = <ChatMessage>[].obs;
   final isLoading = false.obs;
   final isSending = false.obs;
+
+  // Image picker
+  final ImagePicker _imagePicker = ImagePicker();
+  final selectedImage = Rx<File?>(null);
+  final isUploadingImage = false.obs;
 
   // Get current user ID
   String? get myUserId {
@@ -87,15 +95,35 @@ class ChatDetailController extends GetxController {
     _scrollToBottom();
   }
 
+  /// Pick image from gallery/camera
+  Future<void> pickImage({ImageSource source = ImageSource.gallery}) async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(source: source);
+      if (image != null) {
+        selectedImage.value = File(image.path);
+      }
+    } catch (e) {
+      print('Error picking image: $e');
+    }
+  }
+
+  /// Clear selected image
+  void clearSelectedImage() {
+    selectedImage.value = null;
+  }
+
   /// Send message via API
   Future<void> sendMessage() async {
     final text = messageController.text.trim();
-    if (text.isEmpty || myUserId == null) return;
+    final hasImage = selectedImage.value != null;
 
-    // Clear input first
+    if (text.isEmpty && !hasImage) return;
+    if (myUserId == null) return;
+
+    // Clear input
     messageController.clear();
 
-    // Optimistically add message to UI
+    // Create temp message for UI
     final tempMessage = ChatMessage(
       id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
       text: text,
@@ -103,7 +131,12 @@ class ChatDetailController extends GetxController {
       senderName: myUserName,
       timestamp: DateTime.now(),
       isMe: true,
+      image: hasImage ? selectedImage.value!.path : null, // Show local image while uploading
+      messageType: hasImage ? 'image' : 'text',
     );
+
+    // Keep local image path for replacement later
+    final localImagePath = hasImage ? selectedImage.value!.path : null;
 
     messages.add(tempMessage);
     _scrollToBottom();
@@ -111,6 +144,10 @@ class ChatDetailController extends GetxController {
     // Send to API
     try {
       isSending.value = true;
+      if (hasImage) {
+        isUploadingImage.value = true;
+      }
+
       final conversationId = int.tryParse(chatId);
       if (conversationId == null) return;
 
@@ -118,7 +155,14 @@ class ChatDetailController extends GetxController {
         conversationId: conversationId,
         message: text,
         myUserId: myUserId!,
+        imagePath: localImagePath,
       );
+
+      // Clear selected image after sending
+      if (hasImage) {
+        selectedImage.value = null;
+        isUploadingImage.value = false;
+      }
 
       if (sentMessage != null) {
         // Remove temp message and add the real one
@@ -136,6 +180,7 @@ class ChatDetailController extends GetxController {
       Get.snackbar('Error', 'Failed to send message');
     } finally {
       isSending.value = false;
+      isUploadingImage.value = false;
     }
   }
 

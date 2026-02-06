@@ -29,19 +29,24 @@ class TaskController extends GetxController {
   // Observable list of tasks
   final RxList<data_model.TaskModel> tasks = <data_model.TaskModel>[].obs;
 
-  // Filter options (for now using simple status filters)
-  final List<String> filters = [
-    'All',
-    'Pending',
-    'In Progress',
-    'Completed',
-  ];
+  // Filter options - different for supervisor and member
+  List<String> get filters {
+    if (isSupervisor) {
+      // Supervisor sees department filters
+      return ['All', 'Engineering', 'Marketing', 'Sales', 'HR'];
+    } else {
+      // Member sees status filters
+      return ['All', 'Pending', 'In Progress', 'Completed'];
+    }
+  }
 
   @override
   void onInit() {
     super.onInit();
     if (userRole.value == 'member') {
       fetchMyAssignedTasks();
+    } else if (userRole.value == 'supervisor') {
+      fetchAllTasks();
     }
   }
 
@@ -52,6 +57,29 @@ class TaskController extends GetxController {
       errorMessage.value = null;
 
       final response = await _taskService.getMyAssignedTasks();
+
+      if (response != null && response.success) {
+        tasks.value = response.data;
+      }
+    } catch (e) {
+      errorMessage.value = e.toString();
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.TOP,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+  
+  /// Fetch all tasks from API (for supervisor role)
+  Future<void> fetchAllTasks() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = null;
+
+      final response = await _taskService.getAllTasks();
 
       if (response != null && response.success) {
         tasks.value = response.data;
@@ -93,9 +121,19 @@ class TaskController extends GetxController {
       return tasks;
     }
 
-    return tasks.where((task) {
-      return task.status.toLowerCase() == selectedFilter.value.toLowerCase();
-    }).toList();
+    if (isSupervisor) {
+      // Filter by department for supervisor
+      return tasks.where((task) {
+        // Assuming task has a department field, adjust based on actual model
+        // For now, filter by location as department proxy
+        return task.location.toLowerCase() == selectedFilter.value.toLowerCase();
+      }).toList();
+    } else {
+      // Filter by status for member
+      return tasks.where((task) {
+        return task.status.toLowerCase() == selectedFilter.value.toLowerCase();
+      }).toList();
+    }
   }
 
   /// Parse month key string to DateTime for sorting
@@ -166,9 +204,13 @@ class TaskController extends GetxController {
   /// Navigate to task detail based on user role
   /// Supervisor/Admin -> TaskDetailView (with tabs)
   /// Member -> UserTaskDetailView (with status, upload, submit button)
-  void openTaskDetail(data_model.TaskModel task) {
+  void openTaskDetail(data_model.TaskModel task) async {
     if (userRole.value == 'supervisor') {
-      Get.toNamed('/task-detail', arguments: task);
+      final result = await Get.toNamed('/task-detail', arguments: {'taskId': task.id});
+      // Refresh after edit if result is true
+      if (result == true) {
+        await refresh();
+      }
     } else {
       Get.toNamed('/user-task-detail', arguments: task);
     }
@@ -179,6 +221,8 @@ class TaskController extends GetxController {
   Future<void> refresh() async {
     if (userRole.value == 'member') {
       await fetchMyAssignedTasks();
+    } else if (userRole.value == 'supervisor') {
+      await fetchAllTasks();
     }
   }
 }

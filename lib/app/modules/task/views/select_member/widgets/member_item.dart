@@ -8,6 +8,7 @@ class MemberItem extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final bool showDivider;
+  final bool isAllOption;
 
   const MemberItem({
     super.key,
@@ -15,12 +16,15 @@ class MemberItem extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     required this.showDivider,
+    this.isAllOption = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final avatarColor = member['avatarColor'] as int;
-    final isAllMember = member['id'] == 'all';
+    final memberId = member['id'];
+    final displayName = member['displayName'] as String? ?? member['name'] as String?;
+    final email = member['email'] as String?;
+    final avatarUrl = member['avatarUrl'] as String?;
 
     return Column(
       children: [
@@ -32,19 +36,32 @@ class MemberItem extends StatelessWidget {
             highlightColor: AppTheme.primaryColor.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(8),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               child: Row(
                 children: [
-                  _buildAvatar(isAllMember, avatarColor),
+                  _buildAvatar(displayName, avatarUrl),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
-                      member['name'] as String,
-                      style: const TextStyle(
-                        color: AppTheme.gray900,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName ?? 'Unknown',
+                          style: const TextStyle(
+                            color: AppTheme.gray900,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (email != null && email.isNotEmpty)
+                          Text(
+                            email,
+                            style: const TextStyle(
+                              color: AppTheme.gray600,
+                              fontSize: 12,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   AppCheckbox(isSelected: isSelected),
@@ -58,26 +75,33 @@ class MemberItem extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(bool isAllMember, int avatarColor) {
-    if (isAllMember) {
+  Widget _buildAvatar(String? name, String? avatarUrl) {
+    if (isAllOption) {
       return Container(
         width: 48,
         height: 48,
-        decoration: BoxDecoration(
-          color: Color(avatarColor),
+        decoration: const BoxDecoration(
+          color: AppTheme.primaryColor,
           shape: BoxShape.circle,
         ),
         child: const Icon(
-          Icons.person_add,
+          Icons.group,
           color: Colors.white,
           size: 24,
         ),
       );
     }
+    
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 24,
+        backgroundImage: NetworkImage(avatarUrl),
+      );
+    }
+    
     return UserAvatar(
-      name: member['name'] as String,
+      name: name ?? 'U',
       size: 48,
-      backgroundColor: avatarColor,
     );
   }
 }

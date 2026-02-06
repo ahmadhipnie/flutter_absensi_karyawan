@@ -1,21 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../data/models/task_model.dart';
+import '../../../data/services/task_service.dart';
 
 class TaskDetailController extends GetxController
     with GetSingleTickerProviderStateMixin {
   late TabController tabController;
 
   final selectedTabIndex = 0.obs;
+  final isLoading = true.obs;
+  final Rxn<TaskModel> task = Rxn<TaskModel>();
 
-  // Sample task data
-  final taskTitle = 'Update Daily Work Progress for Project 1'.obs;
-  final postedOn = DateTime(2026, 2, 17).obs;
-  final dueDate = DateTime(2026, 2, 17).obs;
-  final description =
-      '''Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet'''
-          .obs;
-  final customerName = 'Alexandria Maria'.obs;
-  final location = 'Orchard 1, Batam'.obs;
+  late final TaskService _taskService;
+
+  // Task data from API
+  final taskTitle = ''.obs;
+  final postedOn = Rxn<DateTime>();
+  final dueDate = Rxn<DateTime>();
+  final description = ''.obs;
+  final customerName = ''.obs;
+  final location = ''.obs;
+  final creatorName = ''.obs;
+  final creatorEmail = ''.obs;
+
+  // Task ID passed as argument
+  int? get taskId => Get.arguments?['taskId'] as int?;
 
   // Employee work statistics
   final approvedCount = 10.obs;
@@ -76,10 +85,54 @@ class TaskDetailController extends GetxController
   @override
   void onInit() {
     super.onInit();
+    _taskService = Get.find<TaskService>();
+    
     tabController = TabController(length: 2, vsync: this);
     tabController.addListener(() {
       selectedTabIndex.value = tabController.index;
     });
+
+    // Load task detail
+    if (taskId != null) {
+      loadTaskDetail();
+    }
+  }
+
+  /// Load task detail from API
+  Future<void> loadTaskDetail() async {
+    try {
+      isLoading.value = true;
+      
+      final taskData = await _taskService.getTaskById(taskId!);
+      
+      if (taskData != null) {
+        task.value = taskData;
+        
+        // Populate observable fields
+        taskTitle.value = taskData.taskSubject;
+        postedOn.value = taskData.createdAt;
+        dueDate.value = taskData.dueDate;
+        description.value = taskData.taskDescription;
+        customerName.value = taskData.customerName ?? '';
+        location.value = taskData.location;
+        creatorName.value = taskData.creatorName ?? '';
+        creatorEmail.value = taskData.creatorEmail ?? '';
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to load task detail',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   @override
@@ -108,25 +161,29 @@ class TaskDetailController extends GetxController
   }
 
   /// Edit task
-  void editTask() {
-    // Prepare task data for editing
-    final taskData = {
-      'subject': taskTitle.value,
-      'dueDate': dueDate.value.toIso8601String(),
-      'description': description.value,
-      'customerName': customerName.value,
-      'location': location.value,
-      'assignedMembers': 'All Member', // or get from assigned list
-    };
+  void editTask() async {
+    if (task.value == null) {
+      Get.snackbar(
+        'Error',
+        'Task data not loaded',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
 
-    // Navigate to edit task with data
-    Get.toNamed(
+    // Navigate to edit task with task object
+    final result = await Get.toNamed(
       '/edit-task',
       arguments: {
-        'taskId': '1', // Use actual task ID
-        'taskData': taskData,
+        'taskId': taskId,
+        'task': task.value,
       },
     );
+
+    // Reload task detail if edit was successful
+    if (result == true && taskId != null) {
+      await loadTaskDetail();
+    }
   }
 }
 

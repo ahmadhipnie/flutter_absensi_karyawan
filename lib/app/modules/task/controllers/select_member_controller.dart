@@ -1,87 +1,93 @@
 import 'package:get/get.dart';
+import '../../../data/services/chat_service.dart';
+import '../../../data/models/user_model.dart';
 
 class SelectMemberController extends GetxController {
-  final RxSet<String> selectedMembers = <String>{}.obs;
+  final ChatService _chatService = Get.find<ChatService>();
+  
+  final RxSet<int> selectedMembers = <int>{}.obs; // Store user IDs
   final RxBool allMembersSelected = false.obs;
+  final isLoading = false.obs;
+  final members = <UserModel>[].obs;
 
-  final List<Map<String, dynamic>> members = [
-    {
-      'id': 'all',
-      'name': 'All Member',
-      'avatarColor': 0xFF0046BE,
-      'avatarText': 'AM',
-    },
-    {
-      'id': '1',
-      'name': 'John Doe',
-      'avatarColor': 0xFF4CAF50,
-      'avatarText': 'JD',
-    },
-    {
-      'id': '2',
-      'name': 'Jane Smith',
-      'avatarColor': 0xFF2196F3,
-      'avatarText': 'JS',
-    },
-    {
-      'id': '3',
-      'name': 'Mike Johnson',
-      'avatarColor': 0xFFFF9800,
-      'avatarText': 'MJ',
-    },
-    {
-      'id': '4',
-      'name': 'Sarah Williams',
-      'avatarColor': 0xFF9C27B0,
-      'avatarText': 'SW',
-    },
-    {
-      'id': '5',
-      'name': 'David Brown',
-      'avatarColor': 0xFFF44336,
-      'avatarText': 'DB',
-    },
-  ];
+  @override
+  void onInit() {
+    super.onInit();
+    fetchMembers();
+  }
 
-  void toggleMember(String id) {
-    if (id == 'all') {
-      if (allMembersSelected.value) {
-        selectedMembers.clear();
-        allMembersSelected.value = false;
-      } else {
-        for (var member in members) {
-          if (member['id'] != 'all') {
-            selectedMembers.add(member['id'] as String);
-          }
-        }
-        allMembersSelected.value = true;
-      }
-    } else {
-      if (selectedMembers.contains(id)) {
-        selectedMembers.remove(id);
-      } else {
-        selectedMembers.add(id);
-      }
-      allMembersSelected.value = selectedMembers.length == members.length - 1;
+  /// Fetch members from API
+  Future<void> fetchMembers() async {
+    try {
+      isLoading.value = true;
+      final result = await _chatService.getUsers();
+      
+      // Filter only members (not supervisors) if needed
+      // Or show all users
+      members.assignAll(result);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to load members');
+    } finally {
+      isLoading.value = false;
     }
   }
 
-  bool isSelected(String id) {
-    if (id == 'all') {
-      return allMembersSelected.value;
+  void toggleMember(int userId) {
+    if (selectedMembers.contains(userId)) {
+      selectedMembers.remove(userId);
+    } else {
+      selectedMembers.add(userId);
     }
-    return selectedMembers.contains(id);
+    
+    // Check if all members selected
+    allMembersSelected.value = selectedMembers.length == members.length;
+    
+    // Force refresh
+    selectedMembers.refresh();
+  }
+  
+  void toggleAllMembers() {
+    if (allMembersSelected.value) {
+      selectedMembers.clear();
+      allMembersSelected.value = false;
+    } else {
+      selectedMembers.clear();
+      for (var member in members) {
+        selectedMembers.add(member.id);
+      }
+      allMembersSelected.value = true;
+    }
+    selectedMembers.refresh();
+  }
+
+  bool isSelected(int userId) {
+    return selectedMembers.contains(userId);
   }
 
   void confirmSelection() {
-    if (allMembersSelected.value) {
-      Get.back(result: 'All Member');
-    } else {
-      final names = members
-          .where((m) => selectedMembers.contains(m['id']))
-          .map((m) => m['name'] as String)
-          .join(', ');
-      Get.back(result: names.isEmpty ? 'All Member' : names);
+    if (selectedMembers.isEmpty) {
+      Get.snackbar('Error', 'Please select at least one member');
+      return;
     }
+    
+    // Get display names
+    final selectedUsers = members
+        .where((m) => selectedMembers.contains(m.id))
+        .toList();
+    
+    String displayText;
+    if (allMembersSelected.value || selectedUsers.length == members.length) {
+      displayText = 'All Members (${members.length})';
+    } else {
+      displayText = selectedUsers.map((u) => u.displayName).take(3).join(', ');
+      if (selectedUsers.length > 3) {
+        displayText += ' +${selectedUsers.length - 3}';
+      }
+    }
+    
+    Get.back(result: {
+      'displayText': displayText,
+      'memberIds': selectedMembers.toList(),
+    });
   }
 }

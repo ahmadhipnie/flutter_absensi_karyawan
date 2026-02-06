@@ -30,7 +30,13 @@ class TaskView extends GetView<TaskController> {
       floatingActionButton: controller.isSupervisor
           ? AppFAB(
               heroTag: 'task_fab',
-              onPressed: () => Get.toNamed('/add-task'),
+              onPressed: () async {
+                final result = await Get.toNamed('/add-task');
+                // Refresh tasks if task was created successfully
+                if (result == true) {
+                  controller.refresh();
+                }
+              },
             )
           : null,
     ));

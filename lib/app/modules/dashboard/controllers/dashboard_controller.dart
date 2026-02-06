@@ -123,12 +123,15 @@ class DashboardController extends GetxController {
           _taskModelMap.clear();
 
           for (final task in incompleteTasks) {
+            // Skip tasks without taskId (shouldn't happen for my-assigned endpoint)
+            if (task.taskId == null) continue;
+            
             dashboardItems.add(DashboardTaskItem(
               id: task.taskId.toString(),
               title: task.taskSubject,
               dueDate: task.dueDate,
             ));
-            _taskModelMap[task.taskId] = task;
+            _taskModelMap[task.taskId!] = task;
           }
 
           ongoingTasks.value = dashboardItems;

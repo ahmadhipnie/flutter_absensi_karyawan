@@ -113,11 +113,39 @@ class AttendanceCard extends GetView<DashboardController> {
               ),
               const SizedBox(height: 4),
               Obx(
-                () => Text(
-                  controller.workLocation.value,
-                  style: const TextStyle(
-                    color: Color(0xFF757575),
-                    fontSize: 12,
+                () => GestureDetector(
+                  onTap: controller.isLoadingLocation.value
+                      ? null
+                      : controller.refreshLocation,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          controller.displayLocation,
+                          style: const TextStyle(
+                            color: Color(0xFF757575),
+                            fontSize: 12,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (controller.isLoadingLocation.value)
+                        const SizedBox(
+                          width: 12,
+                          height: 12,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppTheme.primaryColor,
+                          ),
+                        )
+                      else
+                        const Icon(
+                          Icons.refresh,
+                          color: AppTheme.primaryColor,
+                          size: 16,
+                        ),
+                    ],
                   ),
                 ),
               ),

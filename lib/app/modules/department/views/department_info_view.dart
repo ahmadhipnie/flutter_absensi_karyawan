@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/department_controller.dart';
+import '../../../core/config/app_config.dart';
 
 class DepartmentInfoView extends GetView<DepartmentController> {
   const DepartmentInfoView({Key? key}) : super(key: key);
@@ -67,6 +68,7 @@ class DepartmentInfoView extends GetView<DepartmentController> {
       ),
       body: Obx(() {
         final dept = controller.department.value;
+        final photoUrl = AppConfig.getDepartmentPhotoUrl(dept?.photo);
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -82,8 +84,8 @@ class DepartmentInfoView extends GetView<DepartmentController> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         image: DecorationImage(
-                          image: dept != null && dept.photo != null && dept.photo!.isNotEmpty
-                              ? NetworkImage(dept.photo!) as ImageProvider
+                          image: photoUrl != null
+                              ? NetworkImage(photoUrl) as ImageProvider
                               : const AssetImage('assets/bg-login.png'),
                           fit: BoxFit.cover,
                         ),

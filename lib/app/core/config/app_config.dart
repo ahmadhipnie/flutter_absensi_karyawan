@@ -20,4 +20,16 @@ class AppConfig {
     }
     return url;
   }
+
+  static String? getDepartmentPhotoUrl(String? filename) {
+    if (filename == null || filename.isEmpty) return null;
+    if (filename.startsWith('http')) return filename;
+    return 'https://api-absensi.hftech.web.id/api/assets/departments_photo/$filename';
+  }
+
+  static String? getProfilePhotoUrl(String? filename) {
+    if (filename == null || filename.isEmpty) return null;
+    if (filename.startsWith('http')) return filename;
+    return 'https://api-absensi.hftech.web.id/api/assets/photo_profile/$filename';
+  }
 }

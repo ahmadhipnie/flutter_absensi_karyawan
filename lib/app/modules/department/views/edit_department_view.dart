@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/department_controller.dart';
+import '../../../core/config/app_config.dart';
 
 class EditDepartmentView extends GetView<DepartmentController> {
   const EditDepartmentView({Key? key}) : super(key: key);
@@ -69,6 +70,7 @@ class EditDepartmentView extends GetView<DepartmentController> {
                     Obx(() {
                       final selectedImg = controller.selectedImage.value;
                       final dept = controller.department.value;
+                      final photoUrl = AppConfig.getDepartmentPhotoUrl(dept?.photo);
 
                       return Container(
                         width: 100,
@@ -78,8 +80,8 @@ class EditDepartmentView extends GetView<DepartmentController> {
                           image: DecorationImage(
                             image: selectedImg != null
                                 ? FileImage(selectedImg) as ImageProvider
-                                : (dept != null && dept.photo != null && dept.photo!.isNotEmpty
-                                    ? NetworkImage(dept.photo!) as ImageProvider
+                                : (photoUrl != null
+                                    ? NetworkImage(photoUrl) as ImageProvider
                                     : const AssetImage('assets/bg-login.png')),
                             fit: BoxFit.cover,
                           ),

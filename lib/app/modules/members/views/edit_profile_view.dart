@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/edit_profile_controller.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/config/app_config.dart';
 
 class EditProfileView extends GetView<EditProfileController> {
   const EditProfileView({super.key});
@@ -79,6 +80,7 @@ class EditProfileView extends GetView<EditProfileController> {
               Obx(() {
                 final selectedImage = controller.selectedImage.value;
                 final currentPhotoUrl = controller.user.photoProfile;
+                final photoUrl = AppConfig.getProfilePhotoUrl(currentPhotoUrl);
                 
                 return Center(
                   child: Stack(
@@ -94,14 +96,13 @@ class EditProfileView extends GetView<EditProfileController> {
                           backgroundColor: Colors.grey.shade100,
                           backgroundImage: selectedImage != null
                               ? FileImage(selectedImage) as ImageProvider
-                              : (currentPhotoUrl != null && currentPhotoUrl.isNotEmpty
-                                  ? NetworkImage(currentPhotoUrl)
+                              : (photoUrl != null
+                                  ? NetworkImage(photoUrl)
                                   : null),
-                          child: (selectedImage == null && 
-                                 (currentPhotoUrl == null || currentPhotoUrl.isEmpty))
+                          child: (selectedImage == null && photoUrl == null)
                               ? const Icon(Icons.person, size: 40, color: Colors.grey)
                               : null,
-                          onBackgroundImageError: (currentPhotoUrl != null && currentPhotoUrl.isNotEmpty)
+                          onBackgroundImageError: (photoUrl != null)
                               ? (_, __) {}
                               : null,
                         ),

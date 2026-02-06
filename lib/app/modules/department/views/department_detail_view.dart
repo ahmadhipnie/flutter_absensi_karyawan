@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/department_controller.dart';
 import '../../../routes/app_pages.dart';
+import '../../../core/config/app_config.dart';
 
 class DepartmentDetailView extends GetView<DepartmentController> {
   const DepartmentDetailView({Key? key}) : super(key: key);
@@ -41,6 +42,8 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                 top: 25,
                 child: Obx(() {
                   final dept = controller.department.value;
+                  final photoUrl = AppConfig.getDepartmentPhotoUrl(dept?.photo);
+
                   return Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
@@ -69,8 +72,8 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             image: DecorationImage(
-                              image: dept != null && dept.photo != null && dept.photo!.isNotEmpty
-                                  ? NetworkImage(dept.photo!) as ImageProvider
+                              image: photoUrl != null
+                                  ? NetworkImage(photoUrl) as ImageProvider
                                   : const AssetImage('assets/bg-login.png'),
                               fit: BoxFit.cover,
                             ),

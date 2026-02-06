@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/task_service.dart';
 import '../../../data/services/department_service.dart';
+import '../../../data/services/location_service.dart';
 import '../../../data/models/department_model.dart';
 import '../../../data/models/task_item.dart';
 import '../../../data/models/task_model.dart' as data_model;
@@ -44,9 +45,12 @@ class DashboardController extends GetxController {
   final workStatus = 'Working'.obs;
   final workStartTime = '08:00 AM'.obs;
   final workEndTime = '05:00 PM'.obs;
-  final workLocation =
-      'Jl. Orchard Boulevard, Belian, Kec. Batam Kota, Kota Batam, Kepulauan Riau 29464'
-          .obs;
+
+  // Location
+  final LocationService _locationService = LocationService();
+  final currentLocation = Rxn<LocationData>();
+  final isLoadingLocation = false.obs;
+  final locationError = ''.obs;
 
   // Department list for supervisor
   final departments = <DepartmentModel>[].obs;
@@ -74,12 +78,93 @@ class DashboardController extends GetxController {
     _lastBackPressedTime = null;
     _loadUserData();
     _loadOngoingTasks();
+    _loadCurrentLocation();
   }
 
   @override
   void onClose() {
     searchController.dispose();
     super.onClose();
+  }
+
+  /// Load current location with address
+  Future<void> _loadCurrentLocation() async {
+    try {
+      isLoadingLocation.value = true;
+      locationError.value = '';
+
+      // Check and request permission first (this will show the prompt)
+      final permissionStatus = await _locationService.checkAndRequestPermission();
+
+      switch (permissionStatus) {
+        case LocationPermissionStatus.granted:
+          // Permission granted, get location
+          final locationData = await _locationService.getLocationWithAddress();
+          if (locationData != null) {
+            currentLocation.value = locationData;
+          } else {
+            locationError.value = 'Unable to get location';
+          }
+          break;
+        case LocationPermissionStatus.denied:
+          locationError.value = 'Location permission denied';
+          break;
+        case LocationPermissionStatus.permanentlyDenied:
+          locationError.value = 'Location permission permanently denied';
+          break;
+        case LocationPermissionStatus.serviceDisabled:
+          locationError.value = 'Location services disabled';
+          break;
+      }
+    } catch (e) {
+      locationError.value = 'Location error: ${e.toString()}';
+    } finally {
+      isLoadingLocation.value = false;
+    }
+  }
+
+  /// Refresh location (can be called from UI)
+  Future<void> refreshLocation() async {
+    await _loadCurrentLocation();
+  }
+
+  /// Get formatted location for display
+  String get displayLocation {
+    if (isLoadingLocation.value) {
+      return 'Getting location...';
+    }
+    if (currentLocation.value != null) {
+      return currentLocation.value!.shortAddress;
+    }
+    if (locationError.value.isNotEmpty) {
+      return 'Tap to enable location';
+    }
+    return 'Getting location...';
+  }
+
+  /// Show location permission dialog
+  void showLocationPermissionDialog() {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Location Permission Required'),
+        content: const Text(
+          'Please enable location permission to get your current address.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Get.back();
+              _locationService.openAppSettings();
+            },
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _loadUserData() {

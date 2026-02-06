@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../data/models/user_model.dart';
 import '../../controllers/members_controller.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/config/app_config.dart';
 
 class MemberListItem extends StatelessWidget {
   final UserModel user;
@@ -14,6 +15,8 @@ class MemberListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final photoUrl = AppConfig.getProfilePhotoUrl(user.photoProfile);
+
     return InkWell(
       onTap: () {
         Get.find<MembersController>().goToMemberDetail(user);
@@ -26,17 +29,17 @@ class MemberListItem extends StatelessWidget {
             CircleAvatar(
               radius: 28,
               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-              backgroundImage: user.photoProfile != null && user.photoProfile!.isNotEmpty
-                  ? NetworkImage(user.photoProfile!)
+              backgroundImage: photoUrl != null
+                  ? NetworkImage(photoUrl)
                   : null,
-              child: user.photoProfile == null || user.photoProfile!.isEmpty
+              child: photoUrl == null
                   ? Icon(
                       Icons.person,
                       color: AppTheme.primaryColor,
                       size: 28,
                     )
                   : null,
-              onBackgroundImageError: user.photoProfile != null
+              onBackgroundImageError: photoUrl != null
                   ? (exception, stackTrace) {}
                   : null,
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/config/app_config.dart';
 
 class ProfileAvatarSection extends StatelessWidget {
   const ProfileAvatarSection({
@@ -13,7 +14,8 @@ class ProfileAvatarSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasValidUrl = avatarUrl != null && avatarUrl!.isNotEmpty;
+    final photoUrl = AppConfig.getProfilePhotoUrl(avatarUrl);
+    
     return Center(
       child: Stack(
         children: [
@@ -26,11 +28,11 @@ class ProfileAvatarSection extends StatelessWidget {
             child: CircleAvatar(
               radius: 50,
               backgroundColor: Colors.grey.shade100,
-              backgroundImage: hasValidUrl ? NetworkImage(avatarUrl!) : null,
-              child: !hasValidUrl
+              backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+              child: photoUrl == null
                   ? const Icon(Icons.person, size: 40, color: Colors.grey)
                   : null,
-              onBackgroundImageError: hasValidUrl
+              onBackgroundImageError: photoUrl != null
                   ? (_, __) {}
                   : null,
             ),

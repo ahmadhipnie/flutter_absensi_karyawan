@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../data/models/user_model.dart';
+import '../../../../core/config/app_config.dart';
 
 class MemberProfileHeader extends StatelessWidget {
   const MemberProfileHeader({required this.user, super.key});
@@ -8,18 +9,19 @@ class MemberProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasValidUrl = user.photoProfile != null && user.photoProfile!.isNotEmpty;
+    final photoUrl = AppConfig.getProfilePhotoUrl(user.photoProfile);
+    
     return Center(
       child: Column(
         children: [
           CircleAvatar(
             radius: 40,
             backgroundColor: Colors.grey.shade100,
-            backgroundImage: hasValidUrl ? NetworkImage(user.photoProfile!) : null,
-            child: !hasValidUrl
+            backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+            child: photoUrl == null
                 ? const Icon(Icons.person, size: 40, color: Colors.grey)
                 : null,
-            onBackgroundImageError: hasValidUrl ? (_, __) {} : null,
+            onBackgroundImageError: photoUrl != null ? (_, __) {} : null,
           ),
           const SizedBox(height: 16),
           Text(

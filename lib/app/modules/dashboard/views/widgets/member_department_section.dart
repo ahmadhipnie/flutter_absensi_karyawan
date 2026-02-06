@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/dashboard_controller.dart';
 import '../../../../common/widgets/department_avatar.dart';
+import '../../../../core/config/app_config.dart';
 
 class MemberDepartmentSection extends GetView<DashboardController> {
   const MemberDepartmentSection({super.key});
@@ -54,7 +55,7 @@ class MemberDepartmentSection extends GetView<DashboardController> {
             child: Row(
               children: [
                 DepartmentAvatar(
-                  imageUrl: department.photo,
+                  imageUrl: AppConfig.getDepartmentPhotoUrl(department.photo),
                   departmentName: department.name,
                   size: 56,
                   backgroundColor: const Color(0xFF003AE6).withOpacity(0.1),

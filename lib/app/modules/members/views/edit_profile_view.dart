@@ -1,46 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../data/models/user_model.dart';
+import '../controllers/edit_profile_controller.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/config/app_config.dart';
 
-class EditProfileView extends StatefulWidget {
+class EditProfileView extends GetView<EditProfileController> {
   const EditProfileView({super.key});
-
-  @override
-  State<EditProfileView> createState() => _EditProfileViewState();
-}
-
-class _EditProfileViewState extends State<EditProfileView> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _emailController;
-  late TextEditingController _phoneController;
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  
-  late String _selectedRole;
-  
-  final List<String> _roles = ['member', 'supervisor'];
-
-  @override
-  void initState() {
-    super.initState();
-    final UserModel user = Get.arguments as UserModel;
-    _nameController = TextEditingController(text: user.username ?? '');
-    _emailController = TextEditingController(text: user.email);
-    _phoneController = TextEditingController(text: user.phone ?? '');
-    _selectedRole = user.role;
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _phoneController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,10 +17,10 @@ class _EditProfileViewState extends State<EditProfileView> {
         centerTitle: false,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
           onPressed: () => Get.back(),
         ),
-        title: Text(
+        title: const Text(
           'Edit Profile',
           style: TextStyle(
             color: Colors.black,
@@ -69,102 +34,123 @@ class _EditProfileViewState extends State<EditProfileView> {
             child: Center(
               child: SizedBox(
                 height: 36,
-                child: ElevatedButton.icon(
-                  onPressed: _handleUpdate,
-                  icon: Icon(Icons.edit_square, size: 16, color: AppTheme.primaryColor),
-                  label: Text(
-                    'Update', 
-                    style: TextStyle(
-                      color: AppTheme.primaryColor, 
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    )
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
-                    elevation: 0,
-                    shadowColor: Colors.transparent,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                  ),
-                ),
+                child: Obx(() => ElevatedButton.icon(
+                      onPressed: controller.isLoading.value ? null : controller.updateProfile,
+                      icon: controller.isLoading.value
+                          ? const SizedBox(
+                              width: 14,
+                              height: 14,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF003AE6)),
+                              ),
+                            )
+                          : const Icon(Icons.edit_square, size: 16, color: AppTheme.primaryColor),
+                      label: Text(
+                        controller.isLoading.value ? 'Updating...' : 'Update',
+                        style: const TextStyle(
+                          color: AppTheme.primaryColor,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                    )),
               ),
             ),
           )
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Form(
-          key: _formKey,
+          key: controller.formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar Section
-              Center(
-                child: Stack(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.grey.shade200, width: 1),
-                      ),
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey.shade100,
-                        // Placeholder image logic
-                        backgroundImage: NetworkImage('https://i.pravatar.cc/300?img=5'),
-                        onBackgroundImageError: (_, __) {},
-                        child: null, 
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: EdgeInsets.all(8),
+              // Avatar Section with Image Picker
+              Obx(() {
+                final selectedImage = controller.selectedImage.value;
+                final currentPhotoUrl = controller.user.photoProfile;
+                final photoUrl = AppConfig.getProfilePhotoUrl(currentPhotoUrl);
+
+                return Center(
+                  child: Stack(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(2),
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
+                          border: Border.all(color: Colors.grey.shade200, width: 1),
                         ),
-                        child: Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey.shade100,
+                          backgroundImage: selectedImage != null
+                              ? FileImage(selectedImage) as ImageProvider
+                              : (photoUrl != null ? NetworkImage(photoUrl) : null),
+                          child: (selectedImage == null && photoUrl == null)
+                              ? const Icon(Icons.person, size: 40, color: Colors.grey)
+                              : null,
+                          onBackgroundImageError: (exception, stackTrace) {},
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              SizedBox(height: 32),
-              
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: GestureDetector(
+                          onTap: controller.showImagePickerOptions,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                            ),
+                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+
+              const SizedBox(height: 32),
+
               // Name Field
               _buildLabel('Username'),
               _buildTextField(
-                controller: _nameController,
+                controller: controller.nameController,
                 hint: 'Enter username',
                 validator: (value) => value?.isEmpty == true ? 'Please enter username' : null,
               ),
-              
-              SizedBox(height: 16),
-              
+
+              const SizedBox(height: 16),
+
               // Email Field
               _buildLabel('Email'),
               _buildTextField(
-                controller: _emailController,
+                controller: controller.emailController,
                 hint: 'Enter email',
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) => !GetUtils.isEmail(value ?? '') ? 'Invalid email' : null,
               ),
-              
-              SizedBox(height: 16),
-              
+
+              const SizedBox(height: 16),
+
               // Phone Field
               _buildLabel('Phone'),
               _buildTextField(
-                controller: _phoneController,
+                controller: controller.phoneController,
                 hint: 'Enter phone number',
                 keyboardType: TextInputType.phone,
               ),
@@ -173,50 +159,52 @@ class _EditProfileViewState extends State<EditProfileView> {
 
               // Role Dropdown
               _buildLabel('Role'),
-              _buildDropdown(
-                value: _selectedRole,
-                items: _roles,
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _selectedRole = val);
-                  }
-                },
+              GetBuilder<EditProfileController>(
+                builder: (_) => _buildDropdown(
+                  value: controller.selectedRole,
+                  items: controller.roles,
+                  onChanged: (val) {
+                    if (val != null) {
+                      controller.setRole(val);
+                    }
+                  },
+                ),
               ),
-              
-              SizedBox(height: 16),
-              
+
+              const SizedBox(height: 16),
+
               // Create Password
               _buildLabel('Create Password (Optional)'),
               _buildTextField(
-                controller: _passwordController,
+                controller: controller.passwordController,
                 isPassword: true,
                 hint: '•••••••',
               ),
-              
-              SizedBox(height: 16),
-              
+
+              const SizedBox(height: 16),
+
               // Confirm Password
               _buildLabel('Confirm Password'),
               _buildTextField(
-                controller: _confirmPasswordController,
+                controller: controller.confirmPasswordController,
                 isPassword: true,
                 hint: '•••••••',
                 validator: (value) {
-                  if (_passwordController.text.isNotEmpty && value != _passwordController.text) {
+                  if (controller.passwordController.text.isNotEmpty && value != controller.passwordController.text) {
                     return 'Passwords do not match';
                   }
                   return null;
                 },
               ),
-              
-              SizedBox(height: 32),
+
+              const SizedBox(height: 32),
             ],
           ),
         ),
       ),
     );
   }
-  
+
   Widget _buildLabel(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
@@ -248,7 +236,7 @@ class _EditProfileViewState extends State<EditProfileView> {
         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -278,7 +266,7 @@ class _EditProfileViewState extends State<EditProfileView> {
       decoration: InputDecoration(
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -300,19 +288,5 @@ class _EditProfileViewState extends State<EditProfileView> {
       }).toList(),
       onChanged: onChanged,
     );
-  }
-
-  void _handleUpdate() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implement update profile logic
-      Get.snackbar(
-        'Success',
-        'Profile updated successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-      Get.back();
-    }
   }
 }

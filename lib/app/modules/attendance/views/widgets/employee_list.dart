@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/attendance_controller.dart';
+import '../../../../core/config/app_config.dart';
 
 class EmployeeList extends GetView<AttendanceController> {
   const EmployeeList({super.key});
@@ -31,16 +32,18 @@ class EmployeeList extends GetView<AttendanceController> {
         separatorBuilder: (context, index) => const Divider(),
         itemBuilder: (context, index) {
           final employee = employees[index];
+          final photoUrl = AppConfig.getProfilePhotoUrl(employee.avatarUrl);
+
           return ListTile(
             contentPadding: EdgeInsets.zero,
             onTap: () => controller.viewEmployeeHistory(employee),
             leading: CircleAvatar(
               radius: 24,
               backgroundColor: Colors.blue.shade100,
-              backgroundImage: employee.avatarUrl.isNotEmpty
-                  ? NetworkImage(employee.avatarUrl)
+              backgroundImage: photoUrl != null
+                  ? NetworkImage(photoUrl)
                   : null,
-              child: employee.avatarUrl.isEmpty
+              child: photoUrl == null
                   ? const Icon(Icons.person, color: Colors.blue)
                   : null,
             ),

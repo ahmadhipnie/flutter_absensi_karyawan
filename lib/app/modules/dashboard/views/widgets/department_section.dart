@@ -4,6 +4,7 @@ import '../../../../data/models/department_model.dart';
 import '../../controllers/dashboard_controller.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../common/widgets/department_avatar.dart';
+import '../../../../core/config/app_config.dart';
 
 class DepartmentSection extends GetView<DashboardController> {
   const DepartmentSection({super.key});
@@ -117,7 +118,7 @@ class DepartmentSection extends GetView<DashboardController> {
         child: Row(
           children: [
             DepartmentAvatar(
-              imageUrl: department.photo,
+              imageUrl: AppConfig.getDepartmentPhotoUrl(department.photo),
               departmentName: department.name,
               size: 56,
               backgroundColor: AppTheme.primaryColor.withOpacity(0.1),

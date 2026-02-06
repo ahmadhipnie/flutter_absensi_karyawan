@@ -36,6 +36,11 @@ class ChatMessage {
     final senderId = json['sender_id']?.toString() ?? json['user_id']?.toString() ?? '';
     final isMe = myUserId != null && senderId == myUserId;
 
+    // Determine message type: if there's an image, it's an image message
+    // (Backend sometimes returns message_type='text' even when there's an image)
+    final hasImage = json['image'] != null && json['image'].toString().isNotEmpty;
+    final messageType = hasImage ? 'image' : (json['message_type'] as String? ?? 'text');
+
     return ChatMessage(
       id: json['id']?.toString() ?? '',
       text: json['message_text'] ?? json['message'] ?? json['text'] ?? '',
@@ -47,7 +52,7 @@ class ChatMessage {
           : DateTime.now(),
       isMe: isMe,
       image: json['image'] as String?,
-      messageType: json['message_type'] as String? ?? 'text',
+      messageType: messageType,
     );
   }
 

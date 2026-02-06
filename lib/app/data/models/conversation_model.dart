@@ -4,12 +4,14 @@ class LastMessagePreview {
   final String senderName;
   final DateTime timestamp;
   final bool isFromMe;
+  final String messageType; // 'text' or 'image'
 
   LastMessagePreview({
     required this.text,
     required this.senderName,
     required this.timestamp,
     this.isFromMe = false,
+    this.messageType = 'text',
   });
 }
 

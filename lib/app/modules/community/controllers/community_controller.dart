@@ -82,6 +82,7 @@ class CommunityController extends GetxController {
         );
 
         if (lastMessage != null) {
+          print('Last message for conv ${conversation.id}: type=${lastMessage.messageType}, hasImage=${lastMessage.hasImage}');
           // Update the conversation with last message
           final index = conversations.indexWhere((c) => c.id == conversation.id);
           if (index != -1) {
@@ -91,6 +92,7 @@ class CommunityController extends GetxController {
                 senderName: lastMessage.senderName,
                 timestamp: lastMessage.timestamp,
                 isFromMe: lastMessage.isMe,
+                messageType: lastMessage.messageType,
               ),
             );
           }

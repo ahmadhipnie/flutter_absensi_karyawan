@@ -95,12 +95,33 @@ class ChatDetailController extends GetxController {
     _scrollToBottom();
   }
 
-  /// Pick image from gallery/camera
+  /// Pick image from gallery/camera with built-in compression
   Future<void> pickImage({ImageSource source = ImageSource.gallery}) async {
     try {
-      final XFile? image = await _imagePicker.pickImage(source: source);
+      // Use image_picker's built-in compression
+      final XFile? image = await _imagePicker.pickImage(
+        source: source,
+        maxWidth: 1024,  // Max width 1024px
+        maxHeight: 1024, // Max height 1024px
+        imageQuality: 70, // Quality 70%
+      );
+
       if (image != null) {
-        selectedImage.value = File(image.path);
+        final file = File(image.path);
+        final size = file.lengthSync();
+        print('Image size after picker compression: ${size} bytes (${(size / 1024).toStringAsFixed(1)} KB)');
+
+        // Check if still too large (> 5MB)
+        if (size > 5 * 1024 * 1024) {
+          Get.snackbar(
+            'Error',
+            'Image too large. Please choose a smaller image.',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return;
+        }
+
+        selectedImage.value = file;
       }
     } catch (e) {
       print('Error picking image: $e');

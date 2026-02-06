@@ -179,10 +179,25 @@ class ChatListItem extends StatelessWidget {
     // Use actual last message if available
     if (chat.lastMessage != null) {
       final lm = chat.lastMessage!;
-      if (lm.isFromMe) {
-        return 'You: ${lm.text}';
+
+      // Build message content based on type
+      String messageContent;
+      if (lm.messageType == 'image') {
+        // Image message: show photo indicator + caption if exists
+        if (lm.text.isNotEmpty) {
+          messageContent = '📷 ${lm.text}';
+        } else {
+          messageContent = '📷 Photo';
+        }
       } else {
-        return lm.text;
+        // Text only
+        messageContent = lm.text;
+      }
+
+      if (lm.isFromMe) {
+        return 'You: $messageContent';
+      } else {
+        return messageContent;
       }
     }
 

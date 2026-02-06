@@ -20,9 +20,9 @@ class ApiProvider extends getx.GetxService {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,
-        connectTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        sendTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 60),
+        sendTimeout: const Duration(seconds: 60),
         headers: {
           // Don't set Content-Type here - let Dio handle it based on request data
           // 'Content-Type': 'application/json',

@@ -1,31 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
+import '../controllers/profile_change_password_controller.dart';
 
-class ChangePasswordView extends StatefulWidget {
+class ChangePasswordView extends GetView<ProfileChangePasswordController> {
   const ChangePasswordView({super.key});
-
-  @override
-  State<ChangePasswordView> createState() => _ChangePasswordViewState();
-}
-
-class _ChangePasswordViewState extends State<ChangePasswordView> {
-  final _formKey = GlobalKey<FormState>();
-  final _existingPasswordController = TextEditingController();
-  final _newPasswordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  
-  bool _showExistingPassword = false;
-  bool _showNewPassword = false;
-  bool _showConfirmPassword = false;
-
-  @override
-  void dispose() {
-    _existingPasswordController.dispose();
-    _newPasswordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +16,10 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
         centerTitle: false,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
           onPressed: () => Get.back(),
         ),
-        title: Text(
+        title: const Text(
           'Change Password',
           style: TextStyle(
             color: Colors.black,
@@ -52,11 +31,11 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(
-              child: SizedBox(
+              child: Obx(() => SizedBox(
                 height: 36,
                 child: ElevatedButton.icon(
-                  onPressed: _handleChangePassword,
-                  icon: Icon(Icons.edit_square, size: 16, color: AppTheme.primaryColor),
+                  onPressed: controller.isLoading.value ? null : controller.changePassword,
+                  icon: const Icon(Icons.edit_square, size: 16, color: AppTheme.primaryColor),
                   label: Text(
                     'Save',
                     style: TextStyle(
@@ -66,114 +45,79 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                    backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    disabledBackgroundColor: Colors.grey.shade200,
                     elevation: 0,
                     shadowColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
                 ),
-              ),
+              )),
             ),
           )
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Form(
-          key: _formKey,
+          key: controller.formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Existing Password Field
               _buildLabel('Existing Password'),
-              _buildTextField(
-                controller: _existingPasswordController,
+              Obx(() => _buildTextField(
+                controller: controller.existingPasswordController,
                 hint: 'Enter existing password',
-                obscureText: !_showExistingPassword,
+                obscureText: !controller.showExistingPassword.value,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _showExistingPassword ? Icons.visibility_off : Icons.visibility,
+                    controller.showExistingPassword.value ? Icons.visibility_off : Icons.visibility,
                     color: Colors.grey,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _showExistingPassword = !_showExistingPassword;
-                    });
-                  },
+                  onPressed: controller.toggleExistingPassword,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter existing password';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
-              
+                validator: controller.validateExistingPassword,
+              )),
+              const SizedBox(height: 16),
+
               // New Password Field
               _buildLabel('New Password'),
-              _buildTextField(
-                controller: _newPasswordController,
+              Obx(() => _buildTextField(
+                controller: controller.newPasswordController,
                 hint: 'Enter new password',
-                obscureText: !_showNewPassword,
+                obscureText: !controller.showNewPassword.value,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _showNewPassword ? Icons.visibility_off : Icons.visibility,
+                    controller.showNewPassword.value ? Icons.visibility_off : Icons.visibility,
                     color: Colors.grey,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _showNewPassword = !_showNewPassword;
-                    });
-                  },
+                  onPressed: controller.toggleNewPassword,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter new password';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  if (value == _existingPasswordController.text) {
-                    return 'New password must be different from existing password';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 16),
+                validator: controller.validateNewPassword,
+              )),
+              const SizedBox(height: 16),
 
               // Confirm New Password Field
               _buildLabel('Confirm New Password'),
-              _buildTextField(
-                controller: _confirmPasswordController,
+              Obx(() => _buildTextField(
+                controller: controller.confirmPasswordController,
                 hint: 'Re-enter new password',
-                obscureText: !_showConfirmPassword,
+                obscureText: !controller.showConfirmPassword.value,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _showConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                    controller.showConfirmPassword.value ? Icons.visibility_off : Icons.visibility,
                     color: Colors.grey,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      _showConfirmPassword = !_showConfirmPassword;
-                    });
-                  },
+                  onPressed: controller.toggleConfirmPassword,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please confirm new password';
-                  }
-                  if (value != _newPasswordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
+                validator: controller.validateConfirmPassword,
+              )),
 
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -188,7 +132,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
         text,
         style: TextStyle(
           fontSize: 13,
-          color: Colors.grey[600],
+          color: Colors.grey.shade600,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -197,8 +141,8 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
 
   Widget _buildTextField({
     required TextEditingController controller,
-    String? hint,
-    bool obscureText = false,
+    required String hint,
+    required bool obscureText,
     Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
@@ -211,7 +155,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -222,25 +166,11 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: AppTheme.primaryColor),
+          borderSide: const BorderSide(color: AppTheme.primaryColor),
         ),
         suffixIcon: suffixIcon,
       ),
       validator: validator,
     );
-  }
-
-  void _handleChangePassword() {
-    if (_formKey.currentState!.validate()) {
-      // TODO: Implement change password logic
-      Get.snackbar(
-        'Success',
-        'Password changed successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-      Get.back();
-    }
   }
 }

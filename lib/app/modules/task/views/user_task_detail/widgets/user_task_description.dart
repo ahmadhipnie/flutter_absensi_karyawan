@@ -22,13 +22,16 @@ class UserTaskDescription extends GetView<UserTaskDetailController> {
           ),
           const SizedBox(height: 12),
           Obx(
-            () => Text(
-              controller.description.value,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF616161),
-                fontWeight: FontWeight.w400,
-                height: 1.5,
+            () => SizedBox(
+              width: double.infinity,
+              child: Text(
+                controller.description.value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF616161),
+                  fontWeight: FontWeight.w400,
+                  height: 1.5,
+                ),
               ),
             ),
           ),

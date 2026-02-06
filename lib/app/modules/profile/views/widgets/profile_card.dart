@@ -31,17 +31,23 @@ class ProfileCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const _NameSection(),
-          const SizedBox(height: 32),
-          _MenuItems(
-            onAttendanceLogTap: onAttendanceLogTap,
-            onEditProfileTap: onEditProfileTap,
-            onChangePasswordTap: onChangePasswordTap,
-          ),
-        ],
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.6,
+      ),
+      child: SingleChildScrollView(
+        physics: const ClampingScrollPhysics(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const _NameSection(),
+            const SizedBox(height: 32),
+            _MenuItems(
+              onAttendanceLogTap: onAttendanceLogTap,
+              onEditProfileTap: onEditProfileTap,
+              onChangePasswordTap: onChangePasswordTap,
+            ),
+          ],
+        ),
       ),
     );
   }

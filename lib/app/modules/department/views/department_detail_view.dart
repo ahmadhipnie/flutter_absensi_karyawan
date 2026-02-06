@@ -273,7 +273,15 @@ class DepartmentDetailView extends GetView<DepartmentController> {
             separatorBuilder: (c, i) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
               return GestureDetector(
-                onTap: () => Get.toNamed(Routes.ANNOUNCEMENT_DETAIL),
+                onTap: () {
+                  // TODO: Implement Task Detail navigation
+                  Get.showSnackbar(GetSnackBar(
+                    title: 'TODO',
+                    message: 'Task detail not implemented yet',
+                    backgroundColor: Colors.orange,
+                    duration: const Duration(seconds: 2),
+                  ));
+                },
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(

@@ -2,8 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:get/get.dart';
 import '../models/conversation_model.dart';
 import '../models/chat_message_model.dart';
+import '../models/user_model.dart';
 import '../providers/api_provider.dart';
-import '../../modules/members/models/member_model.dart';
 
 class ChatService extends GetxService {
   late final ApiProvider _apiProvider;
@@ -148,7 +148,7 @@ class ChatService extends GetxService {
 
   /// Get list of users/members for starting new chat
   /// GET /users
-  Future<List<MemberModel>> getUsers() async {
+  Future<List<UserModel>> getUsers() async {
     try {
       final response = await _apiProvider.get('/users');
 
@@ -156,7 +156,7 @@ class ChatService extends GetxService {
         final data = response.data;
         if (data['success'] == true && data['data'] is List) {
           return (data['data'] as List)
-              .map((item) => MemberModel.fromJson(item as Map<String, dynamic>))
+              .map((item) => UserModel.fromJson(item as Map<String, dynamic>))
               .toList();
         }
       }

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/services/chat_service.dart';
 import '../../../data/services/auth_service.dart';
-import '../../../data/models/conversation_model.dart';
-import '../../members/models/member_model.dart';
+import '../../../data/models/user_model.dart';
 import '../../../routes/app_pages.dart';
 
 class NewChatController extends GetxController {
@@ -19,8 +18,8 @@ class NewChatController extends GetxController {
   }
 
   final searchController = TextEditingController();
-  final members = <MemberModel>[].obs;
-  final filteredMembers = <MemberModel>[].obs;
+  final members = <UserModel>[].obs;
+  final filteredMembers = <UserModel>[].obs;
   final isLoading = false.obs;
   final isCreatingChat = false.obs;
   final searchQuery = ''.obs;
@@ -62,8 +61,9 @@ class NewChatController extends GetxController {
       filteredMembers.assignAll(members);
     } else {
       final query = value.toLowerCase();
+      final displayName = value.toLowerCase();
       filteredMembers.assignAll(members.where((m) {
-        return m.username.toLowerCase().contains(query) ||
+        return (m.username?.toLowerCase().contains(query) ?? false) ||
                m.email.toLowerCase().contains(query);
       }).toList());
     }
@@ -71,7 +71,7 @@ class NewChatController extends GetxController {
 
   /// Start a personal chat with a member
   /// Creates a conversation via API, then navigates to chat detail
-  Future<void> startPersonalChat(MemberModel member) async {
+  Future<void> startPersonalChat(UserModel member) async {
     try {
       isCreatingChat.value = true;
 
@@ -79,7 +79,7 @@ class NewChatController extends GetxController {
       // Title is automatically set to member's name
       final response = await _chatService.createPrivateConversation(
         userId: member.id,
-        title: member.username,
+        title: member.displayName,
       );
 
       if (response != null && response.data != null) {

@@ -9,16 +9,15 @@ import '../models/user_model.dart';
 import '../providers/api_provider.dart';
 
 class AuthService extends GetxService {
-  late final ApiProvider _apiProvider;
-
   // Singleton instance
   static AuthService? _instance;
   static AuthService get instance => _instance!;
 
-  // Get apiProvider for external access
-  ApiProvider get apiProvider => _apiProvider;
   // Use singleton ApiProvider
   ApiProvider get _apiProvider => ApiProvider.instance;
+
+  // Get apiProvider for external access
+  ApiProvider get apiProvider => _apiProvider;
 
   final _isLoggedIn = false.obs;
   final _currentUser = Rxn<UserModel>();
@@ -33,9 +32,6 @@ class AuthService extends GetxService {
   String? get token => _token;
 
   Future<AuthService> init() async {
-    // Get ApiProvider from GetX
-    _apiProvider = Get.find<ApiProvider>();
-
     // Set singleton instance
     _instance = this;
 

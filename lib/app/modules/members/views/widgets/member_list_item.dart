@@ -5,10 +5,8 @@ import '../../controllers/members_controller.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class MemberListItem extends StatelessWidget {
-  final MemberModel member;
-
   final UserModel user;
-  
+
   const MemberListItem({
     super.key,
     required this.user,
@@ -43,18 +41,13 @@ class MemberListItem extends StatelessWidget {
                   : null,
             ),
 
-            SizedBox(width: 16),
-
-            
             const SizedBox(width: 16),
-            
+
             // Name only
             Expanded(
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  member.displayName,
-                  style: TextStyle(
                   user.displayName,
                   style: const TextStyle(
                     fontSize: 16,
@@ -66,7 +59,6 @@ class MemberListItem extends StatelessWidget {
             ),
 
             // Trailing: either Supervisor badge or menu button
-            member.isSupervisor
             user.role == 'supervisor'
                 ? Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -139,8 +131,6 @@ class MemberListItem extends StatelessWidget {
   void _showDeleteDialog(BuildContext context, MembersController controller) {
     Get.dialog(
       AlertDialog(
-        title: Text('Delete Member'),
-        content: Text('Are you sure you want to delete ${member.displayName}?'),
         title: const Text('Delete User'),
         content: Text('Are you sure you want to delete ${user.displayName}?'),
         actions: [
@@ -150,7 +140,6 @@ class MemberListItem extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              controller.deleteMember(member.id.toString());
               controller.deleteUser(user.id);
               Get.back();
             },

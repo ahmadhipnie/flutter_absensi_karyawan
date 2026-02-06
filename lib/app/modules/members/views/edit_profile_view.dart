@@ -25,13 +25,8 @@ class _EditProfileViewState extends State<EditProfileView> {
   @override
   void initState() {
     super.initState();
-    final MemberModel member = Get.arguments as MemberModel;
-    _nameController = TextEditingController(text: member.username);
-    _emailController = TextEditingController(text: member.email);
-    _selectedDepartment = member.department;
-    _selectedUserType = member.userType;
     final UserModel user = Get.arguments as UserModel;
-    _nameController = TextEditingController(text: user.username);
+    _nameController = TextEditingController(text: user.username ?? '');
     _emailController = TextEditingController(text: user.email);
     _phoneController = TextEditingController(text: user.phone ?? '');
     _selectedRole = user.role;

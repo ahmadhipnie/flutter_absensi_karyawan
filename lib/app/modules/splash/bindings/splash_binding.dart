@@ -8,7 +8,7 @@ class SplashBinding extends Bindings {
   void dependencies() {
     // Initialize ApiProvider as permanent singleton first (before AuthService)
     if (!Get.isRegistered<ApiProvider>()) {
-      Get.put<ApiProvider>(ApiProvider(), permanent: true);
+      Get.put<ApiProvider>(ApiProvider.instance, permanent: true);
     }
 
     // Initialize AuthService as permanent singleton

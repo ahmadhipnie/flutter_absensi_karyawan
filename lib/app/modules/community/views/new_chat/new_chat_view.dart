@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../members/models/member_model.dart';
+import '../../../../data/models/user_model.dart';
 import '../../controllers/new_chat_controller.dart';
 import 'widgets/empty_members_state.dart';
 import 'widgets/member_list_item.dart';
@@ -39,8 +39,8 @@ class _MemberList extends StatelessWidget {
     required this.onTapMember,
   });
 
-  final List<MemberModel> members;
-  final void Function(MemberModel) onTapMember;
+  final List<UserModel> members;
+  final void Function(UserModel) onTapMember;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +51,7 @@ class _MemberList extends StatelessWidget {
         final member = members[index];
         return MemberListItem(
           member: member,
-          isSupervisor: member.isSupervisor,
+          isSupervisor: member.role == 'supervisor',
           onTap: () => onTapMember(member),
         );
       },

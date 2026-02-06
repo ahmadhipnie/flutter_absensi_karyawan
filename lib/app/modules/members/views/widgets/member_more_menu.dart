@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../routes/app_pages.dart';
-import '../../models/member_model.dart';
+import '../../../../data/models/user_model.dart';
 
 class MemberMoreMenu extends StatelessWidget {
-  const MemberMoreMenu({required this.member, super.key});
+  const MemberMoreMenu({required this.user, super.key});
 
-  final MemberModel member;
+  final UserModel user;
 
   @override
   Widget build(BuildContext context) {
@@ -65,10 +65,10 @@ class MemberMoreMenu extends StatelessWidget {
   void _handleMenuSelection(String value) {
     switch (value) {
       case 'edit':
-        Get.toNamed(Routes.EDIT_PROFILE, arguments: member);
+        Get.toNamed(Routes.EDIT_PROFILE, arguments: user);
         break;
       case 'password':
-        Get.toNamed(Routes.CHANGE_PASSWORD, arguments: member);
+        Get.toNamed(Routes.CHANGE_PASSWORD, arguments: user);
         break;
       case 'delete':
         // TODO: Implement delete logic

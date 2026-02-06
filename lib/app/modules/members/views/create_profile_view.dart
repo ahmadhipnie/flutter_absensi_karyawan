@@ -1,34 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/create_profile_controller.dart';
 import '../../../common/widgets/app_back_button.dart';
 import './widgets/profile_avatar_section.dart';
 import './widgets/profile_form_field.dart';
 import './widgets/profile_dropdown_field.dart';
 import './widgets/profile_save_button.dart';
 
-class CreateProfileView extends StatefulWidget {
+class CreateProfileView extends GetView<CreateProfileController> {
   const CreateProfileView({super.key});
-
-  static const List<String> departments = [
-    'UI/UX Designer',
-    'Backend Developer',
-    'Frontend Developer',
-    'Mobile Developer',
-  ];
-
-  static const List<String> userTypes = ['Member', 'Supervisor'];
-
-  @override
-  State<CreateProfileView> createState() => _CreateProfileViewState();
-}
-
-class _CreateProfileViewState extends State<CreateProfileView> {
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,20 +29,23 @@ class _CreateProfileViewState extends State<CreateProfileView> {
           ),
         ),
         actions: [
-          ProfileSaveButton(onPressed: _handleCreate),
+          Obx(() => ProfileSaveButton(
+                onPressed: controller.isLoading.value ? null : controller.createUser,
+                isLoading: controller.isLoading.value,
+              )),
         ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Form(
-          key: _formKey,
-          child: const Column(
+          key: controller.formKey,
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ProfileAvatarSection(avatarUrl: null),
-              SizedBox(height: 32),
-              _FormFields(),
-              SizedBox(height: 32),
+              const ProfileAvatarSection(avatarUrl: null),
+              const SizedBox(height: 32),
+              _buildFormFields(),
+              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -70,103 +53,69 @@ class _CreateProfileViewState extends State<CreateProfileView> {
     );
   }
 
-  void _handleCreate() {
-    if (_formKey.currentState?.validate() ?? false) {
-      Get.snackbar(
-        'Success',
-        'Profile created successfully',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.green,
-        colorText: Colors.white,
-      );
-      Get.back();
-    }
-  }
-}
-
-class _FormFields extends StatefulWidget {
-  const _FormFields();
-
-  @override
-  State<_FormFields> createState() => _FormFieldsState();
-}
-
-class _FormFieldsState extends State<_FormFields> {
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-
-  String _selectedDepartment = CreateProfileView.departments.first;
-  String _selectedUserType = CreateProfileView.userTypes.first;
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ProfileFormField(
-          label: 'Employee Name',
-          controller: _nameController,
-          hint: 'Alsaa Cantikk',
-          validator: (value) => value?.isEmpty == true ? 'Please enter name' : null,
-        ),
-        const SizedBox(height: 16),
-        ProfileFormField(
-          label: 'Email',
-          controller: _emailController,
-          hint: 'alsaacantikk464@gmail.com',
-          keyboardType: TextInputType.emailAddress,
-          validator: (value) => !GetUtils.isEmail(value ?? '') ? 'Invalid email' : null,
-        ),
-        const SizedBox(height: 16),
-        ProfileDropdownField(
-          label: 'Department',
-          value: _selectedDepartment,
-          items: CreateProfileView.departments,
-          onChanged: (val) {
-            if (val != null) {
-              setState(() => _selectedDepartment = val);
-            }
-          },
-        ),
-        const SizedBox(height: 16),
-        ProfileDropdownField(
-          label: 'User Type',
-          value: _selectedUserType,
-          items: CreateProfileView.userTypes,
-          onChanged: (val) {
-            if (val != null) {
-              setState(() => _selectedUserType = val);
-            }
-          },
-        ),
-        const SizedBox(height: 16),
-        ProfileFormField(
-          label: 'Create Password',
-          controller: _passwordController,
-          isPassword: true,
-          hint: '•••••••',
-          validator: (value) => (value?.length ?? 0) < 6 ? 'Min 6 chars' : null,
-        ),
-        const SizedBox(height: 16),
-        ProfileFormField(
-          label: 'Confirm Password',
-          controller: _confirmPasswordController,
-          isPassword: true,
-          hint: '•••••••',
-          validator: (value) => value != _passwordController.text ? 'Passwords do not match' : null,
-        ),
-      ],
-    );
+  Widget _buildFormFields() {
+    return Obx(() => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ProfileFormField(
+              label: 'Employee Name',
+              controller: controller.nameController,
+              hint: 'Enter full name',
+              validator: controller.validateName,
+            ),
+            const SizedBox(height: 16),
+            ProfileFormField(
+              label: 'Email',
+              controller: controller.emailController,
+              hint: 'example@email.com',
+              keyboardType: TextInputType.emailAddress,
+              validator: controller.validateEmail,
+            ),
+            const SizedBox(height: 16),
+            // Department Dropdown
+            ProfileDropdownField(
+              label: 'Department',
+              value: controller.selectedDepartment.value?.name ?? 
+                     (controller.departments.isEmpty ? 'No departments' : controller.departments.first.name),
+              items: controller.departments.isEmpty
+                  ? ['No departments']
+                  : controller.departments.map((d) => d.name).toList(),
+              onChanged: (val) {
+                if (val != null && controller.departments.isNotEmpty) {
+                  final dept = controller.departments.firstWhere((d) => d.name == val);
+                  controller.setDepartment(dept);
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            // Role Dropdown
+            ProfileDropdownField(
+              label: 'User Type',
+              value: controller.selectedRole.value,
+              items: const ['member', 'supervisor'],
+              onChanged: (val) {
+                if (val != null) {
+                  controller.setRole(val);
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            ProfileFormField(
+              label: 'Create Password',
+              controller: controller.passwordController,
+              isPassword: true,
+              hint: '•••••••',
+              validator: controller.validatePassword,
+            ),
+            const SizedBox(height: 16),
+            ProfileFormField(
+              label: 'Confirm Password',
+              controller: controller.confirmPasswordController,
+              isPassword: true,
+              hint: '•••••••',
+              validator: controller.validateConfirmPassword,
+            ),
+          ],
+        ));
   }
 }

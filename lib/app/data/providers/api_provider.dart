@@ -1,12 +1,22 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:get/get.dart' as getx;
 import '../../core/config/app_config.dart';
 
-class ApiProvider {
+class ApiProvider extends getx.GetxService {
   late final Dio _dio;
   String? _authToken;
 
-  ApiProvider() {
+  // Singleton pattern using GetX
+  static ApiProvider get instance {
+    if (!getx.Get.isRegistered<ApiProvider>()) {
+      getx.Get.put(ApiProvider._internal(), permanent: true);
+    }
+    return getx.Get.find<ApiProvider>();
+  }
+
+  // Private constructor
+  ApiProvider._internal() {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,

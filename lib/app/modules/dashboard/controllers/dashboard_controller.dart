@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/services/department_service.dart';
 import '../../../data/models/department_model.dart';
 import '../../../data/models/task_item.dart';
 import '../../../routes/app_pages.dart';
@@ -14,6 +15,9 @@ class DashboardController extends GetxController {
       return null;
     }
   }
+
+  // Department Service
+  final DepartmentService _departmentService = DepartmentService();
 
   // User role: 'supervisor' or 'member'
   final userRole = 'member'.obs;
@@ -33,40 +37,11 @@ class DashboardController extends GetxController {
           .obs;
 
   // Department list for supervisor
-  final departments = <DepartmentModel>[
-    DepartmentModel(
-      id: '1',
-      name: 'Executive Management',
-      imageUrl:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
-    ),
-    DepartmentModel(
-      id: '2',
-      name: 'Project & Product',
-      imageUrl:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
-    ),
-    DepartmentModel(
-      id: '3',
-      name: 'Engineering / Development',
-      imageUrl:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
-    ),
-    DepartmentModel(
-      id: '4',
-      name: 'UI/UX & Design',
-      imageUrl:
-          'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
-    ),
-  ].obs;
+  final departments = <DepartmentModel>[].obs;
+  final isLoadingDepartments = false.obs;
 
   // User's department (for member view)
-  final userDepartment = DepartmentModel(
-    id: '1',
-    name: 'Executive Management',
-    imageUrl:
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
-  ).obs;
+  final userDepartment = Rxn<DepartmentModel>();
 
   // Ongoing tasks for member
   final ongoingTasks = <DashboardTaskItem>[
@@ -112,7 +87,26 @@ class DashboardController extends GetxController {
         userName.value = user.displayName;
         userRole.value = user.role;
         userPosition.value = user.role;
+        
+        // Load departments if user is supervisor
+        if (isSupervisor) {
+          loadDepartments();
+        }
       }
+    }
+  }
+
+  /// Load departments from API
+  Future<void> loadDepartments() async {
+    try {
+      isLoadingDepartments.value = true;
+      final departmentsList = await _departmentService.getDepartments();
+      departments.value = departmentsList;
+    } catch (e) {
+      _showSnackbar('Error', 'Failed to load departments: ${e.toString()}');
+      print('Error loading departments: $e');
+    } finally {
+      isLoadingDepartments.value = false;
     }
   }
 

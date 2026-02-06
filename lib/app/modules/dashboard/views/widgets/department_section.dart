@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../../data/models/department_model.dart';
 import '../../controllers/dashboard_controller.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../common/widgets/department_avatar.dart';
 
 class DepartmentSection extends GetView<DashboardController> {
   const DepartmentSection({super.key});
@@ -35,18 +36,29 @@ class DepartmentSection extends GetView<DashboardController> {
 
   Widget _buildDepartmentList() {
     return Obx(
-      () => ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: controller.departments.length + 1, // +1 for create button
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return _buildCreateDepartmentItem();
-          }
-          return _buildDepartmentItem(controller.departments[index - 1]);
-        },
-      ),
+      () {
+        if (controller.isLoadingDepartments.value) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: controller.departments.length + 1, // +1 for create button
+          itemBuilder: (context, index) {
+            if (index == 0) {
+              return _buildCreateDepartmentItem();
+            }
+            return _buildDepartmentItem(controller.departments[index - 1]);
+          },
+        );
+      },
     );
   }
 
@@ -104,18 +116,12 @@ class DepartmentSection extends GetView<DashboardController> {
         ),
         child: Row(
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.business_center,
-                color: AppTheme.primaryColor,
-                size: 28,
-              ),
+            DepartmentAvatar(
+              imageUrl: department.photo,
+              departmentName: department.name,
+              size: 56,
+              backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+              iconColor: AppTheme.primaryColor,
             ),
             const SizedBox(width: 16),
             Expanded(

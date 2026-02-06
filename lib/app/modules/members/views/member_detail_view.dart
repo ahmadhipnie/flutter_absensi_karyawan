@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../models/member_model.dart';
+import '../../../data/models/user_model.dart';
 import '../../../common/widgets/app_back_button.dart';
 import './widgets/member_profile_header.dart';
 import './widgets/member_attendance_log_section.dart';
@@ -12,7 +12,7 @@ class MemberDetailView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final MemberModel member = Get.arguments as MemberModel;
+    final UserModel user = Get.arguments as UserModel;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -21,13 +21,13 @@ class MemberDetailView extends StatelessWidget {
         elevation: 0,
         leading: const AppBackButton(),
         actions: [
-          MemberMoreMenu(member: member),
+          MemberMoreMenu(user: user),
         ],
       ),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            MemberProfileHeader(member: member),
+            MemberProfileHeader(user: user),
             const SizedBox(height: 24),
             const Divider(height: 1, color: Color(0xFFE5E5E5)),
             const SizedBox(height: 16),

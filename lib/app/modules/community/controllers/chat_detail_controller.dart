@@ -66,7 +66,7 @@ class ChatDetailController extends GetxController {
     avatarUrl = args['avatarUrl'];
   }
 
-  bool get isGroupChat => chatType == 'Department';
+  bool get isGroupChat => chatType == 'group' || chatType == 'Department';
 
   /// Load messages from API
   Future<void> _loadMessages() async {

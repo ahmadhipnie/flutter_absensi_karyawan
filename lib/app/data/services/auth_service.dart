@@ -9,8 +9,15 @@ import '../models/user_model.dart';
 import '../providers/api_provider.dart';
 
 class AuthService extends GetxService {
+  // Singleton instance
+  static AuthService? _instance;
+  static AuthService get instance => _instance!;
+
   // Use singleton ApiProvider
   ApiProvider get _apiProvider => ApiProvider.instance;
+
+  // Get apiProvider for external access
+  ApiProvider get apiProvider => _apiProvider;
 
   final _isLoggedIn = false.obs;
   final _currentUser = Rxn<UserModel>();
@@ -25,6 +32,9 @@ class AuthService extends GetxService {
   String? get token => _token;
 
   Future<AuthService> init() async {
+    // Set singleton instance
+    _instance = this;
+
     // Load saved session from shared preferences
     final prefs = await SharedPreferences.getInstance();
     final savedToken = prefs.getString(_tokenKey);

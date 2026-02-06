@@ -51,16 +51,55 @@ class OngoingTaskSection extends GetView<DashboardController> {
 
   Widget _buildTaskList() {
     return Obx(
-      () => ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: controller.ongoingTasks.length,
-        itemBuilder: (context, index) {
-          final task = controller.ongoingTasks[index];
-          return _buildTaskItem(task);
-        },
-      ),
+      () {
+        // Show loading indicator
+        if (controller.isTasksLoading.value) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        // Show empty state when no tasks
+        if (controller.ongoingTasks.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.assignment_turned_in_outlined,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No ongoing tasks',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        // Show task list
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: controller.ongoingTasks.length,
+          itemBuilder: (context, index) {
+            final task = controller.ongoingTasks[index];
+            return _buildTaskItem(task);
+          },
+        );
+      },
     );
   }
 

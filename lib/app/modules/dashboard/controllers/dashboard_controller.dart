@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/services/task_service.dart';
 import '../../../data/services/department_service.dart';
 import '../../../data/models/department_model.dart';
 import '../../../data/models/task_item.dart';
+import '../../../data/models/task_model.dart' as data_model;
 import '../../../routes/app_pages.dart';
+import '../../../utils/date_helper.dart';
+import '../../navigation/controllers/navigation_controller.dart';
 
 class DashboardController extends GetxController {
   // Lazy initialization of AuthService
@@ -16,6 +20,14 @@ class DashboardController extends GetxController {
     }
   }
 
+  // Lazy initialization of TaskService
+  TaskService? get _taskService {
+    try {
+      return Get.find<TaskService>();
+    } catch (e) {
+      return null;
+    }
+  }
   // Department Service
   final DepartmentService _departmentService = DepartmentService();
 
@@ -28,7 +40,7 @@ class DashboardController extends GetxController {
   final userAvatar = ''.obs;
 
   // Current date info
-  final currentDate = DateTime.now().obs;
+  final currentDate = DateHelper.nowWib().obs;
   final workStatus = 'Working'.obs;
   final workStartTime = '08:00 AM'.obs;
   final workEndTime = '05:00 PM'.obs;
@@ -43,24 +55,14 @@ class DashboardController extends GetxController {
   // User's department (for member view)
   final userDepartment = Rxn<DepartmentModel>();
 
-  // Ongoing tasks for member
-  final ongoingTasks = <DashboardTaskItem>[
-    DashboardTaskItem(
-      id: '1',
-      title: "Set the company's vision and strategic direction",
-      dueDate: DateTime(2026, 1, 17, 23, 59),
-    ),
-    DashboardTaskItem(
-      id: '2',
-      title: 'Make high-level strategic decisions',
-      dueDate: DateTime(2026, 1, 17, 23, 59),
-    ),
-    DashboardTaskItem(
-      id: '3',
-      title: 'Lead and oversee executive management',
-      dueDate: DateTime(2026, 1, 17, 23, 59),
-    ),
-  ].obs;
+  // Ongoing tasks for member (populated from API)
+  final ongoingTasks = <DashboardTaskItem>[].obs;
+
+  // Store full TaskModel for navigation (key: taskId)
+  final RxMap<int, data_model.TaskModel> _taskModelMap = <int, data_model.TaskModel>{}.obs;
+
+  // Loading state for tasks
+  final isTasksLoading = false.obs;
 
   // Search controller
   final searchController = TextEditingController();
@@ -71,6 +73,7 @@ class DashboardController extends GetxController {
     super.onInit();
     _lastBackPressedTime = null;
     _loadUserData();
+    _loadOngoingTasks();
   }
 
   @override
@@ -94,6 +97,54 @@ class DashboardController extends GetxController {
         }
       }
     }
+  }
+
+  /// Load ongoing tasks from TaskService (for member role only)
+  Future<void> _loadOngoingTasks() async {
+    final taskService = _taskService;
+    if (taskService == null) return;
+
+    try {
+      isTasksLoading.value = true;
+
+      // Only load tasks for member role
+      if (userRole.value == 'member') {
+        final response = await taskService.getMyAssignedTasks();
+
+        if (response != null && response.success) {
+          // Filter for incomplete tasks (not submitted)
+          final incompleteTasks = response.data
+              .where((task) =>
+                  !task.isSubmitted && task.status.toLowerCase() != 'completed')
+              .toList();
+
+          // Convert to DashboardTaskItem and store full model
+          final dashboardItems = <DashboardTaskItem>[];
+          _taskModelMap.clear();
+
+          for (final task in incompleteTasks) {
+            dashboardItems.add(DashboardTaskItem(
+              id: task.taskId.toString(),
+              title: task.taskSubject,
+              dueDate: task.dueDate,
+            ));
+            _taskModelMap[task.taskId] = task;
+          }
+
+          ongoingTasks.value = dashboardItems;
+        }
+      }
+    } catch (e) {
+      // Silently fail - tasks will show empty
+      print('Error loading tasks: $e');
+    } finally {
+      isTasksLoading.value = false;
+    }
+  }
+
+  /// Refresh tasks (call after task status change)
+  Future<void> refreshTasks() async {
+    await _loadOngoingTasks();
   }
 
   /// Load departments from API
@@ -133,13 +184,7 @@ class DashboardController extends GetxController {
   }
 
   String formatTaskDueDate(DateTime date) {
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    final hour = date.hour > 12 ? date.hour - 12 : date.hour;
-    final amPm = date.hour >= 12 ? 'PM' : 'AM';
-    return 'Due ${date.day} ${months[date.month - 1]} ${date.year}, ${hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')} $amPm';
+    return DateHelper.formatDueDateWib(date);
   }
 
   /// Search handler
@@ -185,7 +230,7 @@ class DashboardController extends GetxController {
     Get.toNamed(Routes.CREATE_DEPARTMENT);
   }
 
-  void seeMoreTasks() => _showSnackbar('Tasks', 'Navigate to tasks...');
+  void seeMoreTasks() => NavigationController.navigateToTask();
 
   void openDepartment(DepartmentModel department) {
     Get.toNamed(Routes.DEPARTMENT_DETAIL, arguments: department);
@@ -195,8 +240,17 @@ class DashboardController extends GetxController {
     Get.toNamed(Routes.TAKE_ATTENDANCE);
   }
 
-  void openTask(DashboardTaskItem task) =>
-      _showSnackbar('Task', 'Opening task: ${task.title}');
+  void openTask(DashboardTaskItem task) {
+    // Get the full TaskModel from map
+    final taskId = int.tryParse(task.id);
+    final fullTask = taskId != null ? _taskModelMap[taskId] : null;
+
+    // For members, navigate to user task detail with full task model
+    Get.toNamed(
+      Routes.USER_TASK_DETAIL,
+      arguments: fullTask ?? task,
+    );
+  }
 
   // Double back to exit
   DateTime? _lastBackPressedTime;

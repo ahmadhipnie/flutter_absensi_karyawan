@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../../../data/models/task_model.dart' as data_model;
 import '../../../controllers/task_controller.dart';
 import 'task_item.dart';
 
@@ -9,36 +10,49 @@ class TaskList extends GetView<TaskController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      final tasks = controller.filteredTasks;
+      final tasks = controller.groupedTasks;
 
       if (tasks.isEmpty) {
         return _buildEmptyState();
       }
 
-      return ListView.builder(
-        controller: controller.scrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        itemCount: tasks.length,
-        itemBuilder: (context, monthIndex) {
-          final month = tasks.keys.elementAt(monthIndex);
-          final monthTasks = tasks[month]!;
+      return RefreshIndicator(
+        onRefresh: controller.refresh,
+        child: ListView.builder(
+          controller: controller.scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          itemCount: tasks.length,
+          itemBuilder: (context, monthIndex) {
+            final month = tasks.keys.elementAt(monthIndex);
+            final monthTasks = tasks[month]!;
 
-          return _buildMonthSection(month, monthTasks);
-        },
+            return _buildMonthSection(month, monthTasks);
+          },
+        ),
       );
     });
   }
 
   Widget _buildEmptyState() {
-    return const Center(
-      child: Text(
-        'No tasks found',
-        style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 16),
+    return RefreshIndicator(
+      onRefresh: controller.refresh,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: MediaQuery.of(Get.context!).size.height - 200,
+          child: const Center(
+            child: Text(
+              'No tasks found',
+              style: TextStyle(color: Color(0xFF9E9E9E), fontSize: 16),
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildMonthSection(String month, List<TaskModel> monthTasks) {
+  Widget _buildMonthSection(String month, List<data_model.TaskModel> monthTasks) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

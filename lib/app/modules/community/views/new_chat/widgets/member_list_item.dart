@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
-import '../../../../members/models/member_model.dart';
+import '../../../../../data/models/user_model.dart';
 
 class MemberListItem extends StatelessWidget {
   const MemberListItem({
@@ -10,7 +10,7 @@ class MemberListItem extends StatelessWidget {
     super.key,
   });
 
-  final MemberModel member;
+  final UserModel member;
   final bool isSupervisor;
   final VoidCallback onTap;
 
@@ -29,7 +29,7 @@ class MemberListItem extends StatelessWidget {
             const SizedBox(width: AppTheme.paddingM),
             Expanded(
               child: Text(
-                member.name,
+                member.displayName,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w500,
@@ -48,7 +48,7 @@ class MemberListItem extends StatelessWidget {
 class _MemberAvatar extends StatelessWidget {
   const _MemberAvatar({required this.member});
 
-  final MemberModel member;
+  final UserModel member;
 
   static const _avatarSize = 44.0;
 
@@ -57,9 +57,9 @@ class _MemberAvatar extends StatelessWidget {
     return SizedBox(
       width: _avatarSize,
       height: _avatarSize,
-      child: member.avatarUrl != null
+      child: member.avatarUrl.isNotEmpty && !member.avatarUrl.startsWith('https://ui-avatars.com')
           ? _NetworkAvatar(member: member)
-          : _InitialsAvatar(name: member.name),
+          : _InitialsAvatar(name: member.displayName),
     );
   }
 }
@@ -67,16 +67,16 @@ class _MemberAvatar extends StatelessWidget {
 class _NetworkAvatar extends StatelessWidget {
   const _NetworkAvatar({required this.member});
 
-  final MemberModel member;
+  final UserModel member;
 
   @override
   Widget build(BuildContext context) {
     return ClipOval(
       child: Image.network(
-        member.avatarUrl!,
+        member.avatarUrl,
         fit: BoxFit.cover,
         errorBuilder: (context, error, stackTrace) {
-          return _InitialsAvatar(name: member.name);
+          return _InitialsAvatar(name: member.displayName);
         },
       ),
     );

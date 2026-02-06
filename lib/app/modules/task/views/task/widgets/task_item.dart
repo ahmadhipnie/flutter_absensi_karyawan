@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../../data/models/task_model.dart' as data_model;
 import '../../../controllers/task_controller.dart';
 
 class TaskItem extends StatelessWidget {
-  final TaskModel task;
+  final data_model.TaskModel task;
   final bool showDivider;
 
   const TaskItem({super.key, required this.task, required this.showDivider});
@@ -61,7 +62,7 @@ class TaskItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          task.title,
+          task.taskSubject,
           style: const TextStyle(
             color: Colors.black,
             fontSize: 14,

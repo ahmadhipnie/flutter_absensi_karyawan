@@ -1,90 +1,127 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../data/services/chat_service.dart';
+import '../../../data/models/conversation_model.dart';
 import '../../../routes/app_pages.dart';
 
 class CommunityController extends GetxController {
+  final ChatService _chatService = Get.find<ChatService>();
+
   final searchController = TextEditingController();
   final scrollController = ScrollController();
 
   final selectedFilter = 'All'.obs;
   final searchQuery = ''.obs;
+  final isLoading = false.obs;
 
   final filters = ['All', 'Department', 'Personal'];
 
-  // Sample chat data
-  final chats = <Map<String, dynamic>>[
-    {
-      'id': '1',
-      'name': 'Executive Management',
-      'message':
-          'Bambang: Hi team, quick alignment for the Community division.',
-      'timestamp': '2:30 PM',
-      'unreadCount': 1,
-      'isRead': false,
-      'isSentByMe': false,
-      'avatarText': 'S',
-      'avatarColor': 0xFF0046BE,
-      'type': 'Department',
-    },
-    {
-      'id': '2',
-      'name': 'Bambang',
-      'message': 'quasi architect eatae vitae dicta sunt explid...',
-      'timestamp': '2:30 PM',
-      'unreadCount': 2,
-      'isRead': false,
-      'isSentByMe': false,
-      'avatarImage':
-          'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
-      'type': 'Personal',
-    },
-    {
-      'id': '3',
-      'name': 'Xianying',
-      'message': 'quasi architeo beatae vitae dicta sunt e...',
-      'timestamp': '2:30 PM',
-      'unreadCount': 0,
-      'isRead': true,
-      'isSentByMe': true,
-      'avatarImage':
-          'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
-      'type': 'Personal',
-    },
-    {
-      'id': '4',
-      'name': 'Basuki',
-      'message': 'quasi architecto beatae vitae dicta snet...',
-      'timestamp': '2:30 PM',
-      'unreadCount': 0,
-      'isRead': false,
-      'isSentByMe': true,
-      'avatarImage':
-          'https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png',
-      'type': 'Personal',
-    },
-  ].obs;
+  // Conversation list from API
+  final conversations = <ConversationModel>[].obs;
+
+  // Polling timer
+  Timer? _pollTimer;
+
+  // Polling interval (30 seconds)
+  static const Duration _pollInterval = Duration(seconds: 30);
+
+  @override
+  void onInit() {
+    super.onInit();
+    fetchConversations();
+    _startPolling();
+  }
+
+  @override
+  void onClose() {
+    _stopPolling();
+    searchController.dispose();
+    scrollController.dispose();
+    super.onClose();
+  }
+
+  /// Start smart polling
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(_pollInterval, (_) {
+      fetchConversations(silent: true);
+    });
+  }
+
+  /// Stop smart polling
+  void _stopPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = null;
+  }
+
+  /// Pause polling (e.g., when user opens chat detail)
+  void pausePolling() {
+    _stopPolling();
+  }
+
+  /// Resume polling (e.g., when user back from chat detail)
+  void resumePolling() {
+    _startPolling();
+  }
+
+  /// Refresh conversations (manual refresh via pull-to-refresh or button)
+  Future<void> refresh() async {
+    await fetchConversations();
+  }
+
+  /// Fetch conversations from API
+  Future<void> fetchConversations({bool silent = false}) async {
+    try {
+      if (!silent) isLoading.value = true;
+
+      final result = await _chatService.getConversations();
+      conversations.assignAll(result);
+    } catch (e) {
+      if (!silent) {
+        Get.snackbar('Error', 'Failed to load conversations');
+      }
+    } finally {
+      if (!silent) isLoading.value = false;
+    }
+  }
 
   /// Get filtered chats based on selected filter and search query
-  List<Map<String, dynamic>> get filteredChats {
-    final Iterable<Map<String, dynamic>> result = chats.where((chat) {
-      // Filter by type
-      if (selectedFilter.value != 'All' &&
-          chat['type'] != selectedFilter.value) {
-        return false;
+  List<ConversationModel> get filteredChats {
+    final Iterable<ConversationModel> result = conversations.where((chat) {
+      // Filter by type (map UI filter to API type)
+      // Personal → private, Department → group
+      if (selectedFilter.value != 'All') {
+        final filterType = selectedFilter.value.toLowerCase();
+        final chatType = chat.type.toLowerCase();
+
+        // Map Personal → private, Department → group
+        if (filterType == 'personal' && chatType != 'private') {
+          return false;
+        }
+        if (filterType == 'department' && chatType != 'group') {
+          return false;
+        }
       }
 
       // Filter by search query
       if (searchQuery.value.isNotEmpty) {
         final query = searchQuery.value.toLowerCase();
-        final name = (chat['name'] as String).toLowerCase();
-        final message = (chat['message'] as String).toLowerCase();
-        return name.contains(query) || message.contains(query);
+        final name = chat.displayName.toLowerCase();
+        return name.contains(query);
       }
 
       return true;
     });
 
-    return result.toList();
+    return result.toList()
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  }
+
+  /// Capitalize first letter of string
+  String _capitalizeFirst(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1).toLowerCase();
   }
 
   /// Select filter
@@ -97,30 +134,28 @@ class CommunityController extends GetxController {
     searchQuery.value = value;
   }
 
-  /// Open chat
-  void openChat(Map<String, dynamic> chat) {
-    final isDept = chat['type'] == 'Department';
+  /// Open chat (pause polling while in chat detail)
+  void openChat(ConversationModel conversation) {
+    pausePolling(); // Stop polling saat buka chat
     Get.toNamed(
-      '/chat-detail',
+      Routes.CHAT_DETAIL,
       arguments: {
-        'chatId': chat['id'],
-        'name': chat['name'],
-        'type': chat['type'],
-        'subtitle': isDept ? '10 Members' : null,
-        'avatarUrl': chat['avatarImage'],
+        'chatId': conversation.id.toString(),
+        'name': conversation.displayName,
+        'type': conversation.type,
+        'subtitle': conversation.subtitle,
+        'conversation': conversation,
       },
     );
+  }
+
+  /// Resume polling when back from chat detail
+  void onResume() {
+    resumePolling();
   }
 
   /// Create new chat
   void createNewChat() {
     Get.toNamed(Routes.NEW_CHAT);
-  }
-
-  @override
-  void onClose() {
-    searchController.dispose();
-    scrollController.dispose();
-    super.onClose();
   }
 }

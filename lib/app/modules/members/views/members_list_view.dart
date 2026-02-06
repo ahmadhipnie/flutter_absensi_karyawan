@@ -32,7 +32,6 @@ class MembersListView extends GetView<MembersController> {
       body: SafeArea(
         child: Column(
           children: [
-            
             const SizedBox(height: 8),
 
             // Add Members Row
@@ -74,7 +73,7 @@ class MembersListView extends GetView<MembersController> {
                 ),
               ),
             ),
-            
+
             const Divider(height: 24, thickness: 1, color: Color(0xFFF5F5F5)),
 
             // Members List
@@ -83,44 +82,54 @@ class MembersListView extends GetView<MembersController> {
                 if (controller.isLoading.value) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
+
                 // Trigger rebuild when dependencies change
                 // ignore: unused_local_variable
                 final dep = controller.selectedDepartment.value;
                 // ignore: unused_local_variable
                 final query = controller.searchQuery.value;
-                
-                final users = controller.getFilteredUsers();
-                
-                if (users.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.search_off, size: 48, color: Colors.grey.shade400),
-                        const SizedBox(height: 16),
-                        Text(
-                          'No members found',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+
+                final members = controller.getFilteredMembers();
+
+                if (members.isEmpty) {
+                  return RefreshIndicator(
+                    onRefresh: controller.refresh,
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.search_off, size: 48, color: Colors.grey.shade400),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No members found',
+                              style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 }
-                
-                return ListView.separated(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  itemCount: users.length,
-                  separatorBuilder: (context, index) => Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: Colors.grey.shade100,
-                    indent: 80, 
-                    endIndent: 20,
+
+                return RefreshIndicator(
+                  onRefresh: controller.refresh,
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 24),
+                    itemCount: members.length,
+                    separatorBuilder: (context, index) => Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: Colors.grey.shade100,
+                      indent: 80,
+                      endIndent: 20,
+                    ),
+                    itemBuilder: (context, index) {
+                      return MemberListItem(user: members[index]);
+                    },
                   ),
-                  itemBuilder: (context, index) {
-                    return MemberListItem(user: users[index]);
-                  },
                 );
               }),
             ),

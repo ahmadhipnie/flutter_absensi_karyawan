@@ -1,44 +1,94 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../data/models/task_model.dart' as data_model;
+import '../../../data/models/task_item.dart';
+import '../../../utils/date_helper.dart';
 
 class UserTaskDetailController extends GetxController {
-  // Task info
-  final taskTitle = 'Update Daily Work Progress for Project 1'.obs;
-  final postedDate = DateTime(2025, 12, 25, 10, 30).obs;
-  final dueDate = DateTime(2025, 12, 28, 11, 59).obs;
-  final status = 'Approved'.obs;
-  final commentsCount = 2.obs;
-  final description =
-      'Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus. Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet'
-          .obs;
-  final customerName = 'Alexandria Maria'.obs;
-  final location = 'Orchard 1, Batam'.obs;
+  // Task info - populated from API or arguments
+  final taskId = Rxn<int>();
+  final taskTitle = ''.obs;
+  final postedDate = Rxn<DateTime>();
+  final dueDate = Rxn<DateTime>();
+  final status = ''.obs;
+  final commentsCount = 0.obs;
+  final description = ''.obs;
+  final location = ''.obs;
+  final customerName = ''.obs;
 
   // Status options
-  final List<String> statusOptions = ['Approved', 'Pending', 'Rejected'];
+  final List<String> statusOptions = ['Approved', 'Pending', 'In Progress', 'Rejected'];
 
   // Uploaded files
   final RxList<Map<String, String>> uploadedFiles = <Map<String, String>>[].obs;
 
-  /// Format date with time
-  String formatDateTime(DateTime date) {
-    final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '${date.day} ${months[date.month - 1]} ${date.year}, $hour:$minute';
+  @override
+  void onInit() {
+    super.onInit();
+    _loadTaskData();
+  }
+
+  /// Load task data from arguments
+  void _loadTaskData() {
+    final arguments = Get.arguments;
+
+    if (arguments == null) {
+      _loadMockData();
+      return;
+    }
+
+    // Handle TaskModel from API
+    if (arguments is data_model.TaskModel) {
+      final task = arguments as data_model.TaskModel;
+      taskId.value = task.taskId;
+      taskTitle.value = task.taskSubject;
+      postedDate.value = task.createdAt;
+      dueDate.value = task.dueDate;
+      status.value = _capitalizeFirst(task.status);
+      description.value = task.taskDescription;
+      location.value = task.location;
+      customerName.value = ''; // Not available from API
+      return;
+    }
+
+    // Handle DashboardTaskItem (for backward compatibility)
+    if (arguments is DashboardTaskItem) {
+      final task = arguments as DashboardTaskItem;
+      taskTitle.value = task.title;
+      dueDate.value = task.dueDate;
+      status.value = 'Pending';
+      description.value = 'No description available';
+      location.value = '';
+      customerName.value = '';
+      return;
+    }
+
+    // Fallback to mock data
+    _loadMockData();
+  }
+
+  /// Load mock data as fallback
+  void _loadMockData() {
+    taskTitle.value = 'Update Daily Work Progress for Project 1';
+    postedDate.value = DateTime(2025, 12, 25, 10, 30);
+    dueDate.value = DateTime(2025, 12, 28, 11, 59);
+    status.value = 'Pending';
+    description.value =
+        'Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil impedit quo minus id quod maxime placeat facere possimus, omnis voluptas assumenda est, omnis dolor repellendus.';
+    location.value = 'Orchard 1, Batam';
+    customerName.value = 'Alexandria Maria';
+  }
+
+  /// Capitalize first letter of string
+  String _capitalizeFirst(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
+
+  /// Format date with time (WIB)
+  String formatDateTime(DateTime? date) {
+    if (date == null) return 'N/A';
+    return DateHelper.formatDateTimeWib(date);
   }
 
   /// Change status
@@ -159,9 +209,9 @@ class UserTaskDetailController extends GetxController {
       'Report Final.docx',
     ];
     final fileTypes = ['PDF', 'DOCX', 'XLSX'];
-    
+
     final index = uploadedFiles.length % fileNames.length;
-    
+
     uploadedFiles.add({
       'name': fileNames[index],
       'type': fileTypes[index],

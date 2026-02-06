@@ -85,12 +85,12 @@ class NewChatController extends GetxController {
       if (response != null && response.data != null) {
         final conversation = response.data!;
 
-        // Navigate to Chat Detail with conversation data
+        // Use member's display name since user explicitly selected this member
         Get.toNamed(
           Routes.CHAT_DETAIL,
           arguments: {
             'chatId': conversation.id.toString(),
-            'name': conversation.displayName,
+            'name': member.displayName,
             'type': conversation.type,
             'avatarUrl': member.avatarUrl,
             'conversation': conversation,

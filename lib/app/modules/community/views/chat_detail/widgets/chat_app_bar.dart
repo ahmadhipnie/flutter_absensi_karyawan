@@ -9,8 +9,6 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.isGroupChat,
     this.subtitle,
     this.avatarUrl,
-    this.onVideoCall,
-    this.onVoiceCall,
     super.key,
   });
 
@@ -18,8 +16,6 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isGroupChat;
   final String? subtitle;
   final String? avatarUrl;
-  final VoidCallback? onVideoCall;
-  final VoidCallback? onVoiceCall;
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -37,19 +33,6 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
       title: isGroupChat
           ? _buildGroupTitle()
           : _buildPersonalTitle(),
-      actions: [
-        if (onVideoCall != null)
-          IconButton(
-            icon: const Icon(Icons.videocam, color: Colors.black, size: 24),
-            onPressed: onVideoCall,
-          ),
-        if (onVoiceCall != null)
-          IconButton(
-            icon: const Icon(Icons.phone, color: Colors.black, size: 24),
-            onPressed: onVoiceCall,
-          ),
-        const SizedBox(width: AppTheme.paddingS),
-      ],
     );
   }
 
@@ -65,14 +48,15 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
             fontWeight: FontWeight.w600,
           ),
         ),
-        Text(
-          subtitle ?? '',
-          style: const TextStyle(
-            color: AppTheme.gray500,
-            fontSize: 13,
-            fontWeight: FontWeight.w400,
+        if (subtitle != null)
+          Text(
+            subtitle!,
+            style: const TextStyle(
+              color: AppTheme.gray500,
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+            ),
           ),
-        ),
       ],
     );
   }

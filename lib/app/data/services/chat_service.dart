@@ -1,9 +1,13 @@
-import 'package:dio/dio.dart';
+import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 import '../models/conversation_model.dart';
 import '../models/chat_message_model.dart';
 import '../models/user_model.dart';
 import '../providers/api_provider.dart';
+
+// Typedefs to avoid conflict with GetX
+typedef DioFormData = dio.FormData;
+typedef DioMultipartFile = dio.MultipartFile;
 
 class ChatService extends GetxService {
   late final ApiProvider _apiProvider;
@@ -38,7 +42,7 @@ class ChatService extends GetxService {
       }
 
       return null;
-    } on DioException catch (e) {
+    } on dio.DioException catch (e) {
       String errorMessage = 'Failed to create conversation';
 
       if (e.response != null) {
@@ -101,16 +105,19 @@ class ChatService extends GetxService {
 
   /// Get messages for a conversation
   /// GET /conversations/{conversationId}/messages
-  Future<List<ChatMessage>> getMessages(int conversationId) async {
+  Future<List<ChatMessage>> getMessages(int conversationId, {String? myUserId}) async {
     try {
       final response = await _apiProvider.get('/conversations/$conversationId/messages');
 
       if (response.statusCode == 200) {
         final data = response.data;
-        if (data['success'] == true && data['data'] is Map) {
-          final messagesData = data['data']['messages'] as List? ?? [];
+        if (data['success'] == true && data['data'] is List) {
+          final messagesData = data['data'] as List;
           return messagesData
-              .map((item) => ChatMessage.fromJson(item as Map<String, dynamic>))
+              .map((item) => ChatMessage.fromJson(
+                    item as Map<String, dynamic>,
+                    myUserId: myUserId,
+                  ))
               .toList();
         }
       }
@@ -121,22 +128,59 @@ class ChatService extends GetxService {
     }
   }
 
+  /// Get only the last message for a conversation (for preview in list)
+  /// Returns the last message, or null if no messages
+  Future<ChatMessage?> getLastMessage(int conversationId, {String? myUserId}) async {
+    try {
+      final response = await _apiProvider.get('/conversations/$conversationId/messages');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] is List) {
+          final messagesData = data['data'] as List;
+          if (messagesData.isNotEmpty) {
+            // Get the last message (list is ordered by created_at descending from API)
+            return ChatMessage.fromJson(
+              messagesData.first as Map<String, dynamic>,
+              myUserId: myUserId,
+            );
+          }
+        }
+      }
+
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Send a message to a conversation
   /// POST /conversations/{conversationId}/messages
+  /// If imagePath is provided, sends as multipart/form-data (image upload)
   Future<ChatMessage?> sendMessage({
     required int conversationId,
     required String message,
+    required String myUserId,
+    String? imagePath,
   }) async {
     try {
       final response = await _apiProvider.post(
         '/conversations/$conversationId/messages',
-        data: {'message': message},
+        data: imagePath != null
+            ? DioFormData.fromMap({
+                'message_text': message,
+                'image': await DioMultipartFile.fromFile(imagePath),
+              })
+            : {'message_text': message},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data;
         if (data['success'] == true && data['data'] != null) {
-          return ChatMessage.fromJson(data['data'] as Map<String, dynamic>);
+          return ChatMessage.fromJson(
+            data['data'] as Map<String, dynamic>,
+            myUserId: myUserId,
+          );
         }
       }
 
@@ -164,6 +208,46 @@ class ChatService extends GetxService {
       return [];
     } catch (e) {
       return [];
+    }
+  }
+
+  /// Delete a message (only own messages)
+  /// DELETE /conversations/messages/{messageId}
+  Future<bool> deleteMessage(String messageId) async {
+    try {
+      final response = await _apiProvider.delete('/conversations/messages/$messageId');
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        final data = response.data;
+        if (data is Map && data['success'] == true) {
+          return true;
+        }
+        // Also return true for 204 No Content
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Leave a conversation
+  /// POST /conversations/{conversationId}/leave
+  Future<bool> leaveConversation(int conversationId) async {
+    try {
+      final response = await _apiProvider.post('/conversations/$conversationId/leave');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        if (data is Map && data['success'] == true) {
+          return true;
+        }
+      }
+
+      return false;
+    } catch (e) {
+      return false;
     }
   }
 }

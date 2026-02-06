@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../../../core/theme/app_theme.dart';
 
 class ChatInputField extends StatelessWidget {
@@ -6,6 +8,9 @@ class ChatInputField extends StatelessWidget {
     required this.controller,
     required this.onSend,
     this.onCameraTap,
+    this.selectedImage,
+    this.onRemoveImage,
+    this.isUploadingImage = false,
     this.hintText = 'Type a message here',
     super.key,
   });
@@ -13,69 +18,146 @@ class ChatInputField extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
   final VoidCallback? onCameraTap;
+  final File? selectedImage;
+  final VoidCallback? onRemoveImage;
+  final bool isUploadingImage;
   final String hintText;
 
   @override
   Widget build(BuildContext context) {
+    final hasImage = selectedImage != null;
+
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.all(AppTheme.paddingL),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingL),
-                decoration: BoxDecoration(
-                  color: AppTheme.gray100,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Row(
+            // Selected image preview
+            if (hasImage)
+              Container(
+                margin: const EdgeInsets.only(bottom: AppTheme.paddingM),
+                height: 150,
+                child: Stack(
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: controller,
-                        decoration: InputDecoration(
-                          hintText: hintText,
-                          hintStyle: const TextStyle(
-                            color: AppTheme.gray500,
-                            fontSize: 15,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 14),
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                        child: Image.file(
+                          selectedImage!,
+                          fit: BoxFit.cover,
                         ),
-                        onSubmitted: (_) => onSend(),
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(
-                        Icons.camera_alt,
-                        color: AppTheme.gray500,
-                        size: 24,
+                    if (isUploadingImage)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          ),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          ),
+                        ),
                       ),
-                      onPressed: onCameraTap,
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: GestureDetector(
+                        onTap: onRemoveImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.6),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 18,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(width: AppTheme.paddingM),
-            GestureDetector(
-              onTap: onSend,
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: const BoxDecoration(
-                  color: AppTheme.primaryColor,
-                  shape: BoxShape.circle,
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.paddingL),
+                    decoration: BoxDecoration(
+                      color: AppTheme.gray100,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: controller,
+                            decoration: InputDecoration(
+                              hintText: hintText,
+                              hintStyle: const TextStyle(
+                                color: AppTheme.gray500,
+                                fontSize: 15,
+                              ),
+                              border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
+                              contentPadding:
+                                  const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            onSubmitted: (_) => onSend(),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            hasImage ? Icons.check_circle : Icons.camera_alt,
+                            color: hasImage
+                                ? AppTheme.primaryColor
+                                : AppTheme.gray500,
+                            size: 24,
+                          ),
+                          onPressed: onCameraTap,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                child: const Icon(
-                  Icons.send,
-                  color: Colors.white,
-                  size: 24,
+                const SizedBox(width: AppTheme.paddingM),
+                GestureDetector(
+                  onTap: isUploadingImage ? null : onSend,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: isUploadingImage
+                          ? AppTheme.gray500
+                          : AppTheme.primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: isUploadingImage
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Icon(
+                            Icons.send,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),

@@ -19,6 +19,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
         isGroupChat: controller.isGroupChat,
         subtitle: controller.subtitle,
         avatarUrl: controller.avatarUrl,
+        onLeaveConversation: controller.isGroupChat ? controller.leaveConversation : null,
       ),
       body: Column(
         children: [

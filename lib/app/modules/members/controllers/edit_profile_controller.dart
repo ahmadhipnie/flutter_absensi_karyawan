@@ -4,17 +4,19 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/department_model.dart';
 import '../../../data/services/user_service.dart';
+import '../../../data/services/department_service.dart';
 import '../../../routes/app_pages.dart';
 
 class EditProfileController extends GetxController {
   final UserService _userService = UserService();
+  final DepartmentService _departmentService = DepartmentService();
   final ImagePicker _picker = ImagePicker();
 
   // Form controllers
   late TextEditingController nameController;
   late TextEditingController emailController;
-  late TextEditingController phoneController;
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
@@ -26,6 +28,10 @@ class EditProfileController extends GetxController {
   final selectedImage = Rxn<File>();
   late String selectedRole;
   late UserModel user;
+  
+  // Department data
+  final departments = <DepartmentModel>[].obs;
+  final selectedDepartment = Rxn<DepartmentModel>();
 
   final List<String> roles = ['member', 'supervisor'];
 
@@ -39,18 +45,48 @@ class EditProfileController extends GetxController {
     // Initialize controllers
     nameController = TextEditingController(text: user.username);
     emailController = TextEditingController(text: user.email);
-    phoneController = TextEditingController(text: user.phone ?? '');
     selectedRole = user.role;
+    
+    // Load departments
+    loadDepartments();
   }
 
   @override
   void onClose() {
     nameController.dispose();
     emailController.dispose();
-    phoneController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
     super.onClose();
+  }
+  
+  /// Load departments
+  Future<void> loadDepartments() async {
+    try {
+      final result = await _departmentService.getDepartments();
+      departments.assignAll(result);
+      
+      // Set selected department based on user's departmentId
+      if (user.departmentId != null && departments.isNotEmpty) {
+        try {
+          selectedDepartment.value = departments.firstWhere(
+            (d) => d.id == user.departmentId,
+          );
+        } catch (e) {
+          // If department not found, select first one
+          selectedDepartment.value = departments.first;
+        }
+      } else if (departments.isNotEmpty) {
+        selectedDepartment.value = departments.first;
+      }
+    } catch (e) {
+      print('Error loading departments: $e');
+    }
+  }
+  
+  /// Set department
+  void setDepartment(DepartmentModel dept) {
+    selectedDepartment.value = dept;
   }
 
   /// Pick image from gallery
@@ -201,6 +237,17 @@ class EditProfileController extends GetxController {
     if (!formKey.currentState!.validate()) {
       return;
     }
+    
+    if (selectedDepartment.value == null) {
+      Get.snackbar(
+        'Error',
+        'Please select a department',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
 
     try {
       isLoading.value = true;
@@ -211,8 +258,7 @@ class EditProfileController extends GetxController {
         email: emailController.text.trim(),
         username: nameController.text.trim(),
         role: selectedRole,
-        departmentId: user.departmentId,
-        phone: phoneController.text.trim(),
+        departmentId: selectedDepartment.value!.id,
         photoFile: selectedImage.value,
       );
 

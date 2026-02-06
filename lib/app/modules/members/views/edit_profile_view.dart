@@ -97,10 +97,12 @@ class EditProfileView extends GetView<EditProfileController> {
                           backgroundImage: selectedImage != null
                               ? FileImage(selectedImage) as ImageProvider
                               : (photoUrl != null ? NetworkImage(photoUrl) : null),
+                          onBackgroundImageError: (selectedImage != null || photoUrl != null)
+                              ? (exception, stackTrace) {}
+                              : null,
                           child: (selectedImage == null && photoUrl == null)
                               ? const Icon(Icons.person, size: 40, color: Colors.grey)
                               : null,
-                          onBackgroundImageError: (exception, stackTrace) {},
                         ),
                       ),
                       Positioned(
@@ -127,7 +129,7 @@ class EditProfileView extends GetView<EditProfileController> {
               const SizedBox(height: 32),
 
               // Name Field
-              _buildLabel('Username'),
+              _buildLabel('Employee Name'),
               _buildTextField(
                 controller: controller.nameController,
                 hint: 'Enter username',
@@ -140,25 +142,33 @@ class EditProfileView extends GetView<EditProfileController> {
               _buildLabel('Email'),
               _buildTextField(
                 controller: controller.emailController,
-                hint: 'Enter email',
+                hint: 'example@email.com',
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) => !GetUtils.isEmail(value ?? '') ? 'Invalid email' : null,
               ),
 
               const SizedBox(height: 16),
 
-              // Phone Field
-              _buildLabel('Phone'),
-              _buildTextField(
-                controller: controller.phoneController,
-                hint: 'Enter phone number',
-                keyboardType: TextInputType.phone,
-              ),
+              // Department Dropdown
+              _buildLabel('Department'),
+              Obx(() => _buildDropdown(
+                value: controller.selectedDepartment.value?.name ??
+                    (controller.departments.isEmpty ? 'No departments' : controller.departments.first.name),
+                items: controller.departments.isEmpty
+                    ? ['No departments']
+                    : controller.departments.map((d) => d.name).toList(),
+                onChanged: (val) {
+                  if (val != null && controller.departments.isNotEmpty) {
+                    final dept = controller.departments.firstWhere((d) => d.name == val);
+                    controller.setDepartment(dept);
+                  }
+                },
+              )),
 
               const SizedBox(height: 16),
 
               // Role Dropdown
-              _buildLabel('Role'),
+              _buildLabel('User Type'),
               GetBuilder<EditProfileController>(
                 builder: (_) => _buildDropdown(
                   value: controller.selectedRole,

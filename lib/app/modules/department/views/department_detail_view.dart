@@ -4,6 +4,10 @@ import '../../../core/theme/app_theme.dart';
 import '../controllers/department_controller.dart';
 import '../../../routes/app_pages.dart';
 import '../../../core/config/app_config.dart';
+import '../../members/controllers/members_controller.dart';
+import '../../members/views/widgets/member_list_item.dart';
+import '../../../data/services/user_service.dart';
+import '../../../data/models/user_model.dart';
 
 class DepartmentDetailView extends GetView<DepartmentController> {
   const DepartmentDetailView({Key? key}) : super(key: key);
@@ -114,16 +118,36 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                                 ],
                               ),
                               const SizedBox(height: 4),
-                              Text(
-                                dept?.description ?? '',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w400,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              // Show member count for this department
+                              if (!Get.isRegistered<MembersController>())
+                                const Text(
+                                  '0 members',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                )
+                              else
+                                Obx(() {
+                                  final membersCtrl = Get.find<MembersController>();
+                                  final memberCount = dept != null
+                                      ? membersCtrl.members.where((m) => m.departmentId == dept.id).length
+                                      : 0;
+
+                                  return Text(
+                                    '$memberCount member${memberCount == 1 ? '' : 's'}',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  );
+                                }),
                             ],
                           ),
                         ),
@@ -150,6 +174,12 @@ class DepartmentDetailView extends GetView<DepartmentController> {
             color: const Color(0xFFF3F4F6),
           ),
 
+          // Announcement Card shown below tabs so it's visible across all tab pages
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: _buildAnnouncementCard(),
+          ),
+          
           // Tab View Content (Task/Discussion/Members)
           // Since TabBarView usually expands, we wrap in Expanded.
           Expanded(
@@ -158,11 +188,53 @@ class DepartmentDetailView extends GetView<DepartmentController> {
               children: [
                 _buildTaskTab(),
                 const Center(child: Text('Discussion Content')),
-                const Center(child: Text('Members Content')),
+                _buildMembersTab(),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAnnouncementCard() {
+    return GestureDetector(
+      onTap: () => Get.toNamed(Routes.CREATE_ANNOUNCEMENT),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.campaign,
+                color: AppTheme.primaryColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Text(
+                'Announce Something to your team',
+                style: TextStyle(
+                  color: Color(0xFF9CA3AF),
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -224,48 +296,6 @@ class DepartmentDetailView extends GetView<DepartmentController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Announcement Card
-          GestureDetector(
-            onTap: () => Get.toNamed(Routes.CREATE_ANNOUNCEMENT),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: const Color(0xFFE5E7EB)),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.campaign,
-                      color: AppTheme.primaryColor,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  const Expanded(
-                    child: Text(
-                      'Announce Something to your team',
-                      style: TextStyle(
-                        color: Color(0xFF9CA3AF),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -355,6 +385,120 @@ class DepartmentDetailView extends GetView<DepartmentController> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMembersTab() {
+    final dept = controller.department.value;
+    if (dept == null) {
+      return const Center(child: Text('No department selected'));
+    }
+
+    // If MembersController is available, use it (reactive)
+    if (Get.isRegistered<MembersController>()) {
+      return GetBuilder<MembersController>(
+        init: Get.find<MembersController>(),
+        builder: (membersCtrl) {
+          final members = membersCtrl.members.where((m) {
+            // Match by departmentId OR by location (department name) to be robust
+            final byId = m.departmentId != null && m.departmentId == dept.id;
+            final byName = m.location != null && m.location == dept.name;
+            // Also handle possible string-int mismatch
+            final byIdString = m.departmentId != null && m.departmentId.toString() == dept.id.toString();
+            return byId || byName || byIdString;
+          }).toList();
+
+          if (members.isEmpty) {
+            return RefreshIndicator(
+              onRefresh: membersCtrl.fetchMembers,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: 300,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.people_outline, size: 48, color: Colors.grey.shade400),
+                        const SizedBox(height: 12),
+                        Text('No members in this department', style: TextStyle(color: Colors.grey.shade600)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: membersCtrl.fetchMembers,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: members.length,
+              separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+              itemBuilder: (context, index) {
+                return MemberListItem(user: members[index]);
+              },
+            ),
+          );
+        },
+      );
+    }
+
+    // Fallback: fetch users directly via UserService
+    return FutureBuilder<List<UserModel>>(
+      future: UserService().getUsers(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Failed to load members'),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: () => Get.offAndToNamed(Routes.MEMBERS_LIST),
+                  child: const Text('Open Members List'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final users = snapshot.data ?? [];
+        final members = users.where((u) {
+          final byId = u.departmentId != null && u.departmentId == dept.id;
+          final byName = u.location != null && u.location == dept.name;
+          final byIdString = u.departmentId != null && u.departmentId.toString() == dept.id.toString();
+          return byId || byName || byIdString;
+        }).toList();
+
+        if (members.isEmpty) {
+          return RefreshIndicator(
+            onRefresh: () async {
+              // Try refreshing by navigating to members list
+              await Get.toNamed(Routes.MEMBERS_LIST);
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: 300,
+                child: Center(child: Text('No members in this department')),
+              ),
+            ),
+          );
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          itemCount: members.length,
+          separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+          itemBuilder: (context, index) => MemberListItem(user: members[index]),
+        );
+      },
     );
   }
 }

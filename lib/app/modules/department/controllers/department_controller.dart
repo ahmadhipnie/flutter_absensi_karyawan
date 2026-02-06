@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../../../data/services/department_service.dart';
 import '../../../data/models/department_model.dart';
+import '../../members/controllers/members_controller.dart';
 
 class DepartmentController extends GetxController with GetSingleTickerProviderStateMixin {
   final DepartmentService _departmentService = DepartmentService();
@@ -35,6 +36,22 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
     // Load department from arguments if available
     if (Get.arguments is DepartmentModel) {
       department.value = Get.arguments as DepartmentModel;
+    }
+    
+    // Fetch members data to ensure it's fresh
+    _fetchMembersData();
+  }
+  
+  /// Fetch members data to ensure member count is accurate
+  Future<void> _fetchMembersData() async {
+    try {
+      // If MembersController is registered, refresh its data
+      if (Get.isRegistered<MembersController>()) {
+        final membersController = Get.find<MembersController>();
+        await membersController.fetchMembers(silent: true);
+      }
+    } catch (e) {
+      print('Error fetching members: $e');
     }
   }
 

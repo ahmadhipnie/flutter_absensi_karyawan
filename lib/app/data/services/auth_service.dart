@@ -17,6 +17,8 @@ class AuthService extends GetxService {
 
   // Get apiProvider for external access
   ApiProvider get apiProvider => _apiProvider;
+  // Use singleton ApiProvider
+  ApiProvider get _apiProvider => ApiProvider.instance;
 
   final _isLoggedIn = false.obs;
   final _currentUser = Rxn<UserModel>();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../models/member_model.dart';
+import '../../../data/models/user_model.dart';
 import '../../../core/theme/app_theme.dart';
 
 class EditProfileView extends StatefulWidget {
@@ -14,20 +14,13 @@ class _EditProfileViewState extends State<EditProfileView> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _emailController;
+  late TextEditingController _phoneController;
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   
-  late String _selectedDepartment;
-  late String _selectedUserType;
+  late String _selectedRole;
   
-  final List<String> _departments = [
-    'UI/UX Designer',
-    'Backend Developer',
-    'Frontend Developer',
-    'Mobile Developer',
-  ];
-  
-  final List<String> _userTypes = ['Member', 'Supervisor'];
+  final List<String> _roles = ['member', 'supervisor'];
 
   @override
   void initState() {
@@ -37,12 +30,18 @@ class _EditProfileViewState extends State<EditProfileView> {
     _emailController = TextEditingController(text: member.email);
     _selectedDepartment = member.department;
     _selectedUserType = member.userType;
+    final UserModel user = Get.arguments as UserModel;
+    _nameController = TextEditingController(text: user.username);
+    _emailController = TextEditingController(text: user.email);
+    _phoneController = TextEditingController(text: user.phone ?? '');
+    _selectedRole = user.role;
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -147,11 +146,11 @@ class _EditProfileViewState extends State<EditProfileView> {
               SizedBox(height: 32),
               
               // Name Field
-              _buildLabel('Employee Name'),
+              _buildLabel('Username'),
               _buildTextField(
                 controller: _nameController,
-                hint: 'Enter name',
-                validator: (value) => value?.isEmpty == true ? 'Please enter name' : null,
+                hint: 'Enter username',
+                validator: (value) => value?.isEmpty == true ? 'Please enter username' : null,
               ),
               
               SizedBox(height: 16),
@@ -167,28 +166,24 @@ class _EditProfileViewState extends State<EditProfileView> {
               
               SizedBox(height: 16),
               
-              // Department Dropdown
-              _buildLabel('Department'),
-              _buildDropdown(
-                value: _selectedDepartment,
-                items: _departments,
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _selectedDepartment = val);
-                  }
-                },
+              // Phone Field
+              _buildLabel('Phone'),
+              _buildTextField(
+                controller: _phoneController,
+                hint: 'Enter phone number',
+                keyboardType: TextInputType.phone,
               ),
 
               const SizedBox(height: 16),
 
-              // User Type Dropdown
-              _buildLabel('User Type'),
+              // Role Dropdown
+              _buildLabel('Role'),
               _buildDropdown(
-                value: _selectedUserType,
-                items: _userTypes,
+                value: _selectedRole,
+                items: _roles,
                 onChanged: (val) {
                   if (val != null) {
-                    setState(() => _selectedUserType = val);
+                    setState(() => _selectedRole = val);
                   }
                 },
               ),
@@ -196,7 +191,7 @@ class _EditProfileViewState extends State<EditProfileView> {
               SizedBox(height: 16),
               
               // Create Password
-              _buildLabel('Create Password'),
+              _buildLabel('Create Password (Optional)'),
               _buildTextField(
                 controller: _passwordController,
                 isPassword: true,

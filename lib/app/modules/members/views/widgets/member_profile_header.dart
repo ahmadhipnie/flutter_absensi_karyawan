@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
-import '../../models/member_model.dart';
+import '../../../../data/models/user_model.dart';
 
 class MemberProfileHeader extends StatelessWidget {
-  const MemberProfileHeader({required this.member, super.key});
+  const MemberProfileHeader({required this.user, super.key});
 
-  final MemberModel member;
+  final UserModel user;
 
   @override
   Widget build(BuildContext context) {
-    final hasValidUrl = member.avatarUrl != null && member.avatarUrl!.isNotEmpty;
+    final hasValidUrl = user.photoProfile != null && user.photoProfile!.isNotEmpty;
     return Center(
       child: Column(
         children: [
           CircleAvatar(
             radius: 40,
             backgroundColor: Colors.grey.shade100,
-            backgroundImage: hasValidUrl ? NetworkImage(member.avatarUrl!) : null,
+            backgroundImage: hasValidUrl ? NetworkImage(user.photoProfile!) : null,
             child: !hasValidUrl
                 ? const Icon(Icons.person, size: 40, color: Colors.grey)
                 : null,
@@ -24,6 +24,7 @@ class MemberProfileHeader extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             member.displayName,
+            user.displayName,
             style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -32,7 +33,7 @@ class MemberProfileHeader extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            member.department,
+            user.role.toUpperCase(),
             style: const TextStyle(
               fontSize: 14,
               color: Colors.grey,

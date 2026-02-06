@@ -8,6 +8,42 @@ class EditProfileView extends GetView<EditProfileController> {
   const EditProfileView({super.key});
 
   @override
+  State<EditProfileView> createState() => _EditProfileViewState();
+}
+
+class _EditProfileViewState extends State<EditProfileView> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _phoneController;
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  
+  late String _selectedRole;
+  
+  final List<String> _roles = ['member', 'supervisor'];
+
+  @override
+  void initState() {
+    super.initState();
+    final UserModel user = Get.arguments as UserModel;
+    _nameController = TextEditingController(text: user.username ?? '');
+    _emailController = TextEditingController(text: user.email);
+    _phoneController = TextEditingController(text: user.phone ?? '');
+    _selectedRole = user.role;
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,

@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../data/models/task_model.dart' as data_model;
+import '../../../data/services/task_service.dart';
+import '../../../utils/date_helper.dart';
 import '../../dashboard/controllers/dashboard_controller.dart';
 
 class TaskController extends GetxController {
+  final TaskService _taskService = Get.find<TaskService>();
+
   // Observable states
   final selectedFilter = 'All'.obs;
   final scrollController = ScrollController();
+  final isLoading = false.obs;
+  final RxnString errorMessage = RxnString();
 
   // Get userRole from DashboardController
   DashboardController? get _dashboardController {
@@ -19,98 +26,117 @@ class TaskController extends GetxController {
   // User role from DashboardController: 'supervisor' or 'member'
   RxString get userRole => _dashboardController?.userRole ?? 'member'.obs;
 
-  // Filter options
+  // Observable list of tasks
+  final RxList<data_model.TaskModel> tasks = <data_model.TaskModel>[].obs;
+
+  // Filter options (for now using simple status filters)
   final List<String> filters = [
     'All',
-    'Department A',
-    'Department B',
-    'Department C',
+    'Pending',
+    'In Progress',
+    'Completed',
   ];
 
-  // Sample tasks data grouped by month
-  final Map<String, List<TaskModel>> groupedTasks = {
-    'February 2026': [
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 2, 17, 23, 59),
-        department: 'Department A',
-      ),
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 2, 17, 23, 59),
-        department: 'Department B',
-      ),
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 2, 17, 23, 59),
-        department: 'Department A',
-      ),
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 2, 17, 23, 59),
-        department: 'Department C',
-      ),
-    ],
-    'January 2026': [
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 1, 22, 23, 59),
-        department: 'Department A',
-      ),
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 1, 17, 23, 59),
-        department: 'Department B',
-      ),
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 1, 22, 23, 59),
-        department: 'Department C',
-      ),
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 1, 22, 23, 59),
-        department: 'Department C',
-      ),
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 1, 22, 23, 59),
-        department: 'Department C',
-      ),
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 1, 22, 23, 59),
-        department: 'Department C',
-      ),
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 1, 22, 23, 59),
-        department: 'Department C',
-      ),
-      TaskModel(
-        title: 'Site Inspection Report Submission',
-        dueDate: DateTime(2026, 1, 22, 23, 59),
-        department: 'Department C',
-      ),
-    ],
-  };
+  @override
+  void onInit() {
+    super.onInit();
+    if (userRole.value == 'member') {
+      fetchMyAssignedTasks();
+    }
+  }
 
-  /// Get filtered tasks based on selected department
-  Map<String, List<TaskModel>> get filteredTasks {
-    if (selectedFilter.value == 'All') {
-      return groupedTasks;
+  /// Fetch my assigned tasks from API (for member role)
+  Future<void> fetchMyAssignedTasks() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = null;
+
+      final response = await _taskService.getMyAssignedTasks();
+
+      if (response != null && response.success) {
+        tasks.value = response.data;
+      }
+    } catch (e) {
+      errorMessage.value = e.toString();
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.TOP,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Get tasks grouped by month
+  Map<String, List<data_model.TaskModel>> get groupedTasks {
+    final grouped = <String, List<data_model.TaskModel>>{};
+
+    for (final task in filteredTasks) {
+      final monthKey = _getMonthKey(task.dueDate);
+      grouped.putIfAbsent(monthKey, () => []);
+      grouped[monthKey]!.add(task);
     }
 
-    final filtered = <String, List<TaskModel>>{};
-    groupedTasks.forEach((month, tasks) {
-      final filteredList = tasks
-          .where((task) => task.department == selectedFilter.value)
-          .toList();
-      if (filteredList.isNotEmpty) {
-        filtered[month] = filteredList;
-      }
-    });
-    return filtered;
+    // Sort months in descending order (newest first)
+    final sortedKeys = grouped.keys.toList()
+      ..sort((a, b) => _parseMonthKey(b).compareTo(_parseMonthKey(a)));
+
+    return Map.fromEntries(
+      sortedKeys.map((key) => MapEntry(key, grouped[key]!)),
+    );
+  }
+
+  /// Get filtered tasks based on selected status filter
+  List<data_model.TaskModel> get filteredTasks {
+    if (selectedFilter.value == 'All') {
+      return tasks;
+    }
+
+    return tasks.where((task) {
+      return task.status.toLowerCase() == selectedFilter.value.toLowerCase();
+    }).toList();
+  }
+
+  /// Parse month key string to DateTime for sorting
+  DateTime _parseMonthKey(String monthKey) {
+    final parts = monthKey.split(' ');
+    const months = {
+      'January': 1,
+      'February': 2,
+      'March': 3,
+      'April': 4,
+      'May': 5,
+      'June': 6,
+      'July': 7,
+      'August': 8,
+      'September': 9,
+      'October': 10,
+      'November': 11,
+      'December': 12,
+    };
+    final month = months[parts[0]] ?? 1;
+    final year = int.tryParse(parts[1]) ?? DateTime.now().year;
+    return DateTime(year, month);
+  }
+
+  /// Get month key from DateTime
+  String _getMonthKey(DateTime date) {
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${months[date.month - 1]} ${date.year}';
   }
 
   /// Select filter
@@ -118,27 +144,14 @@ class TaskController extends GetxController {
     selectedFilter.value = filter;
   }
 
-  /// Format date to display format
+  /// Format date to display format (WIB)
   String formatDate(DateTime date) {
-    final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    final month = months[date.month - 1];
-    final day = date.day;
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return 'Due $day $month ${date.year}, $hour $minute PM';
+    return DateHelper.formatDateWib(date);
+  }
+
+  /// Format date with time (WIB)
+  String formatDateTime(DateTime date) {
+    return DateHelper.formatDateTimeWib(date);
   }
 
   @override
@@ -153,26 +166,19 @@ class TaskController extends GetxController {
   /// Navigate to task detail based on user role
   /// Supervisor/Admin -> TaskDetailView (with tabs)
   /// Member -> UserTaskDetailView (with status, upload, submit button)
-  void openTaskDetail(TaskModel task) {
+  void openTaskDetail(data_model.TaskModel task) {
     if (userRole.value == 'supervisor') {
       Get.toNamed('/task-detail', arguments: task);
     } else {
       Get.toNamed('/user-task-detail', arguments: task);
     }
   }
-}
 
-/// Task Model
-class TaskModel {
-  final String title;
-  final DateTime dueDate;
-  final String department;
-  final bool isCompleted;
-
-  TaskModel({
-    required this.title,
-    required this.dueDate,
-    required this.department,
-    this.isCompleted = false,
-  });
+  /// Refresh tasks
+  @override
+  Future<void> refresh() async {
+    if (userRole.value == 'member') {
+      await fetchMyAssignedTasks();
+    }
+  }
 }

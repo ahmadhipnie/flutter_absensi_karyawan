@@ -1,14 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../members/models/member_model.dart';
+import '../../../data/services/chat_service.dart';
+import '../../../data/services/auth_service.dart';
+import '../../../data/models/user_model.dart';
 import '../../../routes/app_pages.dart';
 
 class NewChatController extends GetxController {
+  final ChatService _chatService = Get.find<ChatService>();
+
+  // Lazy initialization of AuthService
+  AuthService? get _authService {
+    try {
+      return Get.find<AuthService>();
+    } catch (e) {
+      return null;
+    }
+  }
+
   final searchController = TextEditingController();
-  final members = <MemberModel>[].obs;
-  final filteredMembers = <MemberModel>[].obs;
+  final members = <UserModel>[].obs;
+  final filteredMembers = <UserModel>[].obs;
   final isLoading = false.obs;
+  final isCreatingChat = false.obs;
   final searchQuery = ''.obs;
+
+  // Get current user ID to exclude from member list
+  int? get currentUserId {
+    final user = _authService?.currentUser;
+    return user?.id;
+  }
 
   @override
   void onInit() {
@@ -16,66 +36,23 @@ class NewChatController extends GetxController {
     fetchMembers();
   }
 
-  void fetchMembers() {
-    isLoading.value = true;
-    
-    // Using dummy data similar to MembersController
-    // In a real app, this would come from a service/API
-    final dummyData = [
-      MemberModel(
-        id: '1',
-        name: 'Sarah Johnson',
-        email: 'sarah.j@company.com',
-        department: 'UI/UX Designer',
-        userType: 'Member',
-      ),
-      MemberModel(
-        id: '2',
-        name: 'Michael Chen',
-        email: 'michael.c@company.com',
-        department: 'Backend Developer',
-        userType: 'Supervisor',
-      ),
-      MemberModel(
-        id: '3',
-        name: 'Emily Davis',
-        email: 'emily.d@company.com',
-        department: 'Frontend Developer',
-        userType: 'Member',
-      ),
-      MemberModel(
-        id: '4',
-        name: 'John Smith',
-        email: 'john.s@company.com',
-        department: 'Mobile Developer',
-        userType: 'Member',
-      ),
-      MemberModel(
-        id: '5',
-        name: 'Lisa Anderson',
-        email: 'lisa.a@company.com',
-        department: 'UI/UX Designer',
-        userType: 'Member',
-      ),
-      MemberModel(
-        id: '6',
-        name: 'David Wilson',
-        email: 'david.w@company.com',
-        department: 'Project Manager',
-        userType: 'Supervisor',
-      ),
-      MemberModel(
-        id: '7',
-        name: 'Jessica Brown',
-        email: 'jessica.b@company.com',
-        department: 'QA Engineer',
-        userType: 'Member',
-      ),
-    ];
-    
-    members.assignAll(dummyData);
-    filteredMembers.assignAll(dummyData);
-    isLoading.value = false;
+  /// Fetch members from API
+  Future<void> fetchMembers() async {
+    try {
+      isLoading.value = true;
+
+      final result = await _chatService.getUsers();
+
+      // Filter out current user from the list
+      final filtered = result.where((m) => m.id != currentUserId).toList();
+
+      members.assignAll(filtered);
+      filteredMembers.assignAll(filtered);
+    } catch (e) {
+      Get.snackbar('Error', 'Failed to load members');
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   void onSearchChanged(String value) {
@@ -84,24 +61,49 @@ class NewChatController extends GetxController {
       filteredMembers.assignAll(members);
     } else {
       final query = value.toLowerCase();
+      final displayName = value.toLowerCase();
       filteredMembers.assignAll(members.where((m) {
-        return m.name.toLowerCase().contains(query) ||
-               m.department.toLowerCase().contains(query);
+        return (m.username?.toLowerCase().contains(query) ?? false) ||
+               m.email.toLowerCase().contains(query);
       }).toList());
     }
   }
 
-  void startPersonalChat(MemberModel member) {
-    // Navigate to Chat Detail with member info
-    Get.toNamed(
-      Routes.CHAT_DETAIL,
-      arguments: {
-        'chatId': 'new_${member.id}',
-        'name': member.name,
-        'type': 'Personal',
-        'avatarUrl': member.avatarUrl,
-      },
-    );
+  /// Start a personal chat with a member
+  /// Creates a conversation via API, then navigates to chat detail
+  Future<void> startPersonalChat(UserModel member) async {
+    try {
+      isCreatingChat.value = true;
+
+      // Create conversation via API
+      // Title is automatically set to member's name
+      final response = await _chatService.createPrivateConversation(
+        userId: member.id,
+        title: member.displayName,
+      );
+
+      if (response != null && response.data != null) {
+        final conversation = response.data!;
+
+        // Navigate to Chat Detail with conversation data
+        Get.toNamed(
+          Routes.CHAT_DETAIL,
+          arguments: {
+            'chatId': conversation.id.toString(),
+            'name': conversation.displayName,
+            'type': conversation.type,
+            'avatarUrl': member.avatarUrl,
+            'conversation': conversation,
+          },
+        );
+      } else {
+        Get.snackbar('Error', 'Failed to create conversation');
+      }
+    } catch (e) {
+      Get.snackbar('Error', e.toString());
+    } finally {
+      isCreatingChat.value = false;
+    }
   }
 
   void createNewGroup() {

@@ -7,7 +7,7 @@ import '../../../../core/config/app_config.dart';
 
 class MemberListItem extends StatelessWidget {
   final UserModel user;
-  
+
   const MemberListItem({
     super.key,
     required this.user,
@@ -43,9 +43,9 @@ class MemberListItem extends StatelessWidget {
                   ? (exception, stackTrace) {}
                   : null,
             ),
-            
+
             const SizedBox(width: 16),
-            
+
             // Name only
             Expanded(
               child: Align(
@@ -60,7 +60,7 @@ class MemberListItem extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Trailing: either Supervisor badge or menu button
             user.role == 'supervisor'
                 ? Container(

@@ -4,6 +4,7 @@ import '../../../data/services/auth_service.dart';
 import '../../../data/models/department_model.dart';
 import '../../../data/models/task_item.dart';
 import '../../../routes/app_pages.dart';
+import '../../navigation/controllers/navigation_controller.dart';
 
 class DashboardController extends GetxController {
   // Lazy initialization of AuthService
@@ -191,7 +192,7 @@ class DashboardController extends GetxController {
     Get.toNamed(Routes.CREATE_DEPARTMENT);
   }
 
-  void seeMoreTasks() => _showSnackbar('Tasks', 'Navigate to tasks...');
+  void seeMoreTasks() => NavigationController.navigateToTask();
 
   void openDepartment(DepartmentModel department) {
     Get.toNamed(Routes.DEPARTMENT_DETAIL, arguments: department);
@@ -201,8 +202,10 @@ class DashboardController extends GetxController {
     Get.toNamed(Routes.TAKE_ATTENDANCE);
   }
 
-  void openTask(DashboardTaskItem task) =>
-      _showSnackbar('Task', 'Opening task: ${task.title}');
+  void openTask(DashboardTaskItem task) {
+    // For members, navigate to user task detail
+    Get.toNamed(Routes.USER_TASK_DETAIL, arguments: task);
+  }
 
   // Double back to exit
   DateTime? _lastBackPressedTime;

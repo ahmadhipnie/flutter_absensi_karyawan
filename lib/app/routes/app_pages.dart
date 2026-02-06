@@ -51,9 +51,9 @@ import '../modules/community/views/new_chat/new_chat_view.dart';
 import '../modules/report/bindings/attendance_report_binding.dart';
 import '../modules/report/views/attendance_report_view.dart';
 import '../modules/department/views/create_announcement_view.dart';
-import '../modules/department/views/select_announcement_member_view.dart';
-import '../modules/department/views/announcement_detail_view.dart';
 import '../modules/department/controllers/create_announcement_controller.dart';
+import '../modules/department/views/select_announcement_member_view.dart';
+import '../modules/notifications/views/announcement_detail_view.dart';
 import '../modules/notifications/bindings/notifications_binding.dart';
 import '../modules/notifications/views/notifications_view.dart';
 

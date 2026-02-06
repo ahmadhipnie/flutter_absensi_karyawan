@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../routes/app_pages.dart';
 import '../../../../data/models/user_model.dart';
 import '../../../../data/services/user_service.dart';
+import '../../controllers/members_controller.dart';
 
 class MemberMoreMenu extends StatelessWidget {
   const MemberMoreMenu({required this.user, super.key});
@@ -221,24 +222,33 @@ class MemberMoreMenu extends StatelessWidget {
     try {
       await _userService.deleteUser(user.id);
 
-      // Close loading dialog first
-      if (Get.isDialogOpen ?? false) {
+      // Close loading dialog - use a loop to ensure it's closed
+      while (Get.isDialogOpen ?? false) {
         Get.back();
+        await Future.delayed(const Duration(milliseconds: 50));
       }
 
-      // Wait for dialog close animation
-      await Future.delayed(const Duration(milliseconds: 200));
+      // Refresh members list if controller is available
+      if (Get.isRegistered<MembersController>()) {
+        try {
+          final membersCtrl = Get.find<MembersController>();
+          await membersCtrl.fetchMembers();
+        } catch (e) {
+          print('Error refreshing members: $e');
+        }
+      }
 
-      // Go back to member list (from member detail)
-      Get.back(result: true);
+      // If we're on the member detail page, pop it to reveal the members list
+      if (Get.currentRoute == Routes.MEMBER_DETAIL) {
+        Get.back(result: true);
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
 
-      // Show success message after navigation
-      await Future.delayed(const Duration(milliseconds: 300));
-
+      // Show success message
       Get.showSnackbar(
         GetSnackBar(
           title: 'Success',
-          message: 'Account deleted successfully',
+          message: 'Account "${user.username ?? user.email}" deleted successfully',
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 3),
           margin: const EdgeInsets.all(16),
@@ -248,9 +258,10 @@ class MemberMoreMenu extends StatelessWidget {
         ),
       );
     } catch (e) {
-      // Close loading dialog
-      if (Get.isDialogOpen ?? false) {
+      // Close loading dialog - use a loop to ensure it's closed
+      while (Get.isDialogOpen ?? false) {
         Get.back();
+        await Future.delayed(const Duration(milliseconds: 50));
       }
 
       Get.showSnackbar(

@@ -142,9 +142,11 @@ class MemberListItem extends StatelessWidget {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              controller.deleteUser(user.id);
+            onPressed: () async {
+              // close confirmation dialog
               Get.back();
+              // call controller to perform API delete and refresh
+              await controller.performDeleteUser(user.id, displayName: user.displayName);
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),

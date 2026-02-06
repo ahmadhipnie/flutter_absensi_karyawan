@@ -73,7 +73,6 @@ class AnnouncementDetailView extends StatelessWidget {
                       radius: 20,
                       backgroundColor: Colors.black,
                       child: const Icon(Icons.person, color: Colors.white), 
-                      // Or network image if available
                     ),
                     const SizedBox(width: 12),
                     Column(

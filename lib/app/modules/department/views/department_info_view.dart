@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../routes/app_pages.dart';
 import '../controllers/department_controller.dart';
+import '../../members/controllers/members_controller.dart';
 import '../../../core/config/app_config.dart';
 
 class DepartmentInfoView extends GetView<DepartmentController> {
@@ -102,14 +103,36 @@ class DepartmentInfoView extends GetView<DepartmentController> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      'Created ${_formatDate(dept?.createdAt)}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF6B7280),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    // Show member count for this department
+                    if (dept == null)
+                      const SizedBox.shrink()
+                    else if (!Get.isRegistered<MembersController>())
+                      const Text(
+                        '0 members',
+                        style: TextStyle(fontSize: 14, color: Color(0xFF6B7280), fontWeight: FontWeight.w500),
+                        textAlign: TextAlign.center,
+                      )
+                    else
+                      Obx(() {
+                        try {
+                          final membersCtrl = Get.find<MembersController>();
+                          final memberCount = membersCtrl.members
+                              .where((m) => m.departmentId == dept.id)
+                              .length;
+
+                          return Text(
+                            '$memberCount member${memberCount == 1 ? '' : 's'}',
+                            style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280), fontWeight: FontWeight.w500),
+                            textAlign: TextAlign.center,
+                          );
+                        } catch (e) {
+                          return const Text(
+                            '0 members',
+                            style: TextStyle(fontSize: 14, color: Color(0xFF6B7280), fontWeight: FontWeight.w500),
+                            textAlign: TextAlign.center,
+                          );
+                        }
+                      }),
                   ],
                 ),
               ),
@@ -138,14 +161,5 @@ class DepartmentInfoView extends GetView<DepartmentController> {
         );
       }),
     );
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return '';
-    final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }

@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/services/chat_service.dart';
+import '../../../data/services/user_service.dart';
 import '../../../routes/app_pages.dart';
 
 class MembersController extends GetxController {
   final ChatService _chatService = Get.find<ChatService>();
+  final UserService _userService = UserService();
 
   final searchController = TextEditingController();
   final members = <UserModel>[].obs;
@@ -127,11 +129,15 @@ class MembersController extends GetxController {
     }
   }
 
-  void goToEditProfile(UserModel member) {
+  void goToEditProfile(UserModel member) async {
     pausePolling();
-    Get.toNamed(Routes.EDIT_PROFILE, arguments: member)?.then((_) {
-      resumePolling();
-    });
+    final result = await Get.toNamed(Routes.EDIT_PROFILE, arguments: member);
+    resumePolling();
+
+    // If profile was updated, refresh the list so the changes are immediately visible
+    if (result == true) {
+      await fetchMembers();
+    }
   }
 
   void deleteMember(String memberId) {
@@ -142,5 +148,78 @@ class MembersController extends GetxController {
   void deleteUser(int userId) {
     members.removeWhere((m) => m.id == userId);
     Get.snackbar('Success', 'Member deleted successfully');
+  }
+
+  /// Delete a user via API, refresh list and show snackbars
+  Future<void> performDeleteUser(int userId, {String? displayName}) async {
+    // Show loading dialog
+    Get.dialog(
+      const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text(
+                  'Deleting account...',
+                  style: TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      await _userService.deleteUser(userId);
+
+      // Ensure dialogs are closed
+      while (Get.isDialogOpen ?? false) {
+        Get.back();
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+
+      // Refresh list
+      await fetchMembers();
+
+      // Show success
+      Get.showSnackbar(
+        GetSnackBar(
+          title: 'Success',
+          message: 'Member "${displayName ?? ''}" deleted successfully',
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          isDismissible: true,
+          dismissDirection: DismissDirection.horizontal,
+        ),
+      );
+    } catch (e) {
+      // Close loading dialog if any
+      while (Get.isDialogOpen ?? false) {
+        Get.back();
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+
+      Get.showSnackbar(
+        GetSnackBar(
+          title: 'Error',
+          message: 'Failed to delete member: ${e.toString()}',
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+          margin: const EdgeInsets.all(16),
+          borderRadius: 8,
+          isDismissible: true,
+          dismissDirection: DismissDirection.horizontal,
+        ),
+      );
+      print('Error deleting user (controller): $e');
+    }
   }
 }

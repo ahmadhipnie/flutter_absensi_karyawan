@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../../../data/models/user_model.dart';
 import '../../../data/services/user_service.dart';
+import '../../../routes/app_pages.dart';
 
 class EditProfileController extends GetxController {
   final UserService _userService = UserService();
@@ -218,8 +219,17 @@ class EditProfileController extends GetxController {
       // Set loading false before navigation
       isLoading.value = false;
 
-      // Go back first
+      // Close edit profile and also go back to members list so updated data is visible
+      // First pop EditProfile -> returns to MemberDetail
       Get.back(result: true);
+      
+      // Small delay to allow navigation stack to settle
+      await Future.delayed(const Duration(milliseconds: 250));
+      
+      // If we're not already at the members list, pop once more to go back
+      if (Get.currentRoute != Routes.MEMBERS_LIST) {
+        Get.back(result: true);
+      }
 
       // Then show success message after navigation
       await Future.delayed(const Duration(milliseconds: 300));

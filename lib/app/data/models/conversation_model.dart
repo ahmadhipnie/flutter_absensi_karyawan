@@ -228,11 +228,13 @@ class CreateConversationResponse {
 class CreateConversationRequest {
   final String type;
   final String? title;
+  final String? description;
   final List<int> participantIds;
 
   CreateConversationRequest({
     required this.type,
     this.title,
+    this.description,
     required this.participantIds,
   });
 
@@ -240,6 +242,7 @@ class CreateConversationRequest {
     return {
       'type': type,
       if (title != null) 'title': title,
+      if (description != null) 'description': description,
       'participant_ids': participantIds,
     };
   }

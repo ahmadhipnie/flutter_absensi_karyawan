@@ -9,18 +9,32 @@ class TaskDetailTabView extends GetView<TaskDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          _TaskDetailDateCard(),
-          SizedBox(height: 16),
-          _TaskDetailDescriptionCard(),
-          SizedBox(height: 16),
-          _TaskDetailInfoCard(),
-        ],
-      ),
-    );
+    return Obx(() {
+      if (controller.isLoading.value) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      }
+
+      if (controller.task.value == null) {
+        return const Center(
+          child: Text('Task not found'),
+        );
+      }
+
+      return SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            _TaskDetailDateCard(),
+            SizedBox(height: 16),
+            _TaskDetailDescriptionCard(),
+            SizedBox(height: 16),
+            _TaskDetailInfoCard(),
+          ],
+        ),
+      );
+    });
   }
 }
 
@@ -51,7 +65,9 @@ class _TaskDetailDateCard extends GetView<TaskDetailController> {
                 Expanded(
                   child: TaskDetailInfoRow(
                     label: 'Posted On',
-                    value: controller.formatDate(controller.postedOn.value),
+                    value: controller.postedOn.value != null
+                        ? controller.formatDate(controller.postedOn.value!)
+                        : '-',
                     icon: Icons.calendar_today_outlined,
                   ),
                 ),
@@ -59,9 +75,11 @@ class _TaskDetailDateCard extends GetView<TaskDetailController> {
                 Expanded(
                   child: TaskDetailInfoRow(
                     label: 'Due Date',
-                    value: controller
-                        .formatDate(controller.dueDate.value)
-                        .substring(0, 6), // "17 Feb"
+                    value: controller.dueDate.value != null
+                        ? controller
+                            .formatDate(controller.dueDate.value!)
+                            .substring(0, 6) // "17 Feb"
+                        : '-',
                     icon: Icons.calendar_today_outlined,
                   ),
                 ),

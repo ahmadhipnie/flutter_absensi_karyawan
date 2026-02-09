@@ -59,6 +59,7 @@ import '../modules/department/views/select_announcement_member_view.dart';
 import '../modules/notifications/views/announcement_detail_view.dart';
 import '../modules/notifications/bindings/notifications_binding.dart';
 import '../modules/notifications/views/notifications_view.dart';
+import '../modules/profile/bindings/attendance_log_binding.dart';
 
 part 'app_routes.dart';
 
@@ -148,6 +149,7 @@ class AppPages {
     GetPage(
       name: _Paths.ATTENDANCE_LOG,
       page: () => const AttendanceLogView(),
+      binding: AttendanceLogBinding(),
     ),
     GetPage(
       name: _Paths.EDIT_MY_PROFILE,
@@ -232,7 +234,6 @@ class AppPages {
       page: () => const SelectAnnouncementMemberView(),
       // Controller is shared with CreateAnnouncementView so we don't need to re-bind if we navigate from there, 
       // but to be safe and if it's found, fine. Usually if it's in the stack it's found.
-      // However, CreateAnnouncementController is needed.
     ),
     GetPage(
       name: _Paths.ANNOUNCEMENT_DETAIL,

@@ -350,92 +350,85 @@ class DepartmentDetailView extends GetView<DepartmentController> {
   }
 
   Widget _buildTaskItem(DepartmentTaskModel task) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF3F4F6)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.assignment_outlined,
-                  color: AppTheme.primaryColor,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task.taskSubject,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Assigned to: ${task.username}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _buildStatusBadge(task.status),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Divider(height: 1),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade400),
-                  const SizedBox(width: 6),
-                  Text(
-                    _formatDate(task.dueDate),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+    return InkWell(
+      onTap: () async {
+        final result = await Get.toNamed(Routes.TASK_DETAIL, arguments: {'taskId': task.taskId});
+        if (result == true) {
+          await controller.fetchDepartmentTasks();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFF3F4F6)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
-              ),
-              if (task.location.isNotEmpty)
+                  child: Icon(
+                    Icons.assignment_outlined,
+                    color: AppTheme.primaryColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.taskSubject,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Assigned to: ${task.username}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _buildStatusBadge(task.status),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Row(
                   children: [
-                    Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade400),
-                    const SizedBox(width: 4),
+                    Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade400),
+                    const SizedBox(width: 6),
                     Text(
-                      task.location,
+                      _formatDate(task.dueDate),
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
@@ -443,9 +436,24 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                     ),
                   ],
                 ),
-            ],
-          ),
-        ],
+                if (task.location.isNotEmpty)
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade400),
+                      const SizedBox(width: 4),
+                      Text(
+                        task.location,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -589,6 +597,11 @@ class DepartmentDetailView extends GetView<DepartmentController> {
         textColor = Colors.grey.shade700;
     }
 
+    // Simple, explicit capitalization to avoid relying on extensions
+    final displayLabel = label.isNotEmpty
+        ? '${label[0].toUpperCase()}${label.substring(1)}'
+        : label;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -596,7 +609,7 @@ class DepartmentDetailView extends GetView<DepartmentController> {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        label.capitalizeFirst ?? label,
+        displayLabel,
         style: TextStyle(
           color: textColor,
           fontSize: 11,

@@ -42,14 +42,12 @@ class TakeAttendanceView extends GetView<TakeAttendanceController> {
       elevation: 0,
       centerTitle: true,
       leading: const AppBackButton(),
-      title: Obx(
-        () => Text(
-          controller.formattedDate,
-          style: const TextStyle(
-            color: AppTheme.gray900,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+      title: Text(
+        controller.title,
+        style: const TextStyle(
+          color: AppTheme.gray900,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

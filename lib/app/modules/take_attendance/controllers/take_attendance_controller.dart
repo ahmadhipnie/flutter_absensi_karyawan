@@ -6,6 +6,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import '../../../data/services/location_service.dart';
+import '../../attendance/controllers/attendance_controller.dart';
 
 class TakeAttendanceController extends GetxController {
   // Selected date
@@ -25,14 +26,27 @@ class TakeAttendanceController extends GetxController {
   final currentLocation = Rxn<LocationData>();
   final isLoadingLocation = false.obs;
   final locationError = ''.obs;
-  
+
   // Coordinates for API submission
   double? latitude;
   double? longitude;
 
+  // Type of attendance: 'check-in' or 'check-out'
+  String attendanceType = 'check-in';
+
+  // Submitting state
+  final isSubmitting = false.obs;
+
   @override
   void onInit() {
     super.onInit();
+
+    // Get attendance type from arguments
+    final args = Get.arguments;
+    if (args != null && args['type'] != null) {
+      attendanceType = args['type'];
+    }
+
     _loadCurrentLocation();
   }
 
@@ -43,7 +57,8 @@ class TakeAttendanceController extends GetxController {
       locationError.value = '';
 
       // Check and request permission first
-      final permissionStatus = await _locationService.checkAndRequestPermission();
+      final permissionStatus = await _locationService
+          .checkAndRequestPermission();
 
       switch (permissionStatus) {
         case LocationPermissionStatus.granted:
@@ -136,20 +151,20 @@ class TakeAttendanceController extends GetxController {
 
       File imageFile = File(photo.path);
       int fileSize = await imageFile.length();
-      
+
       // Check if image exceeds 5MB (5 * 1024 * 1024 bytes)
       const int maxSize = 5 * 1024 * 1024;
-      
+
       if (fileSize > maxSize) {
         Get.snackbar(
           'Compressing',
           'Image size is ${(fileSize / (1024 * 1024)).toStringAsFixed(2)} MB, compressing...',
           duration: const Duration(seconds: 2),
         );
-        
+
         // Compress the image
         imageFile = await _compressImage(imageFile);
-        
+
         // Verify compression result
         fileSize = await imageFile.length();
         if (fileSize > maxSize) {
@@ -192,12 +207,14 @@ class TakeAttendanceController extends GetxController {
         final compressedFile = File(compressed.path);
         final originalSize = await file.length();
         final compressedSize = await compressedFile.length();
-        
-        print('Photo compressed: ${(originalSize / 1024 / 1024).toStringAsFixed(2)} MB → ${(compressedSize / 1024 / 1024).toStringAsFixed(2)} MB');
-        
+
+        print(
+          'Photo compressed: ${(originalSize / 1024 / 1024).toStringAsFixed(2)} MB → ${(compressedSize / 1024 / 1024).toStringAsFixed(2)} MB',
+        );
+
         return compressedFile;
       }
-      
+
       // If compression fails, return original
       return file;
     } catch (e) {
@@ -219,6 +236,12 @@ class TakeAttendanceController extends GetxController {
 
   /// Clock in action
   Future<void> clockIn() async {
+    // Prevent multiple submissions
+    if (isSubmitting.value) {
+      print('clockIn: Already submitting, ignoring duplicate call');
+      return;
+    }
+
     // Validate photo
     if (!hasPhoto.value || photoFile.value == null) {
       Get.snackbar('Error', 'Please take a photo first');
@@ -234,30 +257,137 @@ class TakeAttendanceController extends GetxController {
       Get.snackbar('Error', 'Please enable location permission');
       return;
     }
-    
+
     // Check if we have coordinates
     if (latitude == null || longitude == null) {
-      Get.snackbar('Error', 'Location coordinates not available. Please refresh location.');
+      Get.snackbar(
+        'Error',
+        'Location coordinates not available. Please refresh location.',
+      );
       return;
     }
-    
-    // Get photo size for logging
-    final photoSize = await photoFile.value!.length();
-    final photoSizeMB = (photoSize / (1024 * 1024)).toStringAsFixed(2);
-    
-    // TODO: Submit attendance to backend with:
-    // - photo: photoFile.value (multipart upload)
-    // - latitude: $latitude
-    // - longitude: $longitude
-    // - address: ${locationController.text}
-    // - notes: ${notesController.text}
-    // - timestamp: ${DateTime.now().toIso8601String()}
-    
-    Get.snackbar(
-      'Success',
-      'Clock in successful!\nPhoto: ${photoSizeMB}MB, Location: ${locationController.text}',
-      duration: const Duration(seconds: 4),
-    );
+
+    try {
+      print('clockIn: Starting submission...');
+      isSubmitting.value = true;
+
+      // Get attendance controller
+      final attendanceController = Get.find<AttendanceController>();
+
+      bool success = false;
+      if (attendanceType == 'check-in') {
+        print('clockIn: Type is check-in');
+        // Check if already checked in
+        if (attendanceController.todayAttendance.value?.hasCheckedIn == true) {
+          print('clockIn: Already checked in, showing info and closing');
+          Get.snackbar(
+            'Info',
+            'You have already checked in today',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange[100],
+          );
+          // Close the page
+          Get.back();
+          return;
+        }
+
+        print(
+          'clockIn: Calling performCheckIn with lat: $latitude, long: $longitude',
+        );
+        success = await attendanceController.performCheckIn(
+          photoFile.value!,
+          latitude: latitude,
+          longitude: longitude,
+        );
+        print('clockIn: performCheckIn returned: $success');
+      } else {
+        print('clockIn: Type is check-out');
+        // Check if already checked out
+        if (attendanceController.todayAttendance.value?.hasCheckedOut == true) {
+          print('clockIn: Already checked out, showing info and closing');
+          Get.snackbar(
+            'Info',
+            'You have already checked out today',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: Colors.orange[100],
+          );
+          // Close the page
+          Get.back();
+          return;
+        }
+
+        print(
+          'clockIn: Calling performCheckOut with lat: $latitude, long: $longitude',
+        );
+        success = await attendanceController.performCheckOut(
+          photoFile.value!,
+          latitude: latitude,
+          longitude: longitude,
+        );
+        print('clockIn: performCheckOut returned: $success');
+      }
+
+      if (success) {
+        print('clockIn: Success! Showing snackbar...');
+
+        // Show success message
+        final message = attendanceType == 'check-in'
+            ? 'Check-in successful!'
+            : 'Check-out successful!';
+
+        Get.snackbar(
+          'Success',
+          message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green[100],
+          colorText: Colors.green[900],
+          duration: const Duration(seconds: 2),
+          margin: const EdgeInsets.all(16),
+          borderRadius: 12,
+          icon: const Icon(Icons.check_circle, color: Colors.green),
+        );
+
+        // Wait for snackbar to be visible
+        print('clockIn: Waiting 1.5 seconds for snackbar to show...');
+        await Future.delayed(const Duration(milliseconds: 1500));
+
+        print('clockIn: Now closing page...');
+        // Close the page and return true
+        if (Get.isDialogOpen == false && Get.isBottomSheetOpen == false) {
+          Get.back(result: true);
+          print('clockIn: Get.back() called');
+        }
+      } else {
+        print('clockIn: Failed! Success was false');
+        Get.snackbar(
+          'Error',
+          'Failed to submit attendance. Please try again.',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red[100],
+        );
+      }
+    } catch (e) {
+      print('clockIn: Exception caught: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to submit attendance: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+      );
+    } finally {
+      isSubmitting.value = false;
+      print('clockIn: isSubmitting set to false in finally');
+    }
+  }
+
+  /// Get button text based on attendance type
+  String get buttonText {
+    return attendanceType == 'check-in' ? 'Clock In' : 'Clock Out';
+  }
+
+  /// Get title based on attendance type
+  String get title {
+    return attendanceType == 'check-in' ? 'Check In' : 'Check Out';
   }
 
   /// Get location data for API submission

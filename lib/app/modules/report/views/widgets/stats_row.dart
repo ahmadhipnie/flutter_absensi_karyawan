@@ -7,38 +7,58 @@ class StatsRow extends GetView<AttendanceReportController> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() => Row(
-          children: [
-            Expanded(
-              child: StatCard(
-                title: 'Absent',
-                value: controller.stats['Absent'] ?? '0',
-              ),
+    return Obx(() {
+      if (controller.isLoadingAttendances.value) {
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
+      return Row(
+        children: [
+          Expanded(
+            child: StatCard(
+              title: 'Absent',
+              value: controller.absentDays.value.toString(),
+              color: Colors.black,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: StatCard(
-                title: 'Clock In',
-                value: controller.stats['Clock In'] ?? '0',
-              ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: StatCard(
+              title: 'Clock In',
+              value: controller.presentDays.value.toString(),
+              color: Colors.black,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: StatCard(
-                title: 'Late Clock In',
-                value: controller.stats['Late Clock In'] ?? '0',
-              ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: StatCard(
+              title: 'Late Clock In',
+              value: controller.lateDays.value.toString(),
+              color: Colors.black,
             ),
-          ],
-        ));
+          ),
+        ],
+      );
+    });
   }
 }
 
 class StatCard extends StatelessWidget {
   final String title;
   final String value;
+  final Color color;
 
-  const StatCard({super.key, required this.title, required this.value});
+  const StatCard({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -65,10 +85,10 @@ class StatCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: color,
             ),
           ),
         ],

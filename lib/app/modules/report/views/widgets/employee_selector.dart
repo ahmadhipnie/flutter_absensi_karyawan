@@ -19,37 +19,86 @@ class EmployeeSelector extends GetView<AttendanceReportController> {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade200),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade400,
-                  borderRadius: BorderRadius.circular(4),
-                ),
+        Obx(() {
+          if (controller.isLoadingUsers.value) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Obx(() => Text(
-                      controller.selectedEmployee.value,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    )),
+              child: const Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  SizedBox(width: 12),
+                  Text('Loading employees...'),
+                ],
               ),
-              Icon(Icons.keyboard_arrow_down, size: 24, color: Colors.grey[600]),
-            ],
-          ),
-        ),
+            );
+          }
+
+          if (controller.allUsers.isEmpty) {
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Text('No employees found'),
+            );
+          }
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton(
+                value: controller.selectedUser.value,
+                isExpanded: true,
+                icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey[600]),
+                items: controller.allUsers.map((user) {
+                  return DropdownMenuItem(
+                    value: user,
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 12,
+                          backgroundColor: Colors.blue.shade100,
+                          backgroundImage: user.photoProfile != null
+                              ? NetworkImage(user.photoProfile!)
+                              : null,
+                          child: user.photoProfile == null
+                              ? Icon(Icons.person, size: 14, color: Colors.blue)
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            user.displayName,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: controller.onEmployeeSelected,
+              ),
+            ),
+          );
+        }),
       ],
     );
   }

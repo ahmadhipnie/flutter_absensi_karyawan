@@ -26,21 +26,28 @@ class AttendanceView extends GetView<AttendanceController> {
           onPressed: () => Get.back(),
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              children: [
-                const AttendanceHeaderBackground(),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: const AttendanceCard(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            const EmployeeLogSection(),
-          ],
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await controller.refreshAttendances();
+          await controller.refreshLocation();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              Stack(
+                children: [
+                  const AttendanceHeaderBackground(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                    child: const AttendanceCard(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              const EmployeeLogSection(),
+            ],
+          ),
         ),
       ),
     );

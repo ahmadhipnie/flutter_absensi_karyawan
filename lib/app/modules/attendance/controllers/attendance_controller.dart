@@ -4,7 +4,9 @@ import 'dart:io';
 import 'dart:async';
 import '../../../data/services/location_service.dart';
 import '../../../data/services/attendance_service.dart';
+import '../../../data/services/user_service.dart';
 import '../../../data/models/attendance_model.dart';
+import '../../../data/models/user_model.dart';
 import '../../../routes/app_pages.dart';
 
 class AttendanceController extends GetxController {
@@ -16,6 +18,7 @@ class AttendanceController extends GetxController {
   // Services
   final LocationService _locationService = LocationService();
   final AttendanceService _attendanceService = Get.find<AttendanceService>();
+  final UserService _userService = Get.find<UserService>();
 
   // Location
   final currentLocation = Rxn<LocationData>();
@@ -28,37 +31,19 @@ class AttendanceController extends GetxController {
   final isCheckingIn = false.obs;
   final isCheckingOut = false.obs;
 
+  // All attendances for supervisor
+  final allAttendances = <AttendanceModel>[].obs;
+  final isLoadingAllAttendances = false.obs;
+
+  // All users for checking who hasn't clocked in
+  final allUsers = <UserModel>[].obs;
+  final isLoadingUsers = false.obs;
+
   // Timer for updating UI
   Timer? _uiUpdateTimer;
 
-  // Mock data for employees
-  final employeesClockedIn = <EmployeeAttendance>[
-    EmployeeAttendance(
-      name: 'Karina',
-      checkInTime: '08:00',
-      avatarUrl: '', // Using default or asset later
-      status: 'Check in on 08:00',
-    ),
-    EmployeeAttendance(
-      name: 'Bambang',
-      checkInTime: '08:00',
-      avatarUrl: '',
-      status: 'Check in on 08:00',
-    ),
-    EmployeeAttendance(
-      name: 'Jessylin',
-      checkInTime: '08:00',
-      avatarUrl: '',
-      status: 'Check in on 08:00',
-    ),
-    EmployeeAttendance(
-      name: 'Basuki',
-      checkInTime: '08:00',
-      avatarUrl: '',
-      status: 'Check in on 08:00',
-    ),
-  ].obs;
-
+  // Mock data for employees - Now replaced with real data
+  final employeesClockedIn = <EmployeeAttendance>[].obs;
   final employeesNotClockedIn = <EmployeeAttendance>[].obs;
 
   final showClockedIn = true.obs;
@@ -74,6 +59,7 @@ class AttendanceController extends GetxController {
     ) {
       if (result == true) {
         _loadTodayAttendance(); // Refresh attendance after check-in
+        refreshAttendances(); // Refresh employee list (both clocked in and not clocked in)
       }
     });
   }
@@ -83,6 +69,7 @@ class AttendanceController extends GetxController {
       (result) {
         if (result == true) {
           _loadTodayAttendance(); // Refresh attendance after check-out
+          refreshAttendances(); // Refresh employee list
         }
       },
     );
@@ -262,6 +249,8 @@ class AttendanceController extends GetxController {
     super.onInit();
     _loadCurrentLocation();
     _loadTodayAttendance();
+    _loadAllUsers();
+    _loadAllAttendances();
     _startUIUpdateTimer();
   }
 
@@ -290,6 +279,93 @@ class AttendanceController extends GetxController {
     } finally {
       isLoadingAttendance.value = false;
     }
+  }
+
+  /// Load all attendances (for supervisor view)
+  Future<void> _loadAllAttendances() async {
+    try {
+      isLoadingAllAttendances.value = true;
+      final attendances = await _attendanceService.getAllAttendances();
+      allAttendances.value = attendances;
+      
+      // Process attendances to populate employee lists
+      _processAttendances(attendances);
+    } catch (e) {
+      print('Error loading all attendances: $e');
+    } finally {
+      isLoadingAllAttendances.value = false;
+    }
+  }
+
+  /// Load all users (for checking who hasn't clocked in)
+  Future<void> _loadAllUsers() async {
+    try {
+      isLoadingUsers.value = true;
+      final users = await _userService.getUsers();
+      allUsers.value = users;
+      
+      // Re-process attendances with user list now available
+      _processAttendances(allAttendances);
+    } catch (e) {
+      print('Error loading all users: $e');
+    } finally {
+      isLoadingUsers.value = false;
+    }
+  }
+
+  /// Process attendances to separate clocked in and not clocked in employees for today
+  void _processAttendances(List<AttendanceModel> attendances) {
+    final today = DateTime.now();
+    final todayAttendances = attendances.where((attendance) {
+      return attendance.date.year == today.year &&
+          attendance.date.month == today.month &&
+          attendance.date.day == today.day;
+    }).toList();
+
+    // Get list of employees who have clocked in today
+    final clockedIn = <EmployeeAttendance>[];
+    final userIdsWithAttendance = <int>{};
+
+    for (final attendance in todayAttendances) {
+      if (attendance.hasCheckedIn && attendance.username != null) {
+        userIdsWithAttendance.add(attendance.userId);
+        clockedIn.add(EmployeeAttendance(
+          name: attendance.username!,
+          checkInTime: attendance.clockInTime,
+          avatarUrl: '', // Could be enhanced with user photo URL if available
+          status: attendance.hasCheckedOut 
+              ? 'Checked out at ${attendance.clockOutTime}'
+              : 'Check in on ${attendance.clockInTime}',
+        ));
+      }
+    }
+
+    employeesClockedIn.value = clockedIn;
+    
+    // Get list of employees who haven't clocked in today
+    final notClockedIn = <EmployeeAttendance>[];
+    
+    for (final user in allUsers) {
+      // Only include members (not supervisors or other roles)
+      if (user.role.toLowerCase() == 'member' && !userIdsWithAttendance.contains(user.id)) {
+        notClockedIn.add(EmployeeAttendance(
+          name: user.displayName,
+          checkInTime: '-',
+          avatarUrl: user.photoProfile ?? '',
+          status: 'Not clocked in yet',
+        ));
+      }
+    }
+    
+    employeesNotClockedIn.value = notClockedIn;
+  }
+
+  /// Refresh all attendances (can be called after check-in/out)
+  Future<void> refreshAttendances() async {
+    await Future.wait([
+      _loadAllAttendances(),
+      _loadAllUsers(),
+    ]);
   }
 
   /// Load current location with address

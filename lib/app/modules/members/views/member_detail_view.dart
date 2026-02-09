@@ -31,7 +31,7 @@ class MemberDetailView extends StatelessWidget {
             const SizedBox(height: 24),
             const Divider(height: 1, color: Color(0xFFE5E5E5)),
             const SizedBox(height: 16),
-            const MemberAttendanceLogSection(),
+            MemberAttendanceLogSection(user: user),
             Container(
               height: 8,
               color: const Color(0xFFFAFAFA),

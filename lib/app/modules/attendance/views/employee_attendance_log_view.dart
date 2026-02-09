@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../controllers/attendance_controller.dart';
+import '../../../core/config/app_config.dart';
+import '../../../data/models/attendance_model.dart';
 
-class EmployeeAttendanceLogView extends StatelessWidget {
+class EmployeeAttendanceLogView extends GetView<AttendanceController> {
   const EmployeeAttendanceLogView({super.key});
 
   @override
@@ -26,28 +29,77 @@ class EmployeeAttendanceLogView extends StatelessWidget {
         centerTitle: false,
         titleSpacing: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        children: [
-          _buildDateSection('18 Feb 2026', [
-            {'name': 'Karina', 'time': '08:00'},
-            {'name': 'Paijo Uchiha', 'time': '08:00'},
-            {'name': 'Rahmat', 'time': '08:00'},
-            {'name': 'Lestari', 'time': '08:00'},
-          ]),
-          const SizedBox(height: 10),
-          _buildDateSection('17 Feb 2026', [
-            {'name': 'Karina', 'time': '08:00'},
-            {'name': 'Paijo Uchiha', 'time': '08:00'},
-            {'name': 'Rahmat', 'time': '08:00'},
-            {'name': 'Lestari', 'time': '08:00'},
-          ]),
-        ],
-      ),
+      body: Obx(() {
+        if (controller.isLoadingAllAttendances.value) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        }
+
+        final attendances = controller.allAttendances;
+
+        if (attendances.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade400),
+                const SizedBox(height: 16),
+                Text(
+                  'No attendance records',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Group attendances by date
+        final groupedAttendances = _groupAttendancesByDate(attendances);
+
+        return RefreshIndicator(
+          onRefresh: controller.refreshAttendances,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            itemCount: groupedAttendances.length,
+            itemBuilder: (context, index) {
+              final entry = groupedAttendances.entries.elementAt(index);
+              return _buildDateSection(entry.key, entry.value);
+            },
+          ),
+        );
+      }),
     );
   }
 
-  Widget _buildDateSection(String date, List<Map<String, String>> employees) {
+  Map<String, List<AttendanceModel>> _groupAttendancesByDate(
+    List<AttendanceModel> attendances,
+  ) {
+    final Map<String, List<AttendanceModel>> grouped = {};
+
+    for (final attendance in attendances) {
+      final dateKey = _formatDate(attendance.date);
+      if (!grouped.containsKey(dateKey)) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey]!.add(attendance);
+    }
+
+    return grouped;
+  }
+
+  String _formatDate(DateTime date) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Widget _buildDateSection(String date, List<AttendanceModel> attendances) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -60,12 +112,16 @@ class EmployeeAttendanceLogView extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        ...employees.map((e) => _buildEmployeeItem(e)),
+        ...attendances.map((attendance) => _buildEmployeeItem(attendance)),
+        const SizedBox(height: 10),
       ],
     );
   }
 
-  Widget _buildEmployeeItem(Map<String, String> employee) {
+  Widget _buildEmployeeItem(AttendanceModel attendance) {
+    final username = attendance.username ?? 'Unknown User';
+    final photoUrl = AppConfig.getProfilePhotoUrl('');
+
     return Column(
       children: [
         Row(
@@ -73,8 +129,16 @@ class EmployeeAttendanceLogView extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 24,
-              backgroundImage: NetworkImage(
-                  'https://ui-avatars.com/api/?name=${employee['name']}&background=random'),
+              backgroundColor: Colors.blue.shade100,
+              backgroundImage: photoUrl != null
+                  ? NetworkImage(photoUrl)
+                  : NetworkImage(
+                      'https://ui-avatars.com/api/?name=$username&background=random',
+                    ),
+              onBackgroundImageError: (_, __) {},
+              child: photoUrl == null
+                  ? null
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -82,7 +146,7 @@ class EmployeeAttendanceLogView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    employee['name']!,
+                    username,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -90,12 +154,24 @@ class EmployeeAttendanceLogView extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Check in on ${employee['time']}',
+                    attendance.hasCheckedOut
+                        ? 'Check in: ${attendance.clockInTime} | Check out: ${attendance.clockOutTime}'
+                        : 'Check in on ${attendance.clockInTime}',
                     style: TextStyle(
                       color: Colors.grey.shade500,
                       fontSize: 14,
                     ),
                   ),
+                  if (attendance.email != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      attendance.email!,
+                      style: TextStyle(
+                        color: Colors.grey.shade400,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

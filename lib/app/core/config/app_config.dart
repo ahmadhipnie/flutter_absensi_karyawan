@@ -32,4 +32,17 @@ class AppConfig {
     if (filename.startsWith('http')) return filename;
     return 'https://api-absensi.hftech.web.id/api/assets/photo_profile/$filename';
   }
+
+  static String? getAttendancePhotoUrl(String? filename) {
+    if (filename == null || filename.isEmpty) return null;
+    if (filename.startsWith('http')) return filename;
+    // Support both with and without /api prefix
+    return 'https://api-absensi.hftech.web.id/assets/img_attendances/$filename';
+  }
+
+  static String? getTaskFileUrl(String? filename) {
+    if (filename == null || filename.isEmpty) return null;
+    if (filename.startsWith('http')) return filename;
+    return 'https://api-absensi.hftech.web.id/assets/file_tasks/$filename';
+  }
 }

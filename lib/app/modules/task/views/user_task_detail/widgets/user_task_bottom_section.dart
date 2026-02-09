@@ -12,38 +12,162 @@ class UserTaskBottomSection extends GetView<UserTaskDetailController> {
       color: Colors.white,
       padding: const EdgeInsets.all(16),
       child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 12),
-            // File list dengan scroll jika banyak
-            Flexible(
-              child: Obx(() {
-                if (controller.uploadedFiles.isNotEmpty) {
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    padding: EdgeInsets.zero,
-                    itemCount: controller.uploadedFiles.length,
-                    itemBuilder: (context, index) {
-                      return _buildFileItem(
-                        controller.uploadedFiles[index],
-                        index,
-                      );
-                    },
+        child: Obx(() {
+          // Show "Turned In" state if task is submitted
+          if (controller.isTaskSubmitted.value) {
+            return _buildTurnedInState();
+          }
+          
+          // Show normal upload state
+          return _buildUploadState();
+        }),
+      ),
+    );
+  }
+
+  Widget _buildUploadState() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildHeader(),
+        const SizedBox(height: 12),
+        // File list dengan scroll jika banyak
+        Flexible(
+          child: Obx(() {
+            if (controller.uploadedFiles.isNotEmpty) {
+              return ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: controller.uploadedFiles.length,
+                itemBuilder: (context, index) {
+                  return _buildFileItem(
+                    controller.uploadedFiles[index],
+                    index,
                   );
-                }
-                return const SizedBox.shrink();
-              }),
+                },
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+        ),
+        const SizedBox(height: 12),
+        _buildUploadButton(),
+        const SizedBox(height: 16),
+        _buildSubmitButton(),
+      ],
+    );
+  }
+
+  Widget _buildTurnedInState() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Your Work',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF9E9E9E),
+              ),
             ),
-            const SizedBox(height: 12),
-            _buildUploadButton(),
-            const SizedBox(height: 16),
-            _buildSubmitButton(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'Turned In',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF4CAF50),
+                ),
+              ),
+            ),
           ],
         ),
-      ),
+        const SizedBox(height: 12),
+        // Submitted file item (non-clickable for now)
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            border: Border.all(color: const Color(0xFFE0E0E0)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF5350).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Icon(
+                  Icons.description,
+                  color: Color(0xFFEF5350),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      controller.submittedFileName.value,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      controller.submittedDate.value,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF9E9E9E),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Unsubmit button
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton(
+            onPressed: controller.unsubmitTask,
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Color(0xFFE0E0E0)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Unsubmit',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF757575),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -79,7 +203,7 @@ class UserTaskBottomSection extends GetView<UserTaskDetailController> {
     );
   }
 
-  Widget _buildFileItem(Map<String, String> file, int index) {
+  Widget _buildFileItem(Map<String, dynamic> file, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -109,7 +233,7 @@ class UserTaskBottomSection extends GetView<UserTaskDetailController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  file['name'] ?? '',
+                  file['name']?.toString() ?? '',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -120,7 +244,7 @@ class UserTaskBottomSection extends GetView<UserTaskDetailController> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  file['type'] ?? '',
+                  file['type']?.toString() ?? '',
                   style: const TextStyle(
                     fontSize: 12,
                     color: Color(0xFF9E9E9E),
@@ -172,27 +296,37 @@ class UserTaskBottomSection extends GetView<UserTaskDetailController> {
   }
 
   Widget _buildSubmitButton() {
-    return SizedBox(
+    return Obx(() => SizedBox(
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
-        onPressed: controller.submitWork,
+        onPressed: controller.isSubmitting.value ? null : controller.submitWork,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF0046BE),
+          disabledBackgroundColor: const Color(0xFF0046BE).withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 0,
         ),
-        child: const Text(
-          'Submit',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
+        child: controller.isSubmitting.value
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Text(
+                'Submit',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
       ),
-    );
+    ));
   }
 }

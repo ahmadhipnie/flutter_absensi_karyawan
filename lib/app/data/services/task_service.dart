@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
-import 'package:get/get.dart';
+import 'package:get/get.dart' hide FormData, MultipartFile;
 
 import '../models/task_model.dart';
+import '../models/task_submission_model.dart';
+import '../models/task_assignment_model.dart';
 import '../providers/api_provider.dart';
 
 class TaskService extends GetxService {
@@ -203,6 +205,44 @@ class TaskService extends GetxService {
     }
   }
 
+  /// GET /tasks/:id - Get task detail with assignments
+  Future<TaskWithAssignmentsModel?> getTaskWithAssignments(int taskId) async {
+    try {
+      print('Fetching task with assignments for ID: $taskId');
+
+      final response = await _apiProvider.get('/tasks/$taskId');
+
+      print('Task with assignments response status: ${response.statusCode}');
+      print('Task with assignments response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map && data['success'] == true && data['data'] != null) {
+          return TaskWithAssignmentsModel.fromJson(data['data']);
+        }
+      }
+
+      return null;
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to fetch task with assignments';
+
+      if (e.response != null) {
+        print('Task with assignments error response: ${e.response!.data}');
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        }
+      } else {
+        print('Task with assignments error: ${e.message}');
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      print('Task with assignments unexpected error: $e');
+      throw 'An error occurred: ${e.toString()}';
+    }
+  }
+
   /// PUT /tasks/:id - Update task
   Future<Map<String, dynamic>?> updateTask({
     required int taskId,
@@ -245,6 +285,104 @@ class TaskService extends GetxService {
 
       throw errorMessage;
     } catch (e) {
+      throw 'An error occurred: ${e.toString()}';
+    }
+  }
+
+  /// POST /tasks/assignment/:assignmentId/submit - Submit task work
+  Future<TaskSubmissionResponseModel?> submitTaskWork({
+    required int assignmentId,
+    required String filePath,
+    String submissionType = 'file',
+  }) async {
+    try {
+      // Create FormData for multipart upload
+      final formData = FormData.fromMap({
+        'submission_type': submissionType,
+        'file': await MultipartFile.fromFile(
+          filePath,
+          filename: filePath.split('/').last,
+        ),
+      });
+
+      print('Submitting task to: /tasks/assignment/$assignmentId/submit');
+      print('File path: $filePath');
+      print('Submission type: $submissionType');
+
+      final response = await _apiProvider.post(
+        '/tasks/assignment/$assignmentId/submit',
+        data: formData,
+      );
+
+      print('Submit response status: ${response.statusCode}');
+      print('Submit response data: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return TaskSubmissionResponseModel.fromJson(response.data);
+      }
+
+      return null;
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to submit task';
+
+      if (e.response != null) {
+        print('Submit error response: ${e.response!.data}');
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        }
+      } else {
+        print('Submit error: ${e.message}');
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      print('Submit unexpected error: $e');
+      throw 'An error occurred: ${e.toString()}';
+    }
+  }
+
+  /// GET /tasks/assignment/:assignmentId/submissions - Get task submissions
+  Future<List<TaskSubmissionModel>> getTaskSubmissions({
+    required int assignmentId,
+  }) async {
+    try {
+      print('Fetching submissions for assignment: $assignmentId');
+
+      final response = await _apiProvider.get(
+        '/tasks/assignment/$assignmentId/submissions',
+      );
+
+      print('Submissions response status: ${response.statusCode}');
+      print('Submissions response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map && data['success'] == true && data['data'] != null) {
+          final submissions = (data['data'] as List)
+              .map((item) => TaskSubmissionModel.fromJson(item as Map<String, dynamic>))
+              .toList();
+          return submissions;
+        }
+      }
+
+      return [];
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to fetch submissions';
+
+      if (e.response != null) {
+        print('Submissions error response: ${e.response!.data}');
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        }
+      } else {
+        print('Submissions error: ${e.message}');
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      print('Submissions unexpected error: $e');
       throw 'An error occurred: ${e.toString()}';
     }
   }

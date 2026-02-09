@@ -17,15 +17,37 @@ class AttendanceHistoryPhotoSection extends GetView<AttendanceHistoryDetailContr
       ),
       clipBehavior: Clip.antiAlias,
       child: Obx(
-        () => controller.photoUrl.isNotEmpty
-            ? Image.network(
-                controller.photoUrl.value,
+        () {
+          final url = controller.photoUrl.value;
+          if (url.isNotEmpty) {
+            return GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => Dialog(
+                    insetPadding: const EdgeInsets.all(8),
+                    child: InteractiveViewer(
+                      child: Image.network(
+                        url,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) => _buildPlaceholder(),
+                      ),
+                    ),
+                  ),
+                );
+              },
+              child: Image.network(
+                url,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return _buildPlaceholder();
                 },
-              )
-            : _buildPlaceholder(),
+              ),
+            );
+          }
+
+          return _buildPlaceholder();
+        },
       ),
     );
   }

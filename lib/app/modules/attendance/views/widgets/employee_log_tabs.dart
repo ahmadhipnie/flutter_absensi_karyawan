@@ -15,8 +15,8 @@ class EmployeeLogTabs extends GetView<AttendanceController> {
       ),
       child: Obx(() => Row(
             children: [
-              _buildTabItem('Sudah Clock In', true),
-              _buildTabItem('Belum Clock In', false),
+              _buildTabItem('Already Clocked In', true),
+              _buildTabItem('Not Yet Clocked In', false),
             ],
           )),
     );

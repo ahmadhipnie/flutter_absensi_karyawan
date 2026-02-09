@@ -4,7 +4,9 @@ import 'dart:io';
 import 'dart:async';
 import '../../../data/services/location_service.dart';
 import '../../../data/services/attendance_service.dart';
+import '../../../data/services/user_service.dart';
 import '../../../data/models/attendance_model.dart';
+import '../../../data/models/user_model.dart';
 import '../../../routes/app_pages.dart';
 
 class AttendanceController extends GetxController {
@@ -16,6 +18,7 @@ class AttendanceController extends GetxController {
   // Services
   final LocationService _locationService = LocationService();
   final AttendanceService _attendanceService = Get.find<AttendanceService>();
+  final UserService _userService = Get.find<UserService>();
 
   // Location
   final currentLocation = Rxn<LocationData>();
@@ -31,6 +34,10 @@ class AttendanceController extends GetxController {
   // All attendances for supervisor
   final allAttendances = <AttendanceModel>[].obs;
   final isLoadingAllAttendances = false.obs;
+
+  // All users for checking who hasn't clocked in
+  final allUsers = <UserModel>[].obs;
+  final isLoadingUsers = false.obs;
 
   // Timer for updating UI
   Timer? _uiUpdateTimer;
@@ -52,7 +59,7 @@ class AttendanceController extends GetxController {
     ) {
       if (result == true) {
         _loadTodayAttendance(); // Refresh attendance after check-in
-        _loadAllAttendances(); // Refresh employee list
+        refreshAttendances(); // Refresh employee list (both clocked in and not clocked in)
       }
     });
   }
@@ -62,7 +69,7 @@ class AttendanceController extends GetxController {
       (result) {
         if (result == true) {
           _loadTodayAttendance(); // Refresh attendance after check-out
-          _loadAllAttendances(); // Refresh employee list
+          refreshAttendances(); // Refresh employee list
         }
       },
     );
@@ -242,6 +249,7 @@ class AttendanceController extends GetxController {
     super.onInit();
     _loadCurrentLocation();
     _loadTodayAttendance();
+    _loadAllUsers();
     _loadAllAttendances();
     _startUIUpdateTimer();
   }
@@ -289,6 +297,22 @@ class AttendanceController extends GetxController {
     }
   }
 
+  /// Load all users (for checking who hasn't clocked in)
+  Future<void> _loadAllUsers() async {
+    try {
+      isLoadingUsers.value = true;
+      final users = await _userService.getUsers();
+      allUsers.value = users;
+      
+      // Re-process attendances with user list now available
+      _processAttendances(allAttendances);
+    } catch (e) {
+      print('Error loading all users: $e');
+    } finally {
+      isLoadingUsers.value = false;
+    }
+  }
+
   /// Process attendances to separate clocked in and not clocked in employees for today
   void _processAttendances(List<AttendanceModel> attendances) {
     final today = DateTime.now();
@@ -318,15 +342,30 @@ class AttendanceController extends GetxController {
 
     employeesClockedIn.value = clockedIn;
     
-    // Note: To get employees who haven't clocked in, we would need a separate endpoint
-    // that returns all users, then filter out those in userIdsWithAttendance
-    // For now, we'll leave it empty
-    employeesNotClockedIn.value = [];
+    // Get list of employees who haven't clocked in today
+    final notClockedIn = <EmployeeAttendance>[];
+    
+    for (final user in allUsers) {
+      // Only include members (not supervisors or other roles)
+      if (user.role.toLowerCase() == 'member' && !userIdsWithAttendance.contains(user.id)) {
+        notClockedIn.add(EmployeeAttendance(
+          name: user.displayName,
+          checkInTime: '-',
+          avatarUrl: user.photoProfile ?? '',
+          status: 'Not clocked in yet',
+        ));
+      }
+    }
+    
+    employeesNotClockedIn.value = notClockedIn;
   }
 
   /// Refresh all attendances (can be called after check-in/out)
   Future<void> refreshAttendances() async {
-    await _loadAllAttendances();
+    await Future.wait([
+      _loadAllAttendances(),
+      _loadAllUsers(),
+    ]);
   }
 
   /// Load current location with address

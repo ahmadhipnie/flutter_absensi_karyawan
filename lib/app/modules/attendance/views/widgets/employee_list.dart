@@ -9,8 +9,8 @@ class EmployeeList extends GetView<AttendanceController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // Show loading state
-      if (controller.isLoadingAllAttendances.value) {
+      // Show loading state if either attendances or users are loading
+      if (controller.isLoadingAllAttendances.value || controller.isLoadingUsers.value) {
         return const Padding(
           padding: EdgeInsets.symmetric(vertical: 40),
           child: Center(
@@ -30,7 +30,7 @@ class EmployeeList extends GetView<AttendanceController> {
             child: Text(
               controller.showClockedIn.value
                   ? 'No employees clocked in today'
-                  : 'No employees to show',
+                  : 'All employees have clocked in today',
               style: TextStyle(color: Colors.grey.shade500),
             ),
           ),

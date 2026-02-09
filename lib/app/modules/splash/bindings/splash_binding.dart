@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../../data/providers/api_provider.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/attendance_service.dart';
+import '../../../data/services/user_service.dart';
 import '../controllers/splash_controller.dart';
 
 class SplashBinding extends Bindings {
@@ -20,6 +21,11 @@ class SplashBinding extends Bindings {
     // Initialize AttendanceService as permanent singleton
     if (!Get.isRegistered<AttendanceService>()) {
       Get.put<AttendanceService>(AttendanceService(), permanent: true);
+    }
+
+    // Initialize UserService as permanent singleton
+    if (!Get.isRegistered<UserService>()) {
+      Get.put<UserService>(UserService(), permanent: true);
     }
 
     Get.put<SplashController>(SplashController());

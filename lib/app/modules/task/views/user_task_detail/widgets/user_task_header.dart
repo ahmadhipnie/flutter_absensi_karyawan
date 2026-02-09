@@ -70,42 +70,34 @@ class UserTaskHeader extends GetView<UserTaskDetailController> {
         ),
         const SizedBox(height: 8),
         Obx(
-          () => InkWell(
-                onTap: () => _showStatusBottomSheet(),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFE0E0E0)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0046BE),
-                          borderRadius: BorderRadius.circular(4),
+          () => Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0046BE),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        controller.status.value,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          controller.status.value,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      const Icon(
-                        Icons.keyboard_arrow_down,
-                        size: 20,
-                        color: Color(0xFF9E9E9E),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
         ),
@@ -136,40 +128,6 @@ class UserTaskHeader extends GetView<UserTaskDetailController> {
           ),
         ),
       ],
-    );
-  }
-
-  void _showStatusBottomSheet() {
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Select Status',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...controller.statusOptions.map(
-              (status) => ListTile(
-                title: Text(status),
-                onTap: () {
-                  controller.changeStatus(status);
-                  Get.back();
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

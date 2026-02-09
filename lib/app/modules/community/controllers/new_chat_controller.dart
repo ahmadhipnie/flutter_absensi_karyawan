@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/services/chat_service.dart';
 import '../../../data/services/auth_service.dart';
+import '../../../data/services/department_service.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/department_model.dart';
 import '../../../routes/app_pages.dart';
 
 class NewChatController extends GetxController {
   final ChatService _chatService = Get.find<ChatService>();
+  final DepartmentService _departmentService = DepartmentService();
 
   // Lazy initialization of AuthService
   AuthService? get _authService {
@@ -29,6 +32,9 @@ class NewChatController extends GetxController {
   final selectedMembers = <int>[].obs;
   final groupTitleController = TextEditingController();
   final groupDescriptionController = TextEditingController();
+  final selectedDepartmentId = Rxn<int>(); // Optional department
+  final departments = <DepartmentModel>[].obs;
+  final isLoadingDepartments = false.obs;
 
   // Get current user ID to exclude from member list
   int? get currentUserId {
@@ -46,6 +52,23 @@ class NewChatController extends GetxController {
   void onInit() {
     super.onInit();
     fetchMembers();
+    if (isSupervisor) {
+      fetchDepartments();
+    }
+  }
+
+  /// Fetch departments for group creation
+  Future<void> fetchDepartments() async {
+    try {
+      isLoadingDepartments.value = true;
+      final result = await _departmentService.getDepartments();
+      departments.assignAll(result);
+    } catch (e) {
+      // Silent fail - departments are optional
+      print('Failed to load departments: $e');
+    } finally {
+      isLoadingDepartments.value = false;
+    }
   }
 
   /// Fetch members from API
@@ -130,6 +153,7 @@ class NewChatController extends GetxController {
     groupTitleController.clear();
     groupDescriptionController.clear();
     selectedMembers.clear();
+    selectedDepartmentId.value = null;
     
     Get.dialog(
       _CreateGroupModal(controller: this),
@@ -177,6 +201,7 @@ class NewChatController extends GetxController {
             ? null 
             : groupDescriptionController.text.trim(),
         participantIds: participantIds,
+        departmentId: selectedDepartmentId.value, // Pass department ID (optional)
       );
       
       if (response != null && response.data != null) {
@@ -316,6 +341,70 @@ class _CreateGroupModal extends StatelessWidget {
                         ),
                       ),
                     ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Department Selection (Optional)
+                    const Text(
+                      'Department (Optional)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF374151),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Obx(() {
+                      if (controller.isLoadingDepartments.value) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: const Color(0xFFE5E7EB)),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'Loading departments...',
+                            style: TextStyle(color: Color(0xFF9CA3AF)),
+                          ),
+                        );
+                      }
+                      
+                      return DropdownButtonFormField<int>(
+                        value: controller.selectedDepartmentId.value,
+                        decoration: InputDecoration(
+                          hintText: 'Select department (optional)',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 12,
+                          ),
+                        ),
+                        items: [
+                          const DropdownMenuItem<int>(
+                            value: -1,
+                            child: Text('No Department'),
+                          ),
+                          ...controller.departments.map((dept) {
+                            return DropdownMenuItem<int>(
+                              value: dept.id,
+                              child: Text(dept.name),
+                            );
+                          }),
+                        ],
+                        onChanged: (value) {
+                          if (value == null || value == -1) {
+                            controller.selectedDepartmentId.value = null;
+                          } else {
+                            controller.selectedDepartmentId.value = value;
+                          }
+                        },
+                      );
+                    }),
                     
                     const SizedBox(height: 16),
                     

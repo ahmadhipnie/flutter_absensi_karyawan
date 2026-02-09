@@ -176,6 +176,14 @@ class AttendanceReportController extends GetxController {
 
   /// Navigate to attendance detail
   void viewAttendanceDetail(AttendanceModel attendance) {
+    // Prefer clock-in coordinates, fallback to clock-out
+    String location = 'N/A';
+    if (attendance.clockInLat != null && attendance.clockInLong != null) {
+      location = '${attendance.clockInLat}, ${attendance.clockInLong}';
+    } else if (attendance.clockOutLat != null && attendance.clockOutLong != null) {
+      location = '${attendance.clockOutLat}, ${attendance.clockOutLong}';
+    }
+
     Get.toNamed(
       Routes.ATTENDANCE_HISTORY_DETAIL,
       arguments: {
@@ -183,9 +191,9 @@ class AttendanceReportController extends GetxController {
         'date': formatLogDate(attendance.date),
         'checkInTime': attendance.clockInTime,
         'checkOutTime': attendance.clockOutTime,
-        'photoUrl': attendance.clockInImage ?? '',
+        'photoUrl': attendance.clockInImage ?? attendance.clockOutImage ?? '',
         'notes': attendance.status,
-        'location': 'N/A', // Could be enhanced with actual location if needed
+        'location': location,
       },
     );
   }

@@ -6,6 +6,7 @@ import 'dart:io';
 import '../../../data/services/department_service.dart';
 import '../../../data/models/department_model.dart';
 import '../../../data/models/department_task_model.dart';
+import '../../../data/models/department_group_model.dart';
 import '../../members/controllers/members_controller.dart';
 
 class DepartmentController extends GetxController with GetSingleTickerProviderStateMixin {
@@ -23,11 +24,13 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
   // Observable states
   final isLoading = false.obs;
   final isLoadingTasks = false.obs;
+  final isLoadingGroups = false.obs;
   final selectedImage = Rxn<File>();
   
   // Current department data (for detail/edit/info views)
   final department = Rxn<DepartmentModel>();
   final departmentTasks = <DepartmentTaskModel>[].obs;
+  final departmentGroups = <DepartmentGroupModel>[].obs;
 
   @override
   void onInit() {
@@ -44,9 +47,10 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
     // Fetch members data to ensure it's fresh
     _fetchMembersData();
 
-    // Fetch department tasks if department is loaded
+    // Fetch department data if loaded
     if (department.value != null) {
       fetchDepartmentTasks();
+      fetchDepartmentGroups();
     }
   }
   
@@ -73,9 +77,23 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
       departmentTasks.assignAll(tasks);
     } catch (e) {
       print('Error fetching department tasks: $e');
-      // Optionally show snackbar for task fetch error, or just log it
     } finally {
       isLoadingTasks.value = false;
+    }
+  }
+
+  /// Fetch department groups (conversations)
+  Future<void> fetchDepartmentGroups() async {
+    if (department.value == null) return;
+    
+    try {
+      isLoadingGroups.value = true;
+      final groups = await _departmentService.getDepartmentGroups(department.value!.id);
+      departmentGroups.assignAll(groups);
+    } catch (e) {
+      print('Error fetching department groups: $e');
+    } finally {
+      isLoadingGroups.value = false;
     }
   }
 

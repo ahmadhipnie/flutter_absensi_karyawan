@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:io';
+import 'dart:async';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/task_service.dart';
 import '../../../data/services/department_service.dart';
 import '../../../data/services/location_service.dart';
+import '../../../data/services/attendance_service.dart';
 import '../../../data/models/department_model.dart';
 import '../../../data/models/task_item.dart';
 import '../../../data/models/task_model.dart' as data_model;
+import '../../../data/models/attendance_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../utils/date_helper.dart';
 import '../../navigation/controllers/navigation_controller.dart';
@@ -32,6 +36,15 @@ class DashboardController extends GetxController {
   // Department Service
   final DepartmentService _departmentService = DepartmentService();
 
+  // Attendance Service
+  AttendanceService? get _attendanceService {
+    try {
+      return Get.find<AttendanceService>();
+    } catch (e) {
+      return null;
+    }
+  }
+
   // User role: 'supervisor' or 'member'
   final userRole = 'member'.obs;
 
@@ -51,6 +64,15 @@ class DashboardController extends GetxController {
   final currentLocation = Rxn<LocationData>();
   final isLoadingLocation = false.obs;
   final locationError = ''.obs;
+
+  // Attendance
+  final todayAttendance = Rxn<AttendanceModel>();
+  final isLoadingAttendance = false.obs;
+  final isCheckingIn = false.obs;
+  final isCheckingOut = false.obs;
+
+  // Timer for updating UI
+  Timer? _uiUpdateTimer;
 
   // Department list for supervisor
   final departments = <DepartmentModel>[].obs;
@@ -79,11 +101,14 @@ class DashboardController extends GetxController {
     _loadUserData();
     _loadOngoingTasks();
     _loadCurrentLocation();
+    _loadTodayAttendance();
+    _startUIUpdateTimer();
   }
 
   @override
   void onClose() {
     searchController.dispose();
+    _uiUpdateTimer?.cancel();
     super.onClose();
   }
 
@@ -252,8 +277,163 @@ class DashboardController extends GetxController {
   /// Pull-to-refresh handler
   Future<void> onRefresh() async {
     _loadUserData();
+    await _loadTodayAttendance();
     if (isSupervisor) {
       await loadDepartments();
+    }
+  }
+
+  /// Load today's attendance status
+  Future<void> _loadTodayAttendance() async {
+    final attendanceService = _attendanceService;
+    if (attendanceService == null) return;
+
+    try {
+      isLoadingAttendance.value = true;
+      final attendance = await attendanceService.getTodayAttendance();
+      todayAttendance.value = attendance;
+    } catch (e) {
+      print('Error loading today attendance: $e');
+    } finally {
+      isLoadingAttendance.value = false;
+    }
+  }
+
+  /// Start timer to update UI every minute (to enable check-out button when time comes)
+  void _startUIUpdateTimer() {
+    _uiUpdateTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      // Force UI update to check canCheckOut status
+      update();
+    });
+  }
+
+  /// Check if user can check in (hasn't checked in yet today)
+  bool get canCheckIn =>
+      todayAttendance.value == null || !todayAttendance.value!.hasCheckedIn;
+
+  /// Check if user can check out (has checked in but not checked out yet AND past work end time)
+  bool get canCheckOut {
+    if (todayAttendance.value == null ||
+        !todayAttendance.value!.hasCheckedIn ||
+        todayAttendance.value!.hasCheckedOut) {
+      return false;
+    }
+
+    // Check if current time is past work end time
+    final now = DateTime.now();
+    final workEndHour = int.tryParse(workEndTime.value.replaceAll(RegExp(r'[^0-9]'), '')) ?? 17; // Default 5 PM
+    final workEndDateTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      workEndHour,
+      0,
+    );
+
+    // Can check out if current time is >= work end time
+    return now.isAfter(workEndDateTime) ||
+        now.isAtSameMomentAs(workEndDateTime);
+  }
+
+  /// Perform check-in with image
+  Future<bool> performCheckIn(
+    File imageFile, {
+    double? latitude,
+    double? longitude,
+  }) async {
+    final attendanceService = _attendanceService;
+    if (attendanceService == null) return false;
+
+    // Use provided location or fallback to current location
+    final lat = latitude ?? currentLocation.value?.latitude;
+    final long = longitude ?? currentLocation.value?.longitude;
+
+    if (lat == null || long == null) {
+      Get.snackbar(
+        'Error',
+        'Location not available. Please enable location.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+      );
+      return false;
+    }
+
+    try {
+      isCheckingIn.value = true;
+
+      final attendance = await attendanceService.checkIn(
+        latitude: lat,
+        longitude: long,
+        imageFile: imageFile,
+      );
+
+      if (attendance != null) {
+        todayAttendance.value = attendance;
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+      );
+      return false;
+    } finally {
+      isCheckingIn.value = false;
+    }
+  }
+
+  /// Perform check-out with image
+  Future<bool> performCheckOut(
+    File imageFile, {
+    double? latitude,
+    double? longitude,
+  }) async {
+    final attendanceService = _attendanceService;
+    if (attendanceService == null) return false;
+
+    // Use provided location or fallback to current location
+    final lat = latitude ?? currentLocation.value?.latitude;
+    final long = longitude ?? currentLocation.value?.longitude;
+
+    if (lat == null || long == null) {
+      Get.snackbar(
+        'Error',
+        'Location not available. Please enable location.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+      );
+      return false;
+    }
+
+    try {
+      isCheckingOut.value = true;
+
+      final attendance = await attendanceService.checkOut(
+        latitude: lat,
+        longitude: long,
+        imageFile: imageFile,
+      );
+
+      if (attendance != null) {
+        todayAttendance.value = attendance;
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+      );
+      return false;
+    } finally {
+      isCheckingOut.value = false;
     }
   }
 
@@ -343,7 +523,19 @@ class DashboardController extends GetxController {
   }
 
   void clockIn() {
-    Get.toNamed(Routes.TAKE_ATTENDANCE);
+    Get.toNamed(Routes.TAKE_ATTENDANCE, arguments: {'type': 'check-in'})?.then((result) {
+      if (result == true) {
+        _loadTodayAttendance(); // Refresh attendance after check-in
+      }
+    });
+  }
+
+  void clockOut() {
+    Get.toNamed(Routes.TAKE_ATTENDANCE, arguments: {'type': 'check-out'})?.then((result) {
+      if (result == true) {
+        _loadTodayAttendance(); // Refresh attendance after check-out
+      }
+    });
   }
 
   void openTask(DashboardTaskItem task) {

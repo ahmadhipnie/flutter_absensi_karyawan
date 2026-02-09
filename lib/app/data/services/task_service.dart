@@ -3,6 +3,7 @@ import 'package:get/get.dart' hide FormData, MultipartFile;
 
 import '../models/task_model.dart';
 import '../models/task_submission_model.dart';
+import '../models/task_assignment_model.dart';
 import '../providers/api_provider.dart';
 
 class TaskService extends GetxService {
@@ -200,6 +201,44 @@ class TaskService extends GetxService {
 
       throw errorMessage;
     } catch (e) {
+      throw 'An error occurred: ${e.toString()}';
+    }
+  }
+
+  /// GET /tasks/:id - Get task detail with assignments
+  Future<TaskWithAssignmentsModel?> getTaskWithAssignments(int taskId) async {
+    try {
+      print('Fetching task with assignments for ID: $taskId');
+
+      final response = await _apiProvider.get('/tasks/$taskId');
+
+      print('Task with assignments response status: ${response.statusCode}');
+      print('Task with assignments response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data is Map && data['success'] == true && data['data'] != null) {
+          return TaskWithAssignmentsModel.fromJson(data['data']);
+        }
+      }
+
+      return null;
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to fetch task with assignments';
+
+      if (e.response != null) {
+        print('Task with assignments error response: ${e.response!.data}');
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        }
+      } else {
+        print('Task with assignments error: ${e.message}');
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      print('Task with assignments unexpected error: $e');
       throw 'An error occurred: ${e.toString()}';
     }
   }

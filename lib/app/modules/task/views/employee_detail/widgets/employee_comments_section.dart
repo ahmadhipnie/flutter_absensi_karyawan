@@ -36,11 +36,33 @@ class EmployeeCommentsSection extends GetView<EmployeeDetailController> {
             const SizedBox(height: 16),
             // List comments
             Obx(
-              () => Column(
-                children: controller.comments
-                    .map((comment) => _buildCommentItem(comment))
-                    .toList(),
-              ),
+              () {
+                final comments = controller.comments;
+                if (comments.isEmpty) {
+                  // Show placeholder when there are no comments
+                  return SizedBox(
+                    height: minHeight * 0.6,
+                    child: Center(
+                      child: Text(
+                        'No comments yet',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF9E9E9E),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemBuilder: (context, index) => _buildCommentItem(comments[index]),
+                  separatorBuilder: (context, index) => const Divider(height: 0),
+                  itemCount: comments.length,
+                );
+              },
             ),
           ],
         ),

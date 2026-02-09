@@ -5,7 +5,7 @@ class TaskSubmissionModel {
   final String? contentUrl;
   final String? filePath;
   final String? fileName;
-  final DateTime submittedAt;
+  final DateTime? submittedAt;
 
   TaskSubmissionModel({
     required this.id,
@@ -14,7 +14,7 @@ class TaskSubmissionModel {
     this.contentUrl,
     this.filePath,
     this.fileName,
-    required this.submittedAt,
+    this.submittedAt,
   });
 
   factory TaskSubmissionModel.fromJson(Map<String, dynamic> json) {
@@ -25,7 +25,9 @@ class TaskSubmissionModel {
       contentUrl: json['content_url'] as String?,
       filePath: json['file_path'] as String?,
       fileName: json['file_name'] as String?,
-      submittedAt: DateTime.parse(json['submitted_at'] as String),
+      submittedAt: json['submitted_at'] != null 
+          ? DateTime.parse(json['submitted_at'] as String)
+          : null,
     );
   }
 
@@ -37,7 +39,7 @@ class TaskSubmissionModel {
       'content_url': contentUrl,
       'file_path': filePath,
       'file_name': fileName,
-      'submitted_at': submittedAt.toIso8601String(),
+      'submitted_at': submittedAt?.toIso8601String(),
     };
   }
 }

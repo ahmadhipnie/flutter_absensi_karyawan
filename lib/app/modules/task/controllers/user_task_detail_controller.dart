@@ -133,7 +133,9 @@ class UserTaskDetailController extends GetxController {
       if (submissions.isNotEmpty) {
         final latestSubmission = submissions.first;
         submittedFileName.value = latestSubmission.fileName ?? 'Untitled';
-        submittedDate.value = _formatSubmissionDate(latestSubmission.submittedAt);
+        submittedDate.value = _formatSubmissionDate(
+          latestSubmission.submittedAt ?? DateTime.now()
+        );
         submittedFilePath.value = latestSubmission.filePath ?? '';
       }
     } catch (e) {

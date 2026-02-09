@@ -17,8 +17,26 @@ class EmployeeWorkItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final controller = Get.find<TaskDetailController>();
+    
     return InkWell(
-      onTap: () => Get.toNamed('/employee-detail'),
+      onTap: () {
+        // Navigate to employee submission detail
+        // Pass assignment ID and submission data if available
+        if (employee.assignmentId != null) {
+          Get.toNamed(
+            '/employee-detail',
+            arguments: {
+              'assignmentId': employee.assignmentId,
+              'employeeName': employee.name,
+              'status': employee.status,
+              'submissionDate': employee.submissionDate,
+              'taskId': controller.taskId,
+              'taskSubject': controller.taskTitle.value,
+            },
+          );
+        }
+      },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(

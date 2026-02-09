@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/task_model.dart';
+import '../../../data/models/task_assignment_model.dart';
+import '../../../data/models/task_submission_model.dart';
 import '../../../data/services/task_service.dart';
 
 class TaskDetailController extends GetxController
@@ -10,6 +12,7 @@ class TaskDetailController extends GetxController
   final selectedTabIndex = 0.obs;
   final isLoading = true.obs;
   final Rxn<TaskModel> task = Rxn<TaskModel>();
+  final Rxn<TaskWithAssignmentsModel> taskWithAssignments = Rxn<TaskWithAssignmentsModel>();
 
   late final TaskService _taskService;
 
@@ -27,60 +30,16 @@ class TaskDetailController extends GetxController
   int? get taskId => Get.arguments?['taskId'] as int?;
 
   // Employee work statistics
-  final approvedCount = 10.obs;
-  final lateSubmissionsCount = 20.obs;
+  final approvedCount = 0.obs;
+  final lateSubmissionsCount = 0.obs;
 
-  // Employee work data
-  final List<EmployeeWorkModel> approvedEmployees = [
-    EmployeeWorkModel(
-      id: '1',
-      name: 'Karina',
-      avatarUrl: 'https://i.pravatar.cc/150?img=1',
-      status: EmployeeWorkStatus.onTime,
-    ),
-    EmployeeWorkModel(
-      id: '2',
-      name: 'Bambang',
-      avatarUrl: 'https://i.pravatar.cc/150?img=12',
-      status: EmployeeWorkStatus.late,
-    ),
-  ];
+  // Employee work data (now observable and dynamic)
+  final RxList<EmployeeWorkModel> approvedEmployees = <EmployeeWorkModel>[].obs;
+  final RxList<EmployeeWorkModel> lateEmployees = <EmployeeWorkModel>[].obs;
+  final RxList<EmployeeWorkModel> assignedEmployees = <EmployeeWorkModel>[].obs;
 
-  final List<EmployeeWorkModel> lateEmployees = [
-    EmployeeWorkModel(
-      id: '3',
-      name: 'Jessylin',
-      avatarUrl: 'https://i.pravatar.cc/150?img=5',
-      status: EmployeeWorkStatus.late,
-    ),
-    EmployeeWorkModel(
-      id: '4',
-      name: 'Gerald',
-      avatarUrl: 'https://i.pravatar.cc/150?img=14',
-      status: EmployeeWorkStatus.late,
-    ),
-  ];
-
-  final List<EmployeeWorkModel> assignedEmployees = [
-    EmployeeWorkModel(
-      id: '5',
-      name: 'Jessica',
-      avatarUrl: 'https://i.pravatar.cc/150?img=9',
-      status: EmployeeWorkStatus.notSubmitted,
-    ),
-    EmployeeWorkModel(
-      id: '6',
-      name: 'Karolin',
-      avatarUrl: 'https://i.pravatar.cc/150?img=10',
-      status: EmployeeWorkStatus.notSubmitted,
-    ),
-    EmployeeWorkModel(
-      id: '7',
-      name: 'Karolin2',
-      avatarUrl: 'https://i.pravatar.cc/150?img=10',
-      status: EmployeeWorkStatus.notSubmitted,
-    ),
-  ];
+  // Submission data cache
+  final Map<int, TaskSubmissionModel> _submissionsCache = {};
 
   @override
   void onInit() {
@@ -98,25 +57,46 @@ class TaskDetailController extends GetxController
     }
   }
 
-  /// Load task detail from API
+  /// Load task detail from API with assignments
   Future<void> loadTaskDetail() async {
     try {
       isLoading.value = true;
       
-      final taskData = await _taskService.getTaskById(taskId!);
+      // Get task with assignments
+      final taskData = await _taskService.getTaskWithAssignments(taskId!);
       
       if (taskData != null) {
-        task.value = taskData;
+        taskWithAssignments.value = taskData;
+        
+        // Also set the basic task for backward compatibility
+        task.value = TaskModel(
+          id: taskData.id,
+          taskId: taskData.id,
+          taskSubject: taskData.subject,
+          taskDescription: taskData.description,
+          customerName: taskData.customerName,
+          location: taskData.location,
+          status: 'active', // Default status as it's not in TaskWithAssignmentsModel
+          dueDate: taskData.dueDate,
+          createdAt: taskData.createdAt,
+          updatedAt: taskData.updatedAt,
+          creatorName: taskData.creatorName,
+          creatorEmail: taskData.creatorEmail,
+          isSubmitted: false, // This is per-assignment, not per-task
+        );
         
         // Populate observable fields
-        taskTitle.value = taskData.taskSubject;
+        taskTitle.value = taskData.subject;
         postedOn.value = taskData.createdAt;
         dueDate.value = taskData.dueDate;
-        description.value = taskData.taskDescription;
+        description.value = taskData.description;
         customerName.value = taskData.customerName ?? '';
         location.value = taskData.location;
         creatorName.value = taskData.creatorName ?? '';
         creatorEmail.value = taskData.creatorEmail ?? '';
+
+        // Process assignments for Employee Work tab
+        await _processAssignments(taskData.assignments);
       } else {
         Get.snackbar(
           'Error',
@@ -133,6 +113,72 @@ class TaskDetailController extends GetxController
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Process assignments and categorize employees
+  Future<void> _processAssignments(List<TaskAssignmentModel> assignments) async {
+    // Clear previous data
+    approvedEmployees.clear();
+    lateEmployees.clear();
+    assignedEmployees.clear();
+    _submissionsCache.clear();
+    
+    int approvedTotal = 0;
+    int lateTotal = 0;
+
+    for (var assignment in assignments) {
+      if (assignment.isSubmitted) {
+        // Fetch submission details
+        final submissions = await _taskService.getTaskSubmissions(
+          assignmentId: assignment.id,
+        );
+        
+        if (submissions.isNotEmpty) {
+          final submission = submissions.first;
+          _submissionsCache[assignment.id] = submission;
+
+          // Check if submission is late
+          final isLate = _isSubmissionLate(submission.submittedAt, dueDate.value);
+          
+          final employee = EmployeeWorkModel(
+            id: assignment.userId.toString(),
+            name: assignment.username,
+            avatarUrl: 'https://i.pravatar.cc/150?u=${assignment.userEmail}',
+            status: isLate ? EmployeeWorkStatus.late : EmployeeWorkStatus.onTime,
+            assignmentId: assignment.id,
+            submissionDate: submission.submittedAt,
+          );
+
+          if (isLate) {
+            lateEmployees.add(employee);
+            lateTotal++;
+          } else {
+            approvedEmployees.add(employee);
+            approvedTotal++;
+          }
+        }
+      } else {
+        // Not submitted yet
+        final employee = EmployeeWorkModel(
+          id: assignment.userId.toString(),
+          name: assignment.username,
+          avatarUrl: 'https://i.pravatar.cc/150?u=${assignment.userEmail}',
+          status: EmployeeWorkStatus.notSubmitted,
+          assignmentId: assignment.id,
+        );
+        assignedEmployees.add(employee);
+      }
+    }
+
+    // Update statistics
+    approvedCount.value = approvedTotal;
+    lateSubmissionsCount.value = lateTotal;
+  }
+
+  /// Check if a submission is late
+  bool _isSubmissionLate(DateTime? submittedAt, DateTime? dueDateTime) {
+    if (submittedAt == null || dueDateTime == null) return false;
+    return submittedAt.isAfter(dueDateTime);
   }
 
   @override
@@ -194,12 +240,16 @@ class EmployeeWorkModel {
   final String name;
   final String avatarUrl;
   final EmployeeWorkStatus status;
+  final int? assignmentId;
+  final DateTime? submissionDate;
 
   EmployeeWorkModel({
     required this.id,
     required this.name,
     required this.avatarUrl,
     required this.status,
+    this.assignmentId,
+    this.submissionDate,
   });
 
   String get statusText {

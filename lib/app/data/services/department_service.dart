@@ -4,11 +4,50 @@ import 'dart:io';
 import '../models/departments_response_model.dart';
 import '../models/department_model.dart';
 import '../models/department_task_model.dart';
+import '../models/department_group_model.dart';
 import '../providers/api_provider.dart';
 
 class DepartmentService extends GetxService {
   // Use singleton ApiProvider
   ApiProvider get _apiProvider => ApiProvider.instance;
+
+  /// Get groups for a department
+  Future<List<DepartmentGroupModel>> getDepartmentGroups(int departmentId) async {
+    try {
+      final response = await _apiProvider.get('/conversations/department/$departmentId/groups');
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        if (responseData['success'] == true) {
+          final List<dynamic> data = responseData['data'] ?? [];
+          return data.map((json) => DepartmentGroupModel.fromJson(json)).toList();
+        }
+        throw responseData['message'] ?? 'Failed to load department groups';
+      }
+
+      throw 'Failed to load department groups: ${response.statusCode}';
+    } on DioException catch (e) {
+      print('=== DEPARTMENT GROUPS API ERROR ===');
+      print('Type: ${e.type}');
+      print('Message: ${e.message}');
+      print('Response: ${e.response}');
+
+      String errorMessage = 'Failed to load department groups';
+
+      if (e.response != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        } else {
+          errorMessage = 'Error: ${e.response!.statusCode}';
+        }
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      throw 'An unexpected error occurred: ${e.toString()}';
+    }
+  }
 
   /// Get tasks for a department
   Future<List<DepartmentTaskModel>> getDepartmentTasks(int departmentId) async {
@@ -268,6 +307,63 @@ class DepartmentService extends GetxService {
       print('Response: ${e.response}');
 
       String errorMessage = 'Failed to delete department';
+
+      if (e.response != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        } else {
+          errorMessage = 'Error: ${e.response!.statusCode}';
+        }
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'Connection error. Check your internet.';
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      throw 'An unexpected error occurred: ${e.toString()}';
+    }
+  }
+
+  /// Create Announcement
+  Future<void> createAnnouncement({
+    required String subject,
+    required String message,
+    required bool isBroadcast,
+    required List<int> recipientIds,
+  }) async {
+    try {
+      final requestData = {
+        'subject': subject,
+        'message': message,
+        'is_broadcast': isBroadcast,
+        'recipient_ids': recipientIds,
+      };
+
+      final response = await _apiProvider.post(
+        '/announcements',
+        data: requestData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = response.data;
+        if (responseData['success'] == true) {
+          return;
+        }
+        throw responseData['message'] ?? 'Failed to create announcement';
+      }
+
+      throw 'Failed to create announcement: ${response.statusCode}';
+    } on DioException catch (e) {
+      print('=== CREATE ANNOUNCEMENT API ERROR ===');
+      print('Type: ${e.type}');
+      print('Message: ${e.message}');
+      print('Response: ${e.response}');
+
+      String errorMessage = 'Failed to create announcement';
 
       if (e.response != null) {
         final data = e.response!.data;

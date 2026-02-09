@@ -25,6 +25,7 @@ class ChatService extends GetxService {
     String? title,
     String? description,
     required List<int> participantIds,
+    int? departmentId, // Optional department ID
   }) async {
     try {
       final request = CreateConversationRequest(
@@ -34,9 +35,14 @@ class ChatService extends GetxService {
         participantIds: participantIds,
       );
 
+      final data = request.toJson();
+      if (departmentId != null) {
+        data['department_id'] = departmentId;
+      }
+
       final response = await _apiProvider.post(
         '/conversations',
-        data: request.toJson(),
+        data: data,
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -77,12 +83,14 @@ class ChatService extends GetxService {
     required String title,
     String? description,
     required List<int> participantIds,
+    int? departmentId, // Optional department ID
   }) async {
     return createConversation(
       type: 'group',
       title: title,
       description: description,
       participantIds: participantIds,
+      departmentId: departmentId,
     );
   }
 

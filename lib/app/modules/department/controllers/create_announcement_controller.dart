@@ -1,19 +1,40 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../data/services/department_service.dart';
+import '../../../data/models/user_model.dart';
 
 class CreateAnnouncementController extends GetxController {
+  final DepartmentService _departmentService = DepartmentService();
+
   final subjectController = ''.obs;
   final messageController = ''.obs;
+  final isLoading = false.obs;
   
-  // Selected members list
+  // Members data for selection
+  // Structure: {'id': int, 'name': String, 'avatar': String, 'isSelected': bool, 'user': UserModel}
+  final allMembers = <Map<String, dynamic>>[].obs;
   final selectedMembers = <Map<String, dynamic>>[].obs;
-  
-  // Dummy members data for selection
-  final allMembers = [
-    {'id': '1', 'name': 'Karina', 'avatar': 'https://ui-avatars.com/api/?name=Karina&background=random', 'isSelected': true},
-    {'id': '2', 'name': 'Lee Jae Wook', 'avatar': 'https://ui-avatars.com/api/?name=Lee+Jae+Wook&background=random', 'isSelected': false},
-    {'id': '3', 'name': 'Budi', 'avatar': 'https://ui-avatars.com/api/?name=Budi&background=random', 'isSelected': true},
-    {'id': '4', 'name': 'Gerald P', 'avatar': 'https://ui-avatars.com/api/?name=Gerald+P&background=random', 'isSelected': true},
-  ].obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    if (Get.arguments != null && Get.arguments is List) {
+      final list = Get.arguments as List;
+      if (list.isNotEmpty) {
+        // Handle both direct UserModel list or dynamic list
+        final users = list.map((e) => e as UserModel).toList();
+        
+        allMembers.value = users.map((u) => {
+          'id': u.id,
+          'name': u.displayName,
+          'avatar': u.avatarUrl,
+          'isSelected': true, // Default to all selected
+          'user': u,
+        }).toList();
+      }
+    }
+    updateSelectedMembers();
+  }
 
   void toggleMemberSelection(int index) {
     var member = allMembers[index];
@@ -27,20 +48,80 @@ class CreateAnnouncementController extends GetxController {
   }
 
   String get notifyToText {
+    if (allMembers.isEmpty) return 'No Members';
     if (selectedMembers.isEmpty) return 'Select Members';
     if (selectedMembers.length == allMembers.length) return 'All Member';
     return '${selectedMembers.length} Members Selected';
   }
 
-  void postAnnouncement() {
-    // Implement post logic
-    Get.back();
-    Get.snackbar('Success', 'Announcement posted successfully');
-  }
+  Future<void> postAnnouncement() async {
+    if (isLoading.value) return;
 
-  @override
-  void onInit() {
-    super.onInit();
-    updateSelectedMembers();
+    if (subjectController.value.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Please enter a subject',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+    if (messageController.value.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Please enter a message',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+    if (selectedMembers.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'Please select at least one member',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      
+      final recipientIds = selectedMembers.map((m) => m['id'] as int).toList();
+      final isBroadcast = recipientIds.length == allMembers.length;
+
+      await _departmentService.createAnnouncement(
+        subject: subjectController.value,
+        message: messageController.value,
+        isBroadcast: isBroadcast,
+        recipientIds: recipientIds,
+      );
+
+      isLoading.value = false;
+      
+      Get.back(); // Go back to department detail
+      
+      Get.snackbar(
+        'Success',
+        'Announcement posted successfully',
+        backgroundColor: Colors.green,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+      
+    } catch (e) {
+      isLoading.value = false;
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+    }
   }
 }

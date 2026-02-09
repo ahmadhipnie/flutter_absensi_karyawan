@@ -9,6 +9,7 @@ import '../../members/views/widgets/member_list_item.dart';
 import '../../../data/services/user_service.dart';
 import '../../../data/models/user_model.dart';
 import '../../../data/models/department_task_model.dart';
+import '../../../data/models/department_group_model.dart';
 
 class DepartmentDetailView extends GetView<DepartmentController> {
   const DepartmentDetailView({Key? key}) : super(key: key);
@@ -188,7 +189,7 @@ class DepartmentDetailView extends GetView<DepartmentController> {
               controller: controller.tabController,
               children: [
                 _buildTaskTab(),
-                const Center(child: Text('Discussion Content')),
+                _buildDiscussionTab(),
                 _buildMembersTab(),
               ],
             ),
@@ -200,7 +201,24 @@ class DepartmentDetailView extends GetView<DepartmentController> {
 
   Widget _buildAnnouncementCard() {
     return GestureDetector(
-      onTap: () => Get.toNamed(Routes.CREATE_ANNOUNCEMENT),
+      onTap: () {
+        final dept = controller.department.value;
+        if (dept == null) return;
+
+        List<UserModel> members = [];
+        
+        if (Get.isRegistered<MembersController>()) {
+          final membersCtrl = Get.find<MembersController>();
+          members = membersCtrl.members.where((m) {
+            final byId = m.departmentId != null && m.departmentId == dept.id;
+            final byName = m.location != null && m.location == dept.name;
+            final byIdString = m.departmentId != null && m.departmentId.toString() == dept.id.toString();
+            return byId || byName || byIdString;
+          }).toList();
+        }
+        
+        Get.toNamed(Routes.CREATE_ANNOUNCEMENT, arguments: members);
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
@@ -332,92 +350,85 @@ class DepartmentDetailView extends GetView<DepartmentController> {
   }
 
   Widget _buildTaskItem(DepartmentTaskModel task) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF3F4F6)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.assignment_outlined,
-                  color: AppTheme.primaryColor,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      task.taskSubject,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Assigned to: ${task.username}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6B7280),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              _buildStatusBadge(task.status),
-            ],
-          ),
-          const SizedBox(height: 12),
-          const Divider(height: 1),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade400),
-                  const SizedBox(width: 6),
-                  Text(
-                    _formatDate(task.dueDate),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+    return InkWell(
+      onTap: () async {
+        final result = await Get.toNamed(Routes.TASK_DETAIL, arguments: {'taskId': task.taskId});
+        if (result == true) {
+          await controller.fetchDepartmentTasks();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFF3F4F6)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                ],
-              ),
-              if (task.location.isNotEmpty)
+                  child: Icon(
+                    Icons.assignment_outlined,
+                    color: AppTheme.primaryColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        task.taskSubject,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xFF1F2937),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Assigned to: ${task.username}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF6B7280),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _buildStatusBadge(task.status),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
                 Row(
                   children: [
-                    Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade400),
-                    const SizedBox(width: 4),
+                    Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade400),
+                    const SizedBox(width: 6),
                     Text(
-                      task.location,
+                      _formatDate(task.dueDate),
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
@@ -425,9 +436,139 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                     ),
                   ],
                 ),
+                if (task.location.isNotEmpty)
+                  Row(
+                    children: [
+                      Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade400),
+                      const SizedBox(width: 4),
+                      Text(
+                        task.location,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDiscussionTab() {
+    return Obx(() {
+      if (controller.isLoadingGroups.value) {
+        return const Center(child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: CircularProgressIndicator(),
+        ));
+      }
+
+      if (controller.departmentGroups.isEmpty) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey.shade300),
+              const SizedBox(height: 12),
+              Text(
+                'No discussion groups found',
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
             ],
           ),
-        ],
+        );
+      }
+
+      return RefreshIndicator(
+        onRefresh: controller.fetchDepartmentGroups,
+        child: ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: controller.departmentGroups.length,
+          separatorBuilder: (c, i) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final group = controller.departmentGroups[index];
+            return _buildGroupItem(group);
+          },
+        ),
+      );
+    });
+  }
+
+  Widget _buildGroupItem(DepartmentGroupModel group) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to chat detail with this group info
+        // We'll need to check how ChatDetailView expects arguments.
+        // For now, placeholder or assuming it can take ID/Model
+        // Since we don't have full context on ChatDetail, we'll just show TODO or try to navigate
+        // Routes.CHAT_DETAIL usually expects a conversation ID or object.
+        // Assuming we can pass arguments.
+        Get.toNamed(Routes.CHAT_DETAIL, arguments: {
+          'chatId': group.id.toString(),
+          'title': group.title,
+          'type': group.type,
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFF3F4F6)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.groups,
+                color: AppTheme.primaryColor,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    group.title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F2937),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Created: ${_formatDate(group.createdAt.toIso8601String())}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.shade400),
+          ],
+        ),
       ),
     );
   }
@@ -456,6 +597,11 @@ class DepartmentDetailView extends GetView<DepartmentController> {
         textColor = Colors.grey.shade700;
     }
 
+    // Simple, explicit capitalization to avoid relying on extensions
+    final displayLabel = label.isNotEmpty
+        ? '${label[0].toUpperCase()}${label.substring(1)}'
+        : label;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -463,7 +609,7 @@ class DepartmentDetailView extends GetView<DepartmentController> {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        label.capitalizeFirst ?? label,
+        displayLabel,
         style: TextStyle(
           color: textColor,
           fontSize: 11,

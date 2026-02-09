@@ -31,12 +31,20 @@ class CreateAnnouncementView extends GetView<CreateAnnouncementController> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
-            child: ElevatedButton.icon(
-              onPressed: controller.postAnnouncement,
-              icon: const Icon(Icons.edit_note, size: 16, color: AppTheme.primaryColor),
-              label: const Text(
-                'Post',
-                style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
+            child: Obx(() => ElevatedButton.icon(
+              onPressed: controller.isLoading.value ? null : controller.postAnnouncement,
+              icon: controller.isLoading.value
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppTheme.primaryColor))
+                  : const Icon(Icons.edit_note,
+                      size: 16, color: AppTheme.primaryColor),
+              label: Text(
+                controller.isLoading.value ? 'Posting...' : 'Post',
+                style: const TextStyle(
+                    color: AppTheme.primaryColor, fontWeight: FontWeight.bold),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFEEF2FF),
@@ -46,7 +54,7 @@ class CreateAnnouncementView extends GetView<CreateAnnouncementController> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-            ),
+            )),
           ),
         ],
       ),

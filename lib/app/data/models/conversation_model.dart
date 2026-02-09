@@ -230,12 +230,14 @@ class CreateConversationRequest {
   final String? title;
   final String? description;
   final List<int> participantIds;
+  final int? departmentId; // Optional department ID
 
   CreateConversationRequest({
     required this.type,
     this.title,
     this.description,
     required this.participantIds,
+    this.departmentId,
   });
 
   Map<String, dynamic> toJson() {
@@ -244,6 +246,7 @@ class CreateConversationRequest {
       if (title != null) 'title': title,
       if (description != null) 'description': description,
       'participant_ids': participantIds,
+      if (departmentId != null) 'department_id': departmentId,
     };
   }
 

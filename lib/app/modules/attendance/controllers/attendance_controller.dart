@@ -28,37 +28,15 @@ class AttendanceController extends GetxController {
   final isCheckingIn = false.obs;
   final isCheckingOut = false.obs;
 
+  // All attendances for supervisor
+  final allAttendances = <AttendanceModel>[].obs;
+  final isLoadingAllAttendances = false.obs;
+
   // Timer for updating UI
   Timer? _uiUpdateTimer;
 
-  // Mock data for employees
-  final employeesClockedIn = <EmployeeAttendance>[
-    EmployeeAttendance(
-      name: 'Karina',
-      checkInTime: '08:00',
-      avatarUrl: '', // Using default or asset later
-      status: 'Check in on 08:00',
-    ),
-    EmployeeAttendance(
-      name: 'Bambang',
-      checkInTime: '08:00',
-      avatarUrl: '',
-      status: 'Check in on 08:00',
-    ),
-    EmployeeAttendance(
-      name: 'Jessylin',
-      checkInTime: '08:00',
-      avatarUrl: '',
-      status: 'Check in on 08:00',
-    ),
-    EmployeeAttendance(
-      name: 'Basuki',
-      checkInTime: '08:00',
-      avatarUrl: '',
-      status: 'Check in on 08:00',
-    ),
-  ].obs;
-
+  // Mock data for employees - Now replaced with real data
+  final employeesClockedIn = <EmployeeAttendance>[].obs;
   final employeesNotClockedIn = <EmployeeAttendance>[].obs;
 
   final showClockedIn = true.obs;
@@ -74,6 +52,7 @@ class AttendanceController extends GetxController {
     ) {
       if (result == true) {
         _loadTodayAttendance(); // Refresh attendance after check-in
+        _loadAllAttendances(); // Refresh employee list
       }
     });
   }
@@ -83,6 +62,7 @@ class AttendanceController extends GetxController {
       (result) {
         if (result == true) {
           _loadTodayAttendance(); // Refresh attendance after check-out
+          _loadAllAttendances(); // Refresh employee list
         }
       },
     );
@@ -262,6 +242,7 @@ class AttendanceController extends GetxController {
     super.onInit();
     _loadCurrentLocation();
     _loadTodayAttendance();
+    _loadAllAttendances();
     _startUIUpdateTimer();
   }
 
@@ -290,6 +271,62 @@ class AttendanceController extends GetxController {
     } finally {
       isLoadingAttendance.value = false;
     }
+  }
+
+  /// Load all attendances (for supervisor view)
+  Future<void> _loadAllAttendances() async {
+    try {
+      isLoadingAllAttendances.value = true;
+      final attendances = await _attendanceService.getAllAttendances();
+      allAttendances.value = attendances;
+      
+      // Process attendances to populate employee lists
+      _processAttendances(attendances);
+    } catch (e) {
+      print('Error loading all attendances: $e');
+    } finally {
+      isLoadingAllAttendances.value = false;
+    }
+  }
+
+  /// Process attendances to separate clocked in and not clocked in employees for today
+  void _processAttendances(List<AttendanceModel> attendances) {
+    final today = DateTime.now();
+    final todayAttendances = attendances.where((attendance) {
+      return attendance.date.year == today.year &&
+          attendance.date.month == today.month &&
+          attendance.date.day == today.day;
+    }).toList();
+
+    // Get list of employees who have clocked in today
+    final clockedIn = <EmployeeAttendance>[];
+    final userIdsWithAttendance = <int>{};
+
+    for (final attendance in todayAttendances) {
+      if (attendance.hasCheckedIn && attendance.username != null) {
+        userIdsWithAttendance.add(attendance.userId);
+        clockedIn.add(EmployeeAttendance(
+          name: attendance.username!,
+          checkInTime: attendance.clockInTime,
+          avatarUrl: '', // Could be enhanced with user photo URL if available
+          status: attendance.hasCheckedOut 
+              ? 'Checked out at ${attendance.clockOutTime}'
+              : 'Check in on ${attendance.clockInTime}',
+        ));
+      }
+    }
+
+    employeesClockedIn.value = clockedIn;
+    
+    // Note: To get employees who haven't clocked in, we would need a separate endpoint
+    // that returns all users, then filter out those in userIdsWithAttendance
+    // For now, we'll leave it empty
+    employeesNotClockedIn.value = [];
+  }
+
+  /// Refresh all attendances (can be called after check-in/out)
+  Future<void> refreshAttendances() async {
+    await _loadAllAttendances();
   }
 
   /// Load current location with address

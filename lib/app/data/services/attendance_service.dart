@@ -234,4 +234,28 @@ class AttendanceService extends GetxService {
       return [];
     }
   }
+
+  /// Get all attendances (for supervisor)
+  /// GET /attendances
+  /// Returns all employee attendances with user info
+  Future<List<AttendanceModel>> getAllAttendances() async {
+    try {
+      final response = await _apiProvider.get('/attendances');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List attendanceList = data['data'];
+          return attendanceList
+              .map((json) => AttendanceModel.fromJson(json))
+              .toList();
+        }
+      }
+
+      return [];
+    } catch (e) {
+      print('Error fetching all attendances: $e');
+      return [];
+    }
+  }
 }

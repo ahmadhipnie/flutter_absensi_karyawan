@@ -9,6 +9,16 @@ class EmployeeList extends GetView<AttendanceController> {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
+      // Show loading state
+      if (controller.isLoadingAllAttendances.value) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 40),
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
+
       final employees = controller.showClockedIn.value
           ? controller.employeesClockedIn
           : controller.employeesNotClockedIn;
@@ -18,7 +28,9 @@ class EmployeeList extends GetView<AttendanceController> {
           padding: const EdgeInsets.symmetric(vertical: 20),
           child: Center(
             child: Text(
-              'No employees found',
+              controller.showClockedIn.value
+                  ? 'No employees clocked in today'
+                  : 'No employees to show',
               style: TextStyle(color: Colors.grey.shade500),
             ),
           ),
@@ -42,10 +54,10 @@ class EmployeeList extends GetView<AttendanceController> {
               backgroundColor: Colors.blue.shade100,
               backgroundImage: photoUrl != null
                   ? NetworkImage(photoUrl)
-                  : null,
-              child: photoUrl == null
-                  ? const Icon(Icons.person, color: Colors.blue)
-                  : null,
+                  : NetworkImage(
+                      'https://ui-avatars.com/api/?name=${employee.name}&background=random',
+                    ),
+              onBackgroundImageError: (_, __) {},
             ),
             title: Text(
               employee.name,

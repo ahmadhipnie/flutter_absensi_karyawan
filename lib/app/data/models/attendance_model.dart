@@ -15,6 +15,9 @@ class AttendanceModel {
   final int lateDuration;
   final DateTime createdAt;
   final DateTime updatedAt;
+  // Additional fields for supervisor view
+  final String? email;
+  final String? username;
 
   AttendanceModel({
     required this.id,
@@ -33,6 +36,8 @@ class AttendanceModel {
     required this.lateDuration,
     required this.createdAt,
     required this.updatedAt,
+    this.email,
+    this.username,
   });
 
   factory AttendanceModel.fromJson(Map<String, dynamic> json) {
@@ -53,6 +58,8 @@ class AttendanceModel {
       lateDuration: json['late_duration'] as int? ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      email: json['email'] as String?,
+      username: json['username'] as String?,
     );
   }
 
@@ -74,6 +81,8 @@ class AttendanceModel {
       'late_duration': lateDuration,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'email': email,
+      'username': username,
     };
   }
 

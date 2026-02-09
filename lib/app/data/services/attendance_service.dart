@@ -258,4 +258,87 @@ class AttendanceService extends GetxService {
       return [];
     }
   }
+
+  /// Get attendances by user ID (for supervisor reporting)
+  /// GET /attendances?user_id={userId}
+  /// Optional filters: startDate, endDate
+  Future<List<AttendanceModel>> getAttendancesByUser({
+    required int userId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'user_id': userId,
+      };
+
+      if (startDate != null) {
+        queryParams['start_date'] = startDate.toIso8601String().split('T')[0];
+      }
+      if (endDate != null) {
+        queryParams['end_date'] = endDate.toIso8601String().split('T')[0];
+      }
+
+      print('=== FETCHING ATTENDANCES ===');
+      print('User ID: $userId');
+      print('Start Date: ${queryParams['start_date']}');
+      print('End Date: ${queryParams['end_date']}');
+      print('Query Params: $queryParams');
+
+      final response = await _apiProvider.get(
+        '/attendances',
+        queryParameters: queryParams,
+      );
+
+      print('Response Status: ${response.statusCode}');
+      print('Response Data Count: ${response.data['data']?.length ?? 0}');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          final List attendanceList = data['data'];
+          
+          // Parse all attendances
+          final allAttendances = attendanceList
+              .map((json) => AttendanceModel.fromJson(json))
+              .toList();
+          
+          print('Total records from API: ${allAttendances.length}');
+          
+          // CRITICAL: Filter by user_id first (backend may not filter properly)
+          final userFiltered = allAttendances.where((attendance) {
+            return attendance.userId == userId;
+          }).toList();
+          
+          print('After user filter: ${userFiltered.length} records');
+          
+          // Then filter by date range if provided
+          if (startDate != null && endDate != null) {
+            final dateFiltered = userFiltered.where((attendance) {
+              final attendanceDate = DateTime(
+                attendance.date.year,
+                attendance.date.month,
+                attendance.date.day,
+              );
+              final start = DateTime(startDate.year, startDate.month, startDate.day);
+              final end = DateTime(endDate.year, endDate.month, endDate.day);
+              
+              return (attendanceDate.isAfter(start) || attendanceDate.isAtSameMomentAs(start)) &&
+                     (attendanceDate.isBefore(end) || attendanceDate.isAtSameMomentAs(end));
+            }).toList();
+            
+            print('After date filter: ${dateFiltered.length} records');
+            return dateFiltered;
+          }
+          
+          return userFiltered;
+        }
+      }
+
+      return [];
+    } catch (e) {
+      print('Error fetching user attendances: $e');
+      return [];
+    }
+  }
 }

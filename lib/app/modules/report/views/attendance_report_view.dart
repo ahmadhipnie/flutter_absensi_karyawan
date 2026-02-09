@@ -31,19 +31,23 @@ class AttendanceReportView extends GetView<AttendanceReportController> {
         centerTitle: false,
         titleSpacing: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const EmployeeSelector(),
-            const SizedBox(height: 16),
-            const MonthSelector(),
-            const SizedBox(height: 24),
-            const StatsRow(),
-            const SizedBox(height: 24),
-            const LogList(),
-          ],
+      body: RefreshIndicator(
+        onRefresh: controller.refresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const EmployeeSelector(),
+              const SizedBox(height: 16),
+              const MonthSelector(),
+              const SizedBox(height: 24),
+              const StatsRow(),
+              const SizedBox(height: 24),
+              const LogList(),
+            ],
+          ),
         ),
       ),
     );

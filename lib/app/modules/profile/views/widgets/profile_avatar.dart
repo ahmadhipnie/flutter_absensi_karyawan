@@ -10,7 +10,10 @@ class ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasValidUrl = avatarUrl != null && avatarUrl!.isNotEmpty;
+    final hasValidUrl = avatarUrl != null && 
+                        avatarUrl!.isNotEmpty && 
+                        !avatarUrl!.contains('ui-avatars.com');
+    
     return Center(
       child: Container(
         padding: const EdgeInsets.all(4),

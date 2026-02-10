@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../core/theme/app_theme.dart';
@@ -20,10 +21,10 @@ class EditProfileView extends GetView<ProfileController> {
         centerTitle: false,
         titleSpacing: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
           onPressed: () => Get.back(),
         ),
-        title: Text(
+        title: const Text(
           'Edit Profile',
           style: TextStyle(
             color: Colors.black,
@@ -37,15 +38,19 @@ class EditProfileView extends GetView<ProfileController> {
             child: Center(
               child: SizedBox(
                 height: 36,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: call controller.updateProfile
-                    Get.back();
+                child: Obx(() => ElevatedButton.icon(
+                  onPressed: controller.isUpdating.value ? null : () {
+                    controller.updateProfile(
+                      name: nameController.text,
+                      emailAddress: emailController.text,
+                    );
                   },
-                  icon: Icon(Icons.edit_square, size: 16, color: AppTheme.primaryColor),
+                  icon: controller.isUpdating.value 
+                    ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) 
+                    : const Icon(Icons.edit_square, size: 16, color: AppTheme.primaryColor),
                   label: Text(
-                    'Update',
-                    style: TextStyle(
+                    controller.isUpdating.value ? 'Updating...' : 'Update',
+                    style: const TextStyle(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
@@ -58,52 +63,64 @@ class EditProfileView extends GetView<ProfileController> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                   ),
-                ),
+                )),
               ),
             ),
           )
         ],
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         child: Column(
           children: [
             // Avatar Section
             Center(
-              child: Stack(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey.shade200, width: 1),
-                    ),
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.grey.shade100,
-                      backgroundImage: NetworkImage('https://i.pravatar.cc/300?img=5'),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: EdgeInsets.all(8),
+              child: GestureDetector(
+                onTap: controller.showImagePickerOptions,
+                child: Stack(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(2),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryColor,
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 3),
+                        border: Border.all(color: Colors.grey.shade200, width: 1),
                       ),
-                      child: Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                      child: Obx(() {
+                        if (controller.selectedPhoto.value != null) {
+                          return CircleAvatar(
+                            radius: 50,
+                            backgroundColor: Colors.grey.shade100,
+                            backgroundImage: FileImage(controller.selectedPhoto.value as File),
+                          );
+                        }
+                        return CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Colors.grey.shade100,
+                          backgroundImage: NetworkImage(controller.avatarUrl.value),
+                        );
+                      }),
                     ),
-                  ),
-                ],
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                        ),
+                        child: const Icon(Icons.camera_alt, color: Colors.white, size: 16),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             
             _buildLabel('Your Name'),
             _buildTextField(
@@ -111,7 +128,7 @@ class EditProfileView extends GetView<ProfileController> {
               hint: 'Enter your name',
             ),
             
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             
             _buildLabel('Email'),
             _buildTextField(
@@ -119,42 +136,7 @@ class EditProfileView extends GetView<ProfileController> {
               hint: 'Enter your email',
             ),
             
-            // Conditional Department Field
-            Obx(() {
-               // Only show if role is Member
-               if (controller.userRole.value == 'Member') {
-                 return Column(
-                   crossAxisAlignment: CrossAxisAlignment.start,
-                   children: [
-                     SizedBox(height: 16),
-                     _buildLabel('Department'),
-                     Container(
-                       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                       decoration: BoxDecoration(
-                         color: Colors.white, // No, white bg like others
-                         border: Border.all(color: Colors.grey.shade300),
-                         borderRadius: BorderRadius.circular(8),
-                       ),
-                       child: DropdownButtonHideUnderline(
-                         child: DropdownButton<String>(
-                           isExpanded: true,
-                           value: controller.department.value,
-                           items: [
-                             'UI/UX Designer',
-                             'Mobile Developer', 
-                             'Backend Developer'
-                           ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                           onChanged: (v) {
-                             if(v != null) controller.department.value = v;
-                           },
-                         ),
-                       ),
-                     ),
-                   ],
-                 );
-               }
-               return SizedBox.shrink();
-            }),
+            // Department field removed — only name and email are editable
           ],
         ),
       ),
@@ -190,7 +172,7 @@ class EditProfileView extends GetView<ProfileController> {
         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide(color: Colors.grey.shade300),

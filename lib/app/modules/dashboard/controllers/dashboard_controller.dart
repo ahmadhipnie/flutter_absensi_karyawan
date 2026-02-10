@@ -52,6 +52,7 @@ class DashboardController extends GetxController {
   final userName = ''.obs;
   final userPosition = ''.obs;
   final userAvatar = ''.obs;
+  final userAvatarUrl = ''.obs;
 
   // Current date info
   final currentDate = DateHelper.nowWib().obs;
@@ -200,6 +201,7 @@ class DashboardController extends GetxController {
         userName.value = user.displayName;
         userRole.value = user.role;
         userPosition.value = user.role;
+        userAvatarUrl.value = user.avatarUrl; // Load avatar URL
         
         // Load departments if user is supervisor
         if (isSupervisor) {

@@ -145,6 +145,15 @@ class AuthService extends GetxService {
     await prefs.remove(_userKey);
   }
 
+  /// Update current user data
+  Future<void> updateCurrentUser(UserModel user) async {
+    _currentUser.value = user;
+    
+    // Save updated user to shared preferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userKey, jsonEncode(user.toJson()));
+  }
+
   /// Logout user
   Future<void> logout() async {
     try {

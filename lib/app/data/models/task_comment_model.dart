@@ -1,3 +1,5 @@
+import '../../core/config/app_config.dart';
+
 class TaskCommentModel {
   final int id;
   final int assignmentId;
@@ -6,6 +8,7 @@ class TaskCommentModel {
   final DateTime createdAt;
   final String userEmail;
   final String username;
+  final String? photoProfile; // Added for actual profile photo
 
   TaskCommentModel({
     required this.id,
@@ -15,10 +18,15 @@ class TaskCommentModel {
     required this.createdAt,
     required this.userEmail,
     required this.username,
+    this.photoProfile,
   });
 
   factory TaskCommentModel.fromJson(Map<String, dynamic> json) {
-    return TaskCommentModel(
+    print('=== Parsing TaskCommentModel ===');
+    print('Raw JSON: $json');
+    print('Keys available: ${json.keys.toList()}');
+    
+    final model = TaskCommentModel(
       id: json['id'] as int,
       assignmentId: json['assignment_id'] as int,
       userId: json['user_id'] as int,
@@ -26,7 +34,14 @@ class TaskCommentModel {
       createdAt: DateTime.parse(json['created_at'] as String),
       userEmail: json['user_email'] as String,
       username: json['username'] as String,
+      photoProfile: json['photo_profile'] as String?, // Parse from API
     );
+    
+    print('Parsed photoProfile: ${model.photoProfile}');
+    print('Generated avatarUrl: ${model.avatarUrl}');
+    print('===========================');
+    
+    return model;
   }
 
   Map<String, dynamic> toJson() {
@@ -38,6 +53,7 @@ class TaskCommentModel {
       'created_at': createdAt.toIso8601String(),
       'user_email': userEmail,
       'username': username,
+      'photo_profile': photoProfile,
     };
   }
 
@@ -50,6 +66,15 @@ class TaskCommentModel {
 
   /// Get avatar URL for user
   String get avatarUrl {
+    // If photo_profile exists and is not empty, use the real photo
+    if (photoProfile != null && photoProfile!.isNotEmpty) {
+      final photoUrl = AppConfig.getProfilePhotoUrl(photoProfile!);
+      if (photoUrl != null) {
+        return photoUrl;
+      }
+    }
+    
+    // Otherwise, use ui-avatars.com as placeholder
     return 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(username)}&background=003AE6&color=fff&size=200';
   }
 }

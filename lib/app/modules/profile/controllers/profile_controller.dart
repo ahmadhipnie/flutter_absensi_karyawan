@@ -254,8 +254,11 @@ class ProfileController extends GetxController {
         snackPosition: SnackPosition.TOP,
         backgroundColor: Colors.green,
         colorText: Colors.white,
+        duration: const Duration(seconds: 2),
       );
 
+      // Navigate back after a short delay to allow user to see the success message
+      await Future.delayed(const Duration(milliseconds: 500));
       Get.back();
     } catch (e) {
       Get.snackbar(

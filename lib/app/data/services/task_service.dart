@@ -409,6 +409,17 @@ class TaskService extends GetxService {
 
         if (commentResponse.success) {
           print('Comments loaded: ${commentResponse.data.length}');
+          
+          // Debug: Print each comment's details
+          for (var comment in commentResponse.data) {
+            print('Comment ID: ${comment.id}');
+            print('  Username: ${comment.username}');
+            print('  User Email: ${comment.userEmail}');
+            print('  Photo Profile: ${comment.photoProfile}');
+            print('  Avatar URL: ${comment.avatarUrl}');
+            print('---');
+          }
+          
           return commentResponse.data;
         }
 

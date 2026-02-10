@@ -244,12 +244,14 @@ class CommentModel {
   final String userName;
   final String comment;
   final String time;
+  final String? avatarUrl; // Added for profile photo
 
   CommentModel({
     required this.id,
     required this.userName,
     required this.comment,
     required this.time,
+    this.avatarUrl,
   });
 
   /// Create from TaskCommentModel
@@ -259,6 +261,7 @@ class CommentModel {
       userName: taskComment.username,
       comment: taskComment.commentText,
       time: taskComment.formattedTime,
+      avatarUrl: taskComment.avatarUrl, // Pass the avatar URL
     );
   }
 }

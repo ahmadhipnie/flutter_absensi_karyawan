@@ -49,8 +49,14 @@ class UserTaskCommentController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    print('UserTaskCommentController - onInit');
+    print('UserTaskCommentController - assignmentId: $assignmentId');
+    print('UserTaskCommentController - Get.arguments: ${Get.arguments}');
+    
     if (assignmentId != null) {
       loadComments();
+    } else {
+      print('UserTaskCommentController - ERROR: assignmentId is null!');
     }
   }
 
@@ -66,16 +72,22 @@ class UserTaskCommentController extends GetxController {
 
     try {
       isLoading.value = true;
+      print('UserTaskCommentController - Loading comments for assignmentId: $assignmentId');
 
       final taskComments = await _taskService.getAssignmentComments(
         assignmentId: assignmentId!,
       );
 
+      print('UserTaskCommentController - Received ${taskComments.length} comments');
+
       // Convert to UI model
       comments.value = taskComments
           .map((comment) => CommentModel.fromTaskComment(comment))
           .toList();
+          
+      print('UserTaskCommentController - Converted to ${comments.length} UI comments');
     } catch (e) {
+      print('UserTaskCommentController - Error loading comments: $e');
       Get.snackbar(
         'Error',
         e.toString(),

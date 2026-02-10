@@ -77,6 +77,13 @@ class UserTaskCommentView extends GetView<UserTaskCommentController> {
   }
 
   Widget _buildCommentItem(CommentModel comment) {
+    // For now, API doesn't return photo_profile, so we always use generated avatars
+    // These look good and show user initials
+    final hasAvatarUrl = comment.avatarUrl != null && comment.avatarUrl!.isNotEmpty;
+    
+    print('Comment "${comment.name}": avatarUrl = ${comment.avatarUrl}');
+    print('  hasAvatarUrl = $hasAvatarUrl');
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -84,14 +91,16 @@ class UserTaskCommentView extends GetView<UserTaskCommentController> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundImage: comment.avatarUrl != null && comment.avatarUrl!.isNotEmpty
+            backgroundImage: hasAvatarUrl
                 ? NetworkImage(comment.avatarUrl!)
                 : null,
             backgroundColor: const Color(0xFFE0E0E0),
-            onBackgroundImageError: comment.avatarUrl != null && comment.avatarUrl!.isNotEmpty
-                ? (_, __) {}
+            onBackgroundImageError: hasAvatarUrl
+                ? (exception, stackTrace) {
+                    print('Error loading avatar for ${comment.name}: $exception');
+                  }
                 : null,
-            child: comment.avatarUrl == null || comment.avatarUrl!.isEmpty
+            child: !hasAvatarUrl
                 ? const Icon(Icons.person, color: Colors.white, size: 24)
                 : null,
           ),

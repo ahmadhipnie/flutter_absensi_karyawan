@@ -111,12 +111,7 @@ class UserTaskHeader extends GetView<UserTaskDetailController> {
       children: [
         const SizedBox(height: 14),
         InkWell(
-          onTap: () => Get.toNamed(
-            '/user-task-comment',
-            arguments: {
-              'assignmentId': controller.assignmentId.value,
-            },
-          ),
+          onTap: () => Get.toNamed('/user-task-comment'),
           child: Row(
             children: [
               const Icon(Icons.chat_bubble_outline, size: 18, color: Color(0xFF757575)),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/services/task_service.dart';
+import '../../../data/models/task_comment_model.dart';
 import 'task_detail_controller.dart';
 
 class EmployeeDetailController extends GetxController {
@@ -27,6 +28,10 @@ class EmployeeDetailController extends GetxController {
 
   // Comments
   final RxList<CommentModel> comments = <CommentModel>[].obs;
+
+  // Comment loading states
+  final isLoadingComments = false.obs;
+  final isSendingComment = false.obs;
 
   // Approval status options
   final List<String> approvalOptions = ['Approved', 'Pending', 'Rejected'];
@@ -75,6 +80,7 @@ class EmployeeDetailController extends GetxController {
         if (assignmentId.value != null && 
             employeeStatus != EmployeeWorkStatus.notSubmitted) {
           await _loadSubmissionDetails();
+          await _loadComments();
         }
       }
     } catch (e) {
@@ -129,6 +135,29 @@ class EmployeeDetailController extends GetxController {
     }
   }
 
+  /// Load comments from API
+  Future<void> _loadComments() async {
+    if (assignmentId.value == null) return;
+
+    try {
+      isLoadingComments.value = true;
+
+      final taskComments = await _taskService.getAssignmentComments(
+        assignmentId: assignmentId.value!,
+      );
+
+      // Convert to UI model
+      comments.value = taskComments
+          .map((comment) => CommentModel.fromTaskComment(comment))
+          .toList();
+    } catch (e) {
+      print('Error loading comments: $e');
+      // Don't show error, just continue with empty comments
+    } finally {
+      isLoadingComments.value = false;
+    }
+  }
+
   /// Format date to display
   String formatDate(DateTime? date) {
     if (date == null) return 'N/A';
@@ -161,19 +190,41 @@ class EmployeeDetailController extends GetxController {
   }
 
   /// Send private comment
-  void sendPrivateComment() {
-    if (commentController.text.trim().isEmpty) return;
+  Future<void> sendPrivateComment() async {
+    if (assignmentId.value == null) return;
+    
+    final text = commentController.text.trim();
+    if (text.isEmpty) return;
 
-    final newComment = CommentModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      userName: 'Me',
-      comment: commentController.text.trim(),
-      time:
-          '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
-    );
+    try {
+      isSendingComment.value = true;
 
-    comments.add(newComment);
-    commentController.clear();
+      final newComment = await _taskService.postAssignmentComment(
+        assignmentId: assignmentId.value!,
+        commentText: text,
+      );
+
+      // Add to list
+      comments.add(CommentModel.fromTaskComment(newComment));
+      
+      // Clear input
+      commentController.clear();
+
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Comment posted successfully',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isSendingComment.value = false;
+    }
   }
 
   /// Open output file
@@ -200,4 +251,14 @@ class CommentModel {
     required this.comment,
     required this.time,
   });
+
+  /// Create from TaskCommentModel
+  factory CommentModel.fromTaskComment(TaskCommentModel taskComment) {
+    return CommentModel(
+      id: taskComment.id.toString(),
+      userName: taskComment.username,
+      comment: taskComment.commentText,
+      time: taskComment.formattedTime,
+    );
+  }
 }

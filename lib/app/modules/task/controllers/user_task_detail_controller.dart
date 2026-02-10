@@ -76,6 +76,11 @@ class UserTaskDetailController extends GetxController {
         await _loadSubmissionDetails();
       }
       
+      // Load comment count
+      if (assignmentId.value != null) {
+        await _loadCommentsCount();
+      }
+      
       return;
     }
 
@@ -145,6 +150,22 @@ class UserTaskDetailController extends GetxController {
       submittedDate.value = _formatSubmissionDate(DateTime.now());
     } finally {
       isLoadingSubmissions.value = false;
+    }
+  }
+
+  /// Load comments count from API
+  Future<void> _loadCommentsCount() async {
+    if (assignmentId.value == null) return;
+
+    try {
+      final comments = await _taskService.getAssignmentComments(
+        assignmentId: assignmentId.value!,
+      );
+      commentsCount.value = comments.length;
+    } catch (e) {
+      print('Error loading comments count: $e');
+      // Don't show error, just keep count at 0
+      commentsCount.value = 0;
     }
   }
 

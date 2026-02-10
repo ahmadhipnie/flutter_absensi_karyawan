@@ -14,21 +14,43 @@ class UserTaskCommentView extends GetView<UserTaskCommentController> {
       body: Column(
         children: [
           Expanded(
-            child: Obx(() => ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: controller.comments.length,
-              itemBuilder: (context, index) {
-                final comment = controller.comments[index];
-                return _buildCommentItem(comment);
-              },
-            )),
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: Color(0xFFE53935),
+                  ),
+                );
+              }
+              
+              if (controller.comments.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No comments yet',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF9E9E9E),
+                    ),
+                  ),
+                );
+              }
+              
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: controller.comments.length,
+                itemBuilder: (context, index) {
+                  final comment = controller.comments[index];
+                  return _buildCommentItem(comment);
+                },
+              );
+            }),
           ),
-          CommentInputWidget(
+          Obx(() => CommentInputWidget(
             controller: controller.commentController,
-            onSend: controller.sendComment,
-            hintText: 'Type Here',
+            onSend: controller.isSending.value ? () {} : () => controller.sendComment(),
+            hintText: controller.isSending.value ? 'Sending...' : 'Type Here',
             sendIconColor: const Color(0xFFE53935),
-          ),
+          )),
         ],
       ),
     );

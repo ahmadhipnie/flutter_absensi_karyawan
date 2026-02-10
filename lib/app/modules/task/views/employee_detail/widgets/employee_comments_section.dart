@@ -37,12 +37,23 @@ class EmployeeCommentsSection extends GetView<EmployeeDetailController> {
             // List comments
             Obx(
               () {
+                if (controller.isLoadingComments.value) {
+                  return SizedBox(
+                    height: minHeight * 0.6,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFE53935),
+                      ),
+                    ),
+                  );
+                }
+                
                 final comments = controller.comments;
                 if (comments.isEmpty) {
                   // Show placeholder when there are no comments
                   return SizedBox(
                     height: minHeight * 0.6,
-                    child: Center(
+                    child: const Center(
                       child: Text(
                         'No comments yet',
                         style: TextStyle(

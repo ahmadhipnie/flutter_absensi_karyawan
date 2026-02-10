@@ -4,6 +4,7 @@ import 'package:get/get.dart' hide FormData, MultipartFile;
 import '../models/task_model.dart';
 import '../models/task_submission_model.dart';
 import '../models/task_assignment_model.dart';
+import '../models/task_comment_model.dart';
 import '../providers/api_provider.dart';
 
 class TaskService extends GetxService {
@@ -383,6 +384,118 @@ class TaskService extends GetxService {
       throw errorMessage;
     } catch (e) {
       print('Submissions unexpected error: $e');
+      throw 'An error occurred: ${e.toString()}';
+    }
+  }
+
+  /// Get comments for an assignment
+  /// GET /tasks/assignment/:assignmentId/comments
+  Future<List<TaskCommentModel>> getAssignmentComments({
+    required int assignmentId,
+  }) async {
+    try {
+      print('=== GET ASSIGNMENT COMMENTS ===');
+      print('Assignment ID: $assignmentId');
+
+      final response = await _apiProvider.get(
+        '/tasks/assignment/$assignmentId/comments',
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final commentResponse = TaskCommentResponseModel.fromJson(response.data);
+
+        if (commentResponse.success) {
+          print('Comments loaded: ${commentResponse.data.length}');
+          
+          // Debug: Print each comment's details
+          for (var comment in commentResponse.data) {
+            print('Comment ID: ${comment.id}');
+            print('  Username: ${comment.username}');
+            print('  User Email: ${comment.userEmail}');
+            print('  Photo Profile: ${comment.photoProfile}');
+            print('  Avatar URL: ${comment.avatarUrl}');
+            print('---');
+          }
+          
+          return commentResponse.data;
+        }
+
+        throw commentResponse.message;
+      }
+
+      throw 'Failed to load comments: ${response.statusCode}';
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to fetch comments';
+
+      if (e.response != null) {
+        print('Comments error response: ${e.response!.data}');
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        }
+      } else {
+        print('Comments error: ${e.message}');
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      print('Comments unexpected error: $e');
+      throw 'An error occurred: ${e.toString()}';
+    }
+  }
+
+  /// Post a comment on an assignment
+  /// POST /tasks/assignment/:assignmentId/comments
+  Future<TaskCommentModel> postAssignmentComment({
+    required int assignmentId,
+    required String commentText,
+  }) async {
+    try {
+      print('=== POST ASSIGNMENT COMMENT ===');
+      print('Assignment ID: $assignmentId');
+      print('Comment: $commentText');
+
+      final response = await _apiProvider.post(
+        '/tasks/assignment/$assignmentId/comments',
+        data: {
+          'comment_text': commentText,
+        },
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final commentResponse = TaskCommentCreateResponseModel.fromJson(response.data);
+
+        if (commentResponse.success) {
+          print('Comment created: ${commentResponse.data.id}');
+          return commentResponse.data;
+        }
+
+        throw commentResponse.message;
+      }
+
+      throw 'Failed to post comment: ${response.statusCode}';
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to post comment';
+
+      if (e.response != null) {
+        print('Post comment error response: ${e.response!.data}');
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        }
+      } else {
+        print('Post comment error: ${e.message}');
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      print('Post comment unexpected error: $e');
       throw 'An error occurred: ${e.toString()}';
     }
   }

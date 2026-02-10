@@ -54,20 +54,34 @@ class DashboardHeader extends GetView<DashboardController> {
   Widget _buildAvatar() {
     return GestureDetector(
       onTap: () => Get.toNamed(Routes.PROFILE),
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 2),
-          color: Colors.white.withOpacity(0.3),
-        ),
-        child: const Icon(
-          Icons.person,
-          color: Colors.white,
-          size: 32,
-        ),
-      ),
+      child: Obx(() {
+        final avatarUrl = controller.userAvatarUrl.value;
+        final hasValidUrl = avatarUrl.isNotEmpty && 
+                           !avatarUrl.contains('ui-avatars.com');
+        
+        return Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2),
+            color: hasValidUrl ? null : Colors.white.withOpacity(0.3),
+            image: hasValidUrl
+                ? DecorationImage(
+                    image: NetworkImage(avatarUrl),
+                    fit: BoxFit.cover,
+                  )
+                : null,
+          ),
+          child: !hasValidUrl
+              ? const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 32,
+                )
+              : null,
+        );
+      }),
     );
   }
 

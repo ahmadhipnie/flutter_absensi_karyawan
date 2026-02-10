@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../../common/widgets/app_card_container.dart';
-import '../../../../../common/widgets/user_avatar.dart';
 import '../../../controllers/employee_detail_controller.dart';
 
 class EmployeeCommentsSection extends GetView<EmployeeDetailController> {
@@ -37,12 +36,23 @@ class EmployeeCommentsSection extends GetView<EmployeeDetailController> {
             // List comments
             Obx(
               () {
+                if (controller.isLoadingComments.value) {
+                  return SizedBox(
+                    height: minHeight * 0.6,
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFE53935),
+                      ),
+                    ),
+                  );
+                }
+                
                 final comments = controller.comments;
                 if (comments.isEmpty) {
                   // Show placeholder when there are no comments
                   return SizedBox(
                     height: minHeight * 0.6,
-                    child: Center(
+                    child: const Center(
                       child: Text(
                         'No comments yet',
                         style: TextStyle(
@@ -71,12 +81,27 @@ class EmployeeCommentsSection extends GetView<EmployeeDetailController> {
   }
 
   Widget _buildCommentItem(CommentModel comment) {
+    // For now, API doesn't return photo_profile, so we use generated avatars
+    final hasAvatarUrl = comment.avatarUrl != null && comment.avatarUrl!.isNotEmpty;
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          UserAvatar(name: comment.userName, size: 40),
+          CircleAvatar(
+            radius: 20,
+            backgroundImage: hasAvatarUrl
+                ? NetworkImage(comment.avatarUrl!)
+                : null,
+            backgroundColor: const Color(0xFFE0E0E0),
+            onBackgroundImageError: hasAvatarUrl
+                ? (_, __) {}
+                : null,
+            child: !hasAvatarUrl
+                ? const Icon(Icons.person, color: Colors.white, size: 24)
+                : null,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

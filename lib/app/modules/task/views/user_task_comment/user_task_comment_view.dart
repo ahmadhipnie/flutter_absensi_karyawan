@@ -14,21 +14,43 @@ class UserTaskCommentView extends GetView<UserTaskCommentController> {
       body: Column(
         children: [
           Expanded(
-            child: Obx(() => ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: controller.comments.length,
-              itemBuilder: (context, index) {
-                final comment = controller.comments[index];
-                return _buildCommentItem(comment);
-              },
-            )),
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(
+                  child: CircularProgressIndicator(
+                    color: Color(0xFFE53935),
+                  ),
+                );
+              }
+              
+              if (controller.comments.isEmpty) {
+                return const Center(
+                  child: Text(
+                    'No comments yet',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF9E9E9E),
+                    ),
+                  ),
+                );
+              }
+              
+              return ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: controller.comments.length,
+                itemBuilder: (context, index) {
+                  final comment = controller.comments[index];
+                  return _buildCommentItem(comment);
+                },
+              );
+            }),
           ),
-          CommentInputWidget(
+          Obx(() => CommentInputWidget(
             controller: controller.commentController,
-            onSend: controller.sendComment,
-            hintText: 'Type Here',
+            onSend: controller.isSending.value ? () {} : () => controller.sendComment(),
+            hintText: controller.isSending.value ? 'Sending...' : 'Type Here',
             sendIconColor: const Color(0xFFE53935),
-          ),
+          )),
         ],
       ),
     );
@@ -55,6 +77,13 @@ class UserTaskCommentView extends GetView<UserTaskCommentController> {
   }
 
   Widget _buildCommentItem(CommentModel comment) {
+    // For now, API doesn't return photo_profile, so we always use generated avatars
+    // These look good and show user initials
+    final hasAvatarUrl = comment.avatarUrl != null && comment.avatarUrl!.isNotEmpty;
+    
+    print('Comment "${comment.name}": avatarUrl = ${comment.avatarUrl}');
+    print('  hasAvatarUrl = $hasAvatarUrl');
+    
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -62,14 +91,16 @@ class UserTaskCommentView extends GetView<UserTaskCommentController> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundImage: comment.avatarUrl != null && comment.avatarUrl!.isNotEmpty
+            backgroundImage: hasAvatarUrl
                 ? NetworkImage(comment.avatarUrl!)
                 : null,
             backgroundColor: const Color(0xFFE0E0E0),
-            onBackgroundImageError: comment.avatarUrl != null && comment.avatarUrl!.isNotEmpty
-                ? (_, __) {}
+            onBackgroundImageError: hasAvatarUrl
+                ? (exception, stackTrace) {
+                    print('Error loading avatar for ${comment.name}: $exception');
+                  }
                 : null,
-            child: comment.avatarUrl == null || comment.avatarUrl!.isEmpty
+            child: !hasAvatarUrl
                 ? const Icon(Icons.person, color: Colors.white, size: 24)
                 : null,
           ),

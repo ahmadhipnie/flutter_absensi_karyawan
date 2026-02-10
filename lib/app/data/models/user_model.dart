@@ -1,3 +1,5 @@
+import '../../core/config/app_config.dart';
+
 class UserModel {
   final int id;
   final String email;
@@ -67,7 +69,9 @@ class UserModel {
   /// Get avatar URL or return default placeholder
   String get avatarUrl {
     if (photoProfile != null && photoProfile!.isNotEmpty) {
-      return photoProfile!;
+      // Use AppConfig helper to build full URL
+      return AppConfig.getProfilePhotoUrl(photoProfile) ?? 
+             'https://ui-avatars.com/api/?name=${Uri.encodeComponent(displayName)}&background=003AE6&color=fff&size=200';
     }
     // Return default avatar placeholder
     return 'https://ui-avatars.com/api/?name=${Uri.encodeComponent(displayName)}&background=003AE6&color=fff&size=200';

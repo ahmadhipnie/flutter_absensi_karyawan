@@ -58,11 +58,11 @@ class EmployeeDetailView extends GetView<EmployeeDetailController> {
   }
 
   Widget _buildPrivateCommentInput() {
-    return CommentInputWidget(
+    return Obx(() => CommentInputWidget(
       controller: controller.commentController,
-      onSend: controller.sendPrivateComment,
-      hintText: 'This task needs more precision',
+      onSend: controller.isSendingComment.value ? () {} : () => controller.sendPrivateComment(),
+      hintText: controller.isSendingComment.value ? 'Sending...' : 'This task needs more precision',
       sendIconColor: const Color(0xFF0046BE),
-    );
+    ));
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../data/services/task_service.dart';
+import '../../../data/models/task_comment_model.dart';
 
 class CommentModel {
   final String id;
@@ -15,19 +17,47 @@ class CommentModel {
     required this.time,
     required this.message,
   });
+
+  /// Create from TaskCommentModel
+  factory CommentModel.fromTaskComment(TaskCommentModel comment) {
+    return CommentModel(
+      id: comment.id.toString(),
+      name: comment.username,
+      avatarUrl: comment.avatarUrl,
+      time: comment.formattedTime,
+      message: comment.commentText,
+    );
+  }
 }
 
 class UserTaskCommentController extends GetxController {
+  final TaskService _taskService = Get.find<TaskService>();
+  
   // Text controller for comment input
   final commentController = TextEditingController();
 
   // Comments list
   final comments = <CommentModel>[].obs;
+  
+  // Loading states
+  final isLoading = false.obs;
+  final isSending = false.obs;
+
+  // Assignment ID from arguments
+  int? get assignmentId => Get.arguments?['assignmentId'] as int?;
 
   @override
   void onInit() {
     super.onInit();
-    _loadDummyComments();
+    print('UserTaskCommentController - onInit');
+    print('UserTaskCommentController - assignmentId: $assignmentId');
+    print('UserTaskCommentController - Get.arguments: ${Get.arguments}');
+    
+    if (assignmentId != null) {
+      loadComments();
+    } else {
+      print('UserTaskCommentController - ERROR: assignmentId is null!');
+    }
   }
 
   @override
@@ -36,48 +66,73 @@ class UserTaskCommentController extends GetxController {
     super.onClose();
   }
 
-  /// Load dummy comments for UI demonstration
-  void _loadDummyComments() {
-    comments.value = [
-      CommentModel(
-        id: '1',
-        name: 'Alexander Deron',
-        avatarUrl: null,
-        time: '14:09',
-        message: 'Test Comment',
-      ),
-      CommentModel(
-        id: '2',
-        name: 'Queen Alsaa',
-        avatarUrl: null,
-        time: '14:15',
-        message: 'Great!',
-      ),
-    ];
+  /// Load comments from API
+  Future<void> loadComments() async {
+    if (assignmentId == null) return;
+
+    try {
+      isLoading.value = true;
+      print('UserTaskCommentController - Loading comments for assignmentId: $assignmentId');
+
+      final taskComments = await _taskService.getAssignmentComments(
+        assignmentId: assignmentId!,
+      );
+
+      print('UserTaskCommentController - Received ${taskComments.length} comments');
+
+      // Convert to UI model
+      comments.value = taskComments
+          .map((comment) => CommentModel.fromTaskComment(comment))
+          .toList();
+          
+      print('UserTaskCommentController - Converted to ${comments.length} UI comments');
+    } catch (e) {
+      print('UserTaskCommentController - Error loading comments: $e');
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   /// Send a new comment
-  void sendComment() {
+  Future<void> sendComment() async {
+    if (assignmentId == null) return;
+    
     final text = commentController.text.trim();
     if (text.isEmpty) return;
 
-    final newComment = CommentModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: 'You',
-      avatarUrl: null,
-      time: _getCurrentTime(),
-      message: text,
-    );
+    try {
+      isSending.value = true;
 
-    comments.add(newComment);
-    commentController.clear();
-  }
+      final newComment = await _taskService.postAssignmentComment(
+        assignmentId: assignmentId!,
+        commentText: text,
+      );
 
-  /// Get current time in HH:MM format
-  String _getCurrentTime() {
-    final now = DateTime.now();
-    final hour = now.hour.toString().padLeft(2, '0');
-    final minute = now.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
+      // Add to list
+      comments.add(CommentModel.fromTaskComment(newComment));
+      
+      // Clear input
+      commentController.clear();
+
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Comment posted successfully',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isSending.value = false;
+    }
   }
 }

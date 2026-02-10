@@ -71,10 +71,10 @@ class EmployeeSelector extends GetView<AttendanceReportController> {
                         CircleAvatar(
                           radius: 12,
                           backgroundColor: Colors.blue.shade100,
-                          backgroundImage: user.photoProfile != null
-                              ? NetworkImage(user.photoProfile!)
+                          backgroundImage: user.photoProfile != null && user.photoProfile!.isNotEmpty
+                              ? NetworkImage(user.avatarUrl)
                               : null,
-                          child: user.photoProfile == null
+                          child: user.photoProfile == null || user.photoProfile!.isEmpty
                               ? Icon(Icons.person, size: 14, color: Colors.blue)
                               : null,
                         ),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../data/services/task_service.dart';
 import '../../../data/models/task_comment_model.dart';
+import '../../../core/config/app_config.dart';
 import 'task_detail_controller.dart';
 
 class EmployeeDetailController extends GetxController {
@@ -106,25 +108,33 @@ class EmployeeDetailController extends GetxController {
 
       if (submissions.isNotEmpty) {
         final submission = submissions.first;
-        
+
+        // Debug: print the submission details
+        print('=== SUBMISSION DETAILS ===');
+        print('FileName: ${submission.fileName}');
+        print('FilePath: ${submission.filePath}');
+        print('ContentType: ${submission.contentUrl}');
+
         // Add submitted file to output files
         if (submission.fileName != null && submission.fileName!.isNotEmpty) {
           final fileExtension = submission.fileName!.split('.').last.toLowerCase();
-          String fileType = 'file';
-          
+          String iconType = 'file';
+
           if (['pdf'].contains(fileExtension)) {
-            fileType = 'pdf';
+            iconType = 'pdf';
           } else if (['doc', 'docx'].contains(fileExtension)) {
-            fileType = 'doc';
+            iconType = 'doc';
           } else if (['xls', 'xlsx'].contains(fileExtension)) {
-            fileType = 'xls';
-          } else if (['jpg', 'jpeg', 'png', 'gif'].contains(fileExtension)) {
-            fileType = 'image';
+            iconType = 'xls';
+          } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileExtension)) {
+            iconType = 'image';
+          } else if (['txt'].contains(fileExtension)) {
+            iconType = 'txt';
           }
-          
+
           outputFiles.add({
             'name': submission.fileName!,
-            'type': fileType,
+            'type': iconType,
             'path': submission.filePath ?? '',
           });
         }
@@ -227,9 +237,41 @@ class EmployeeDetailController extends GetxController {
     }
   }
 
-  /// Open output file
-  void openOutputFile(String fileName) {
-    Get.snackbar('Open File', fileName);
+  /// Open output file - uses filePath from submissions API
+  Future<void> openOutputFile(String filePath) async {
+    if (filePath.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'File path is empty',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    try {
+      // Use the preview endpoint with filePath from submissions API
+      // Encode the filename to handle spaces and special characters properly
+      final baseUrl = 'https://api-absensi.hftech.web.id/api/assets/file_tasks/';
+      final encodedPath = Uri.encodeComponent(filePath);
+      final fileUrl = '$baseUrl$encodedPath/preview';
+
+      print('Opening file URL in browser: $fileUrl');
+
+      final uri = Uri.parse(fileUrl);
+
+      // Open in external browser
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      print('Error opening file: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to open file: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 
   @override

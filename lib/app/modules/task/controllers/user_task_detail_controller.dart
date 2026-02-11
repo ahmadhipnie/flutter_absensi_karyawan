@@ -509,7 +509,7 @@ class UserTaskDetailController extends GetxController {
     }
   }
 
-  /// Open submitted file in browser
+  /// Open submitted file in browser using preview endpoint
   Future<void> openSubmittedFile() async {
     if (submittedFilePath.value.isEmpty) {
       Get.snackbar(
@@ -521,28 +521,20 @@ class UserTaskDetailController extends GetxController {
     }
 
     try {
-      final fileUrl = AppConfig.getTaskFileUrl(submittedFilePath.value);
-      
-      if (fileUrl == null) {
-        Get.snackbar(
-          'Error',
-          'Invalid file URL',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-        return;
-      }
+      // Use preview endpoint - encode the path for special characters
+      final baseUrl = 'https://api-absensi.hftech.web.id/api/assets/file_tasks/';
+      final encodedPath = Uri.encodeComponent(submittedFilePath.value);
+      final fileUrl = '$baseUrl$encodedPath/preview';
+
+      print('Opening file URL in browser: $fileUrl');
 
       final uri = Uri.parse(fileUrl);
-      
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        Get.snackbar(
-          'Error',
-          'Could not open file',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
+
+      // Open in external browser
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
     } catch (e) {
       Get.snackbar(
         'Error',

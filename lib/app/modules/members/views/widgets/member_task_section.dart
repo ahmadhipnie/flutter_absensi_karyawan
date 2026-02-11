@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../data/models/user_model.dart';
+import '../../../members/controllers/member_task_controller.dart';
 
 class MemberTaskSection extends StatelessWidget {
-  const MemberTaskSection({super.key});
+  final UserModel user;
+  
+  const MemberTaskSection({super.key, required this.user});
 
   @override
   Widget build(BuildContext context) {
+    // Use a unique tag per user to avoid controller collisions
+    final tag = 'member_task_${user.id}';
+    final controller = Get.put(MemberTaskController(user), tag: tag);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -19,25 +28,72 @@ class MemberTaskSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const Row(
-            children: [
-              Expanded(child: _TaskSummaryCard(title: 'Ditugaskan', count: '19')),
-              SizedBox(width: 12),
-              Expanded(child: _TaskSummaryCard(title: 'Tepat Waktu', count: '10')),
-              SizedBox(width: 12),
-              Expanded(child: _TaskSummaryCard(title: 'Approved', count: '20')),
-            ],
-          ),
+          Obx(() => Row(
+                children: [
+                  Expanded(
+                    child: _TaskSummaryCard(
+                      title: 'Ditugaskan',
+                      count: '${controller.assignedCount.value}',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _TaskSummaryCard(
+                      title: 'Tepat Waktu',
+                      count: '${controller.onTimeCount.value}',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _TaskSummaryCard(
+                      title: 'Approved',
+                      count: '${controller.approvedCount.value}',
+                    ),
+                  ),
+                ],
+              )),
           const SizedBox(height: 24),
-          const _TaskItem(
-            title: 'Site Inspection Report Submission',
-            subtitle: 'Due 17 Feb 2026, 11:59 PM',
-          ),
-          const SizedBox(height: 32),
-          const _TaskItem(
-            title: 'Site Inspection Report Submission',
-            subtitle: 'Due 17 Feb 2026, 11:59 PM',
-          ),
+          Obx(() {
+            if (controller.isLoading.value) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: CircularProgressIndicator(
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+              );
+            }
+
+            if (controller.memberTasks.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Text(
+                    'No tasks assigned yet',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.memberTasks.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final task = controller.memberTasks[index];
+                return _TaskItem(
+                  task: task,
+                  controller: controller,
+                );
+              },
+            );
+          }),
           const SizedBox(height: 32),
         ],
       ),
@@ -89,56 +145,80 @@ class _TaskSummaryCard extends StatelessWidget {
 }
 
 class _TaskItem extends StatelessWidget {
-  const _TaskItem({
-    required this.title,
-    required this.subtitle,
-  });
+  final dynamic task;
+  final MemberTaskController controller;
 
-  final String title;
-  final String subtitle;
+  const _TaskItem({
+    required this.task,
+    required this.controller,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 48,
-          height: 48,
-          decoration: BoxDecoration(
-            color: const Color(0xFFEBF0FF),
-            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+    return InkWell(
+      onTap: () => controller.openTaskDetail(task),
+      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEBF0FF),
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+            ),
+            child: Center(
+              child: Icon(Icons.assignment, color: AppTheme.primaryColor, size: 24),
+            ),
           ),
-          child: Center(
-            child: Icon(Icons.assignment, color: AppTheme.primaryColor, size: 24),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.taskSubject,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF9E9E9E),
+                const SizedBox(height: 4),
+                Text(
+                  controller.formatDueDate(task.dueDate),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF9E9E9E),
+                  ),
                 ),
-              ),
-            ],
+                if (task.isSubmitted) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Color(int.parse(controller.getStatusColor(task.status))).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      task.status.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Color(int.parse(controller.getStatusColor(task.status))),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-        ),
-        const Icon(Icons.more_vert, size: 20, color: Color(0xFF757575)),
-      ],
+          Icon(Icons.chevron_right, size: 20, color: Color(0xFF757575)),
+        ],
+      ),
     );
   }
 }

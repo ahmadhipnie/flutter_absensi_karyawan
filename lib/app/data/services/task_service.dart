@@ -564,4 +564,53 @@ class TaskService extends GetxService {
       throw 'An error occurred: ${e.toString()}';
     }
   }
+
+  /// Update assignment status
+  /// PUT /tasks/assignment/:assignmentId/status
+  Future<Map<String, dynamic>?> updateAssignmentStatus({
+    required int assignmentId,
+    required String status,
+  }) async {
+    try {
+      print('=== UPDATE ASSIGNMENT STATUS ===');
+      print('Assignment ID: $assignmentId');
+      print('Status: $status');
+
+      final response = await _apiProvider.put(
+        '/tasks/assignment/$assignmentId/status',
+        data: {
+          'status': status,
+        },
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data;
+        if (data is Map && data['success'] == true) {
+          return Map<String, dynamic>.from(data);
+        }
+      }
+
+      return null;
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to update status';
+
+      if (e.response != null) {
+        print('Update status error response: ${e.response!.data}');
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        }
+      } else {
+        print('Update status error: ${e.message}');
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      print('Update status unexpected error: $e');
+      throw 'An error occurred: ${e.toString()}';
+    }
+  }
 }

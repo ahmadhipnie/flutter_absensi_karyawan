@@ -38,6 +38,18 @@ class EmployeeDetailController extends GetxController {
   // Approval status options
   final List<String> approvalOptions = ['Approved', 'Pending', 'Rejected'];
 
+  // Assignment status options (from API)
+  final List<String> assignmentStatusOptions = [
+    'pending',
+    'in_progress',
+    'completed',
+    'cancelled'
+  ];
+
+  // Current assignment status
+  final assignmentStatus = ''.obs;
+  final isUpdatingStatus = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -51,14 +63,23 @@ class EmployeeDetailController extends GetxController {
 
       // Get data from arguments
       final arguments = Get.arguments as Map<String, dynamic>?;
-      
+
       if (arguments != null) {
         assignmentId.value = arguments['assignmentId'] as int?;
         taskId.value = arguments['taskId'] as int?;
         employeeName.value = arguments['employeeName'] as String? ?? '';
         taskSubject.value = arguments['taskSubject'] as String? ?? '';
         submissionDate.value = arguments['submissionDate'] as DateTime?;
-        
+
+        // Load assignment status if provided
+        final statusFromArgs = arguments['assignmentStatus'] as String?;
+        if (statusFromArgs != null && assignmentStatusOptions.contains(statusFromArgs)) {
+          assignmentStatus.value = statusFromArgs;
+        } else {
+          // Default to pending if not provided
+          assignmentStatus.value = 'pending';
+        }
+
         // Set status and color
         final employeeStatus = arguments['status'] as EmployeeWorkStatus?;
         if (employeeStatus != null) {
@@ -79,7 +100,7 @@ class EmployeeDetailController extends GetxController {
         }
 
         // Fetch submission details if submitted
-        if (assignmentId.value != null && 
+        if (assignmentId.value != null &&
             employeeStatus != EmployeeWorkStatus.notSubmitted) {
           await _loadSubmissionDetails();
           await _loadComments();
@@ -209,6 +230,91 @@ class EmployeeDetailController extends GetxController {
     if (newStatus != null) {
       approvalStatus.value = newStatus;
       Get.snackbar('Status Changed', 'Approval status updated to $newStatus');
+    }
+  }
+
+  /// Update assignment status
+  Future<void> updateAssignmentStatus(String newStatus) async {
+    if (assignmentId.value == null) {
+      Get.snackbar(
+        'Error',
+        'Assignment ID not found',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    if (!assignmentStatusOptions.contains(newStatus)) {
+      Get.snackbar(
+        'Error',
+        'Invalid status',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    try {
+      isUpdatingStatus.value = true;
+
+      final result = await _taskService.updateAssignmentStatus(
+        assignmentId: assignmentId.value!,
+        status: newStatus,
+      );
+
+      if (result != null && result['success'] == true) {
+        assignmentStatus.value = newStatus;
+
+        Get.snackbar(
+          'Success',
+          'Assignment status updated successfully',
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green[100],
+          colorText: Colors.green[900],
+        );
+      } else {
+        throw 'Failed to update status';
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+      );
+    } finally {
+      isUpdatingStatus.value = false;
+    }
+  }
+
+  /// Get display text for assignment status
+  String getAssignmentStatusDisplay(String status) {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'in_progress':
+        return 'In Progress';
+      case 'completed':
+        return 'Completed';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return 'Pending';
+    }
+  }
+
+  /// Get color for assignment status
+  Color getAssignmentStatusColor(String status) {
+    switch (status) {
+      case 'pending':
+        return const Color(0xFFFFA726); // Orange
+      case 'in_progress':
+        return const Color(0xFF42A5F5); // Blue
+      case 'completed':
+        return const Color(0xFF4CAF50); // Green
+      case 'cancelled':
+        return const Color(0xFFF44336); // Red
+      default:
+        return const Color(0xFF9E9E9E); // Grey
     }
   }
 

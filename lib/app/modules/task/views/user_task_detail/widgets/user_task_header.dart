@@ -71,35 +71,43 @@ class UserTaskHeader extends GetView<UserTaskDetailController> {
         const SizedBox(height: 8),
         Obx(
           () => Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0046BE),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0xFFE0E0E0)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: controller.getAssignmentStatusColor(
+                      controller.assignmentStatus.value.isEmpty
+                          ? 'pending'
+                          : controller.assignmentStatus.value,
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        controller.status.value,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.black,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    controller.assignmentStatus.value.isEmpty
+                        ? 'Pending'
+                        : controller.getAssignmentStatusDisplay(
+                            controller.assignmentStatus.value,
+                          ),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );

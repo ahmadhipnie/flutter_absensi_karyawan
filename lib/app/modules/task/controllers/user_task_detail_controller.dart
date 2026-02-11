@@ -30,6 +30,12 @@ class UserTaskDetailController extends GetxController {
   // Status options
   final List<String> statusOptions = ['Approved', 'Pending', 'In Progress', 'Rejected'];
 
+  // Assignment status options (from API)
+  final List<String> assignmentStatusOptions = ['pending', 'in_progress', 'completed', 'cancelled'];
+
+  // Current assignment status (read-only for members, can only be changed by supervisor)
+  final assignmentStatus = ''.obs;
+
   // Uploaded files with File objects for actual upload
   final RxList<Map<String, dynamic>> uploadedFiles = <Map<String, dynamic>>[].obs;
 
@@ -70,6 +76,19 @@ class UserTaskDetailController extends GetxController {
       description.value = task.taskDescription;
       location.value = task.location;
       customerName.value = ''; // Not available from API
+
+      // Set assignment status from API (pending, in_progress, completed, cancelled)
+      final apiStatus = task.status.toLowerCase();
+      if (assignmentStatusOptions.contains(apiStatus)) {
+        assignmentStatus.value = apiStatus;
+      } else {
+        // Map legacy status to new status
+        if (task.isSubmitted) {
+          assignmentStatus.value = 'completed';
+        } else {
+          assignmentStatus.value = 'pending';
+        }
+      }
 
       // Check if task is already submitted
       isTaskSubmitted.value = task.isSubmitted;
@@ -636,6 +655,38 @@ class UserTaskDetailController extends GetxController {
         'Failed to open: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
       );
+    }
+  }
+
+  /// Get display text for assignment status
+  String getAssignmentStatusDisplay(String status) {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'in_progress':
+        return 'In Progress';
+      case 'completed':
+        return 'Completed';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return 'Pending';
+    }
+  }
+
+  /// Get color for assignment status
+  Color getAssignmentStatusColor(String status) {
+    switch (status) {
+      case 'pending':
+        return const Color(0xFFFFA726); // Orange
+      case 'in_progress':
+        return const Color(0xFF42A5F5); // Blue
+      case 'completed':
+        return const Color(0xFF4CAF50); // Green
+      case 'cancelled':
+        return const Color(0xFFF44336); // Red
+      default:
+        return const Color(0xFF9E9E9E); // Grey
     }
   }
 }

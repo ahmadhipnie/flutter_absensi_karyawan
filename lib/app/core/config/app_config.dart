@@ -18,37 +18,50 @@ class AppConfig {
     if (url == null || url.isEmpty) {
       throw Exception('API_BASE_URL is not set in .env file');
     }
-    return url;
+    // Remove trailing slash to avoid double slashes
+    return url.replaceAll(RegExp(r'/+$'), '');
+  }
+
+  // Helper to build URL path without double slashes
+  static String _buildUrl(String path) {
+    final baseUrl = apiBaseUrl;
+    final cleanPath = path.replaceAll(RegExp(r'^/+'), '');
+    return '$baseUrl/$cleanPath';
   }
 
   static String? getDepartmentPhotoUrl(String? filename) {
     if (filename == null || filename.isEmpty) return null;
     if (filename.startsWith('http')) return filename;
-    return 'https://api-absensi.hftech.web.id/api/assets/departments_photo/$filename';
+    return _buildUrl('assets/departments_photo/$filename');
   }
 
   static String? getProfilePhotoUrl(String? filename) {
     if (filename == null || filename.isEmpty) return null;
     if (filename.startsWith('http')) return filename;
-    return 'https://api-absensi.hftech.web.id/api/assets/photo_profile/$filename';
+    return _buildUrl('assets/photo_profile/$filename');
   }
 
   static String? getAttendancePhotoUrl(String? filename) {
     if (filename == null || filename.isEmpty) return null;
     if (filename.startsWith('http')) return filename;
-    // Support both with and without /api prefix
-    return 'https://api-absensi.hftech.web.id/assets/img_attendances/$filename';
+    return _buildUrl('assets/img_attendances/$filename');
   }
 
   static String? getTaskFileUrl(String? filename) {
     if (filename == null || filename.isEmpty) return null;
     if (filename.startsWith('http')) return filename;
-    return 'https://api-absensi.hftech.web.id/assets/file_tasks/$filename';
+    return _buildUrl('assets/file_tasks/$filename');
   }
 
   static String? getTaskFilePreviewUrl(String? filename) {
     if (filename == null || filename.isEmpty) return null;
     if (filename.startsWith('http')) return filename;
-    return 'https://api-absensi.hftech.web.id/api/assets/file_tasks/$filename/preview';
+    return _buildUrl('assets/file_tasks/$filename/preview');
+  }
+
+  static String? getMessageImageUrl(String? image) {
+    if (image == null || image.isEmpty) return null;
+    if (image.startsWith('http')) return image;
+    return _buildUrl('assets/message_images/$image');
   }
 }

@@ -67,20 +67,25 @@ class UserTaskDetailController extends GetxController {
       description.value = task.taskDescription;
       location.value = task.location;
       customerName.value = ''; // Not available from API
-      
+
       // Check if task is already submitted
       isTaskSubmitted.value = task.isSubmitted;
-      
+
+      // Fetch full task details if location is empty
+      if (location.value.isEmpty && taskId.value != null) {
+        await _loadFullTaskDetails();
+      }
+
       // If submitted, fetch submission details
       if (task.isSubmitted && assignmentId.value != null) {
         await _loadSubmissionDetails();
       }
-      
+
       // Load comment count
       if (assignmentId.value != null) {
         await _loadCommentsCount();
       }
-      
+
       return;
     }
 
@@ -98,6 +103,23 @@ class UserTaskDetailController extends GetxController {
 
     // Fallback to mock data
     _loadMockData();
+  }
+
+  /// Load full task details to get location and other missing fields
+  Future<void> _loadFullTaskDetails() async {
+    if (taskId.value == null) return;
+
+    try {
+      final fullTask = await _taskService.getTaskById(taskId.value!);
+      if (fullTask != null) {
+        location.value = fullTask.location;
+        customerName.value = fullTask.customerName ?? '';
+        print('Full task details loaded: location=${fullTask.location}, customer=${fullTask.customerName}');
+      }
+    } catch (e) {
+      print('Error loading full task details: $e');
+      // Don't show error, just continue with available data
+    }
   }
 
   /// Load mock data as fallback
@@ -155,18 +177,28 @@ class UserTaskDetailController extends GetxController {
 
   /// Load comments count from API
   Future<void> _loadCommentsCount() async {
-    if (assignmentId.value == null) return;
+    if (assignmentId.value == null) {
+      print('loadCommentsCount: assignmentId is null');
+      return;
+    }
 
     try {
+      print('loadCommentsCount: Fetching comments for assignmentId: ${assignmentId.value}');
       final comments = await _taskService.getAssignmentComments(
         assignmentId: assignmentId.value!,
       );
+      print('loadCommentsCount: Found ${comments.length} comments');
       commentsCount.value = comments.length;
     } catch (e) {
       print('Error loading comments count: $e');
       // Don't show error, just keep count at 0
       commentsCount.value = 0;
     }
+  }
+
+  /// Refresh comment count (call when returning from comments screen)
+  Future<void> refreshCommentCount() async {
+    await _loadCommentsCount();
   }
 
   /// Format date with time (WIB)
@@ -418,12 +450,24 @@ class UserTaskDetailController extends GetxController {
     try {
       isSubmitting.value = true;
 
-      // Currently, we'll submit the first file
-      // TODO: Handle multiple files if needed
-      final firstFile = uploadedFiles.first;
+      // Collect all file paths (exclude LINK type for now)
+      final filePaths = <String>[];
+      final linkFiles = <Map<String, dynamic>>[];
 
-      if (firstFile['type'] == 'LINK') {
-        // TODO: Handle link submission if API supports it
+      for (var file in uploadedFiles) {
+        if (file['type'] == 'LINK') {
+          linkFiles.add(file);
+        } else {
+          final path = file['path'] as String?;
+          if (path != null && path.isNotEmpty) {
+            filePaths.add(path);
+          }
+        }
+      }
+
+      // Check if there are any files to submit
+      if (filePaths.isEmpty && linkFiles.isNotEmpty) {
+        // Only link files, not supported yet
         Get.snackbar(
           'Info',
           'Link submission is not yet implemented',
@@ -432,24 +476,31 @@ class UserTaskDetailController extends GetxController {
         return;
       }
 
-      final filePath = firstFile['path'] as String;
+      if (filePaths.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'No valid files to submit',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
 
       final response = await _taskService.submitTaskWork(
         assignmentId: assignmentId.value!,
-        filePath: filePath,
+        filePaths: filePaths,
         submissionType: 'file',
       );
 
       if (response != null && response.success) {
         // Update submission state
         isTaskSubmitted.value = true;
-        
+
         // Clear uploaded files list
         uploadedFiles.clear();
-        
+
         // Reload submission details from API to get accurate info
         await _loadSubmissionDetails();
-        
+
         Get.snackbar(
           'Success',
           response.message,
@@ -521,10 +572,16 @@ class UserTaskDetailController extends GetxController {
     }
 
     try {
-      // Use preview endpoint - encode the path for special characters
-      final baseUrl = 'https://api-absensi.hftech.web.id/api/assets/file_tasks/';
-      final encodedPath = Uri.encodeComponent(submittedFilePath.value);
-      final fileUrl = '$baseUrl$encodedPath/preview';
+      final fileUrl = AppConfig.getTaskFilePreviewUrl(submittedFilePath.value);
+
+      if (fileUrl == null) {
+        Get.snackbar(
+          'Error',
+          'Invalid file URL',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
 
       print('Opening file URL in browser: $fileUrl');
 

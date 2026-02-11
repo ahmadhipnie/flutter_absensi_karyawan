@@ -291,38 +291,52 @@ class TaskService extends GetxService {
   }
 
   /// POST /tasks/assignment/:assignmentId/submit - Submit task work
+  /// Submits multiple files one by one since API doesn't support bulk upload
   Future<TaskSubmissionResponseModel?> submitTaskWork({
     required int assignmentId,
-    required String filePath,
+    required List<String> filePaths,
     String submissionType = 'file',
   }) async {
     try {
-      // Create FormData for multipart upload
-      final formData = FormData.fromMap({
-        'submission_type': submissionType,
-        'file': await MultipartFile.fromFile(
-          filePath,
-          filename: filePath.split('/').last,
-        ),
-      });
-
-      print('Submitting task to: /tasks/assignment/$assignmentId/submit');
-      print('File path: $filePath');
-      print('Submission type: $submissionType');
-
-      final response = await _apiProvider.post(
-        '/tasks/assignment/$assignmentId/submit',
-        data: formData,
-      );
-
-      print('Submit response status: ${response.statusCode}');
-      print('Submit response data: ${response.data}');
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return TaskSubmissionResponseModel.fromJson(response.data);
+      if (filePaths.isEmpty) {
+        throw 'No files to submit';
       }
 
-      return null;
+      TaskSubmissionResponseModel? lastResponse;
+
+      // Submit each file individually since API doesn't support bulk upload
+      for (int i = 0; i < filePaths.length; i++) {
+        final filePath = filePaths[i];
+
+        // Create FormData for multipart upload
+        final formData = FormData.fromMap({
+          'submission_type': submissionType,
+          'file': await MultipartFile.fromFile(
+            filePath,
+            filename: filePath.split('/').last,
+          ),
+        });
+
+        print('Submitting task to: /tasks/assignment/$assignmentId/submit');
+        print('File ${i + 1}/${filePaths.length}: $filePath');
+        print('Submission type: $submissionType');
+
+        final response = await _apiProvider.post(
+          '/tasks/assignment/$assignmentId/submit',
+          data: formData,
+        );
+
+        print('Submit response status: ${response.statusCode}');
+        print('Submit response data: ${response.data}');
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          lastResponse = TaskSubmissionResponseModel.fromJson(response.data);
+        } else {
+          throw 'Failed to submit file ${i + 1}: ${response.statusCode}';
+        }
+      }
+
+      return lastResponse;
     } on DioException catch (e) {
       String errorMessage = 'Failed to submit task';
 

@@ -249,11 +249,16 @@ class EmployeeDetailController extends GetxController {
     }
 
     try {
-      // Use the preview endpoint with filePath from submissions API
-      // Encode the filename to handle spaces and special characters properly
-      final baseUrl = 'https://api-absensi.hftech.web.id/api/assets/file_tasks/';
-      final encodedPath = Uri.encodeComponent(filePath);
-      final fileUrl = '$baseUrl$encodedPath/preview';
+      final fileUrl = AppConfig.getTaskFilePreviewUrl(filePath);
+
+      if (fileUrl == null) {
+        Get.snackbar(
+          'Error',
+          'Invalid file URL',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
 
       print('Opening file URL in browser: $fileUrl');
 

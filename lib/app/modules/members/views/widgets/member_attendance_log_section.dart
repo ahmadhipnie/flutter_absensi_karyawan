@@ -32,7 +32,10 @@ class MemberAttendanceLogSection extends StatelessWidget {
                 ),
               ),
               TextButton(
-                onPressed: () => Get.toNamed(Routes.ATTENDANCE_LOG),
+                onPressed: () => Get.toNamed(
+                  Routes.ATTENDANCE_LOG,
+                  arguments: {'user': user},
+                ),
                 child: Text(
                   'View Log',
                   style: TextStyle(

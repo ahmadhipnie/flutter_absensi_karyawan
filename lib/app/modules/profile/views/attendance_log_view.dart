@@ -7,12 +7,15 @@ class AttendanceLogView extends GetView<AttendanceLogController> {
 
   @override
   Widget build(BuildContext context) {
+    // Get title once (doesn't change after init)
+    final title = controller.viewingUser?.displayName ?? 'Attendance Report';
+    
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text(
-          'Attendance Report',
-          style: TextStyle(
+        title: Text(
+          title,
+          style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 18,
@@ -22,8 +25,9 @@ class AttendanceLogView extends GetView<AttendanceLogController> {
         elevation: 0,
         centerTitle: false,
         titleSpacing: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new, size: 20),
           onPressed: () => Get.back(),
         ),
       ),

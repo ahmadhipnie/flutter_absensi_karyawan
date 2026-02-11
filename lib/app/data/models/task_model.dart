@@ -107,7 +107,7 @@ class TaskModel {
     String? customerName,
     String? location,
   }) {
-    return TaskModel(
+    final copied = TaskModel(
       id: id,
       taskId: taskId,
       userId: userId,
@@ -125,6 +125,10 @@ class TaskModel {
       creatorName: creatorName,
       assignedTo: assignedTo,
     );
+    print('--- copyWith debug: ${taskSubject} ---');
+    print('  Original: status=$status, isSubmitted=$isSubmitted');
+    print('  Copied: status=${copied.status}, isSubmitted=${copied.isSubmitted}');
+    return copied;
   }
 }
 

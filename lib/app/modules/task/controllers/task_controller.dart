@@ -138,6 +138,11 @@ class TaskController extends GetxController {
     );
   }
 
+  /// Normalize status by removing underscores and hyphens (for comparison)
+  String _normalizeStatus(String status) {
+    return status.toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ');
+  }
+
   /// Get filtered tasks based on selected status filter
   List<data_model.TaskModel> get filteredTasks {
     if (selectedFilter.value == 'All') {
@@ -152,9 +157,9 @@ class TaskController extends GetxController {
         return task.location.toLowerCase() == selectedFilter.value.toLowerCase();
       }).toList();
     } else {
-      // Filter by status for member
+      // Filter by status for member (with normalized comparison)
       return tasks.where((task) {
-        return task.status.toLowerCase() == selectedFilter.value.toLowerCase();
+        return _normalizeStatus(task.status) == _normalizeStatus(selectedFilter.value);
       }).toList();
     }
   }

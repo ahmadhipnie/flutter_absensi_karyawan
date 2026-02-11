@@ -192,10 +192,19 @@ class TaskService extends GetxService {
 
       final response = await _apiProvider.get('/tasks/my-assigned');
 
+      print('=== API RESPONSE DEBUG ===');
+      print('Status code: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
       if (response.statusCode == 200) {
         final taskResponse = TaskResponseModel.fromJson(response.data);
 
+        print('TaskResponse success: ${taskResponse.success}');
+        print('TaskResponse data length: ${taskResponse.data.length}');
+
         if (taskResponse.success) {
+          print('Task statuses before enrichment: ${taskResponse.data.map((t) => '${t.taskSubject}: status="${t.status}", isSubmitted=${t.isSubmitted}').toList()}');
+          
           final enrichedTasks = await _enrichTasksWithCustomerNames(taskResponse.data);
           _myAssignedTasks.value = enrichedTasks;
           return TaskResponseModel(success: true, data: enrichedTasks);
@@ -233,7 +242,11 @@ class TaskService extends GetxService {
 
   /// Enrich a single task with customer name by fetching full task details
   Future<TaskModel> _enrichTaskWithCustomerName(TaskModel taskAssignment) async {
+    print('--- Enriching task: ${taskAssignment.taskSubject} ---');
+    print('  Initial: taskId=${taskAssignment.taskId}, status="${taskAssignment.status}", isSubmitted=${taskAssignment.isSubmitted}');
+    
     if (taskAssignment.taskId == null) {
+      print('  No taskId, returning as-is');
       return taskAssignment;
     }
 
@@ -241,10 +254,12 @@ class TaskService extends GetxService {
 
     if (_taskDetailsCache.containsKey(taskId)) {
       final cachedDetails = _taskDetailsCache[taskId]!;
-      return taskAssignment.copyWith(
+      final enriched = taskAssignment.copyWith(
         customerName: cachedDetails.customerName,
         location: taskAssignment.location.isEmpty ? cachedDetails.location : taskAssignment.location,
       );
+      print('  From cache - final status="${enriched.status}", isSubmitted=${enriched.isSubmitted}');
+      return enriched;
     }
 
     try {
@@ -252,31 +267,39 @@ class TaskService extends GetxService {
 
       if (fullTask != null) {
         _taskDetailsCache[taskId] = fullTask;
-        return taskAssignment.copyWith(
+        final enriched = taskAssignment.copyWith(
           customerName: fullTask.customerName,
           location: taskAssignment.location.isEmpty ? fullTask.location : taskAssignment.location,
         );
+        print('  From API - final status="${enriched.status}", isSubmitted=${enriched.isSubmitted}');
+        return enriched;
       }
     } catch (e) {
       print('Error enriching task $taskId: $e');
     }
 
-    return taskAssignment;
+    final result = taskAssignment;
+    print('  Using original - final status="${result.status}", isSubmitted=${result.isSubmitted}');
+    return result;
   }
 
   /// Enrich multiple tasks with customer names using controlled concurrency
   /// Processes tasks in batches to avoid overwhelming the API
   Future<List<TaskModel>> _enrichTasksWithCustomerNames(List<TaskModel> assignments) async {
+    print('=== ENRICHMENT DEBUG ===');
+    print('Total assignments to enrich: ${assignments.length}');
+    
     if (assignments.isEmpty) {
       return assignments;
     }
 
     final batchSize = 4;
     final enrichedTasks = <TaskModel>[];
-
+ 
     for (int i = 0; i < assignments.length; i += batchSize) {
       final batch = assignments.sublist(i, (i + batchSize) < assignments.length ? (i + batchSize) : assignments.length);
-      
+       
+      print('Processing batch $i-${i + batchSize - 1}');
       final results = await Future.wait(
         batch.map((task) => _enrichTaskWithCustomerName(task)),
         eagerError: false,
@@ -285,6 +308,8 @@ class TaskService extends GetxService {
       enrichedTasks.addAll(results);
     }
 
+    print('Total enriched tasks: ${enrichedTasks.length}');
+    print('Enriched task statuses: ${enrichedTasks.map((t) => '${t.taskSubject}: status="${t.status}", isSubmitted=${t.isSubmitted}').toList()}');
     return enrichedTasks;
   }
    

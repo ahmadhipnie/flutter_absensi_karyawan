@@ -23,7 +23,13 @@ class AttendanceView extends GetView<AttendanceController> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-          onPressed: () => Get.back(),
+          onPressed: () {
+            // Close any open overlays first
+            if (Get.isSnackbarOpen) {
+              Get.closeAllSnackbars();
+            }
+            Get.back(closeOverlays: true);
+          },
         ),
       ),
       body: RefreshIndicator(

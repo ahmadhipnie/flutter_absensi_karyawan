@@ -8,6 +8,7 @@ class TaskAssignmentModel {
   final DateTime updatedAt;
   final String userEmail;
   final String username;
+  final String? photoProfile;
 
   TaskAssignmentModel({
     required this.id,
@@ -19,6 +20,7 @@ class TaskAssignmentModel {
     required this.updatedAt,
     required this.userEmail,
     required this.username,
+    this.photoProfile,
   });
 
   factory TaskAssignmentModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class TaskAssignmentModel {
       updatedAt: DateTime.parse(json['updated_at'] as String),
       userEmail: json['user_email'] as String,
       username: json['username'] as String,
+      photoProfile: json['photo_profile'] as String?,
     );
   }
 
@@ -46,6 +49,7 @@ class TaskAssignmentModel {
       'updated_at': updatedAt.toIso8601String(),
       'user_email': userEmail,
       'username': username,
+      'photo_profile': photoProfile,
     };
   }
 }

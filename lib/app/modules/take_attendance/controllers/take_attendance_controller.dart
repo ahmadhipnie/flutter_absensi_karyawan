@@ -345,9 +345,14 @@ class TakeAttendanceController extends GetxController {
       }
 
       if (success) {
-        print('clockIn: Success! Showing snackbar...');
+        print('clockIn: Success! Closing page...');
 
-        // Show success message
+        // Close the page immediately and return success
+        Get.back(result: true);
+        print('clockIn: Get.back() called');
+
+        // Show success message on the previous page after a short delay
+        await Future.delayed(const Duration(milliseconds: 300));
         final message = attendanceType == 'check-in'
             ? 'Check-in successful!'
             : 'Check-out successful!';
@@ -363,17 +368,6 @@ class TakeAttendanceController extends GetxController {
           borderRadius: 12,
           icon: const Icon(Icons.check_circle, color: Colors.green),
         );
-
-        // Wait for snackbar to be visible
-        print('clockIn: Waiting 1.5 seconds for snackbar to show...');
-        await Future.delayed(const Duration(milliseconds: 1500));
-
-        print('clockIn: Now closing page...');
-        // Close the page and return true
-        if (Get.isDialogOpen == false && Get.isBottomSheetOpen == false) {
-          Get.back(result: true);
-          print('clockIn: Get.back() called');
-        }
       } else {
         print('clockIn: Failed! Success was false');
         Get.snackbar(

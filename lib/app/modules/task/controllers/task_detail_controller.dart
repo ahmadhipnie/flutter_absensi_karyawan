@@ -131,6 +131,9 @@ class TaskDetailController extends GetxController
       // Get profile photo URL from API response
       final profilePhotoUrl = AppConfig.getProfilePhotoUrl(assignment.photoProfile);
 
+      // Get assignment status from API (pending, in_progress, completed, cancelled)
+      final assignmentStatus = assignment.status;
+
       if (assignment.isSubmitted) {
         // Fetch submission details
         final submissions = await _taskService.getTaskSubmissions(
@@ -151,6 +154,7 @@ class TaskDetailController extends GetxController
             status: isLate ? EmployeeWorkStatus.late : EmployeeWorkStatus.onTime,
             assignmentId: assignment.id,
             submissionDate: submission.submittedAt,
+            assignmentStatus: assignmentStatus,
           );
 
           if (isLate) {
@@ -169,6 +173,7 @@ class TaskDetailController extends GetxController
           avatarUrl: profilePhotoUrl ?? '',
           status: EmployeeWorkStatus.notSubmitted,
           assignmentId: assignment.id,
+          assignmentStatus: assignmentStatus,
         );
         assignedEmployees.add(employee);
       }
@@ -246,6 +251,7 @@ class EmployeeWorkModel {
   final EmployeeWorkStatus status;
   final int? assignmentId;
   final DateTime? submissionDate;
+  final String assignmentStatus; // Added assignment status from API
 
   EmployeeWorkModel({
     required this.id,
@@ -254,6 +260,7 @@ class EmployeeWorkModel {
     required this.status,
     this.assignmentId,
     this.submissionDate,
+    this.assignmentStatus = 'pending', // Default status
   });
 
   String get statusText {

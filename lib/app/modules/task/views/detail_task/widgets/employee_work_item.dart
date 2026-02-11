@@ -18,7 +18,7 @@ class EmployeeWorkItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.find<TaskDetailController>();
-    
+
     return InkWell(
       onTap: () {
         // Navigate to employee submission detail
@@ -33,6 +33,7 @@ class EmployeeWorkItem extends StatelessWidget {
               'submissionDate': employee.submissionDate,
               'taskId': controller.taskId,
               'taskSubject': controller.taskTitle.value,
+              'assignmentStatus': employee.assignmentStatus,
             },
           );
         }

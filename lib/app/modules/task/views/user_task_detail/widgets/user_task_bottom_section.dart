@@ -94,7 +94,7 @@ class UserTaskBottomSection extends GetView<UserTaskDetailController> {
         ),
         const SizedBox(height: 12),
         // Submitted file item (clickable to preview)
-        InkWell(
+        Obx(() => InkWell(
           onTap: controller.openSubmittedFile,
           borderRadius: BorderRadius.circular(12),
           child: Container(
@@ -108,12 +108,18 @@ class UserTaskBottomSection extends GetView<UserTaskDetailController> {
                 Container(
                   padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEF5350).withValues(alpha: 0.1),
+                    color: controller.submittedContentType.value == 'url'
+                        ? const Color(0xFF2196F3).withValues(alpha: 0.1)
+                        : const Color(0xFFEF5350).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Icon(
-                    Icons.description,
-                    color: Color(0xFFEF5350),
+                  child: Icon(
+                    controller.submittedContentType.value == 'url'
+                        ? Icons.link
+                        : Icons.description,
+                    color: controller.submittedContentType.value == 'url'
+                        ? const Color(0xFF2196F3)
+                        : const Color(0xFFEF5350),
                     size: 20,
                   ),
                 ),
@@ -152,7 +158,7 @@ class UserTaskBottomSection extends GetView<UserTaskDetailController> {
               ],
             ),
           ),
-        ),
+        )),
         const SizedBox(height: 16),
         // Unsubmit button
         SizedBox(
@@ -193,7 +199,7 @@ class UserTaskBottomSection extends GetView<UserTaskDetailController> {
           ),
         ),
         TextButton(
-          onPressed: () {},
+          onPressed: null,
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             minimumSize: const Size(60, 40),

@@ -45,7 +45,7 @@ class EmployeeOutputSection extends GetView<EmployeeDetailController> {
     final filePath = file['path'] ?? '';
 
     return InkWell(
-      onTap: () => controller.openOutputFile(filePath),
+      onTap: () => controller.openOutputFile(filePath, fileType: fileType),
       borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -104,6 +104,10 @@ class EmployeeOutputSection extends GetView<EmployeeDetailController> {
       case 'txt':
         iconData = Icons.text_snippet_outlined;
         iconColor = const Color(0xFF757575);
+        break;
+      case 'link':
+        iconData = Icons.link;
+        iconColor = const Color(0xFF2196F3);
         break;
       default:
         iconData = Icons.insert_drive_file_outlined;

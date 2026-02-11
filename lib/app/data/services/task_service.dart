@@ -357,6 +357,57 @@ class TaskService extends GetxService {
     }
   }
 
+  /// POST /tasks/assignment/:assignmentId/submit - Submit task work as link/url
+  Future<TaskSubmissionResponseModel?> submitTaskLink({
+    required int assignmentId,
+    required String linkUrl,
+  }) async {
+    try {
+      if (linkUrl.isEmpty) {
+        throw 'Link URL is empty';
+      }
+
+      final formData = FormData.fromMap({
+        'submission_type': 'url',
+        'content_url': linkUrl,
+      });
+
+      print('Submitting task link to: /tasks/assignment/$assignmentId/submit');
+      print('Link URL: $linkUrl');
+
+      final response = await _apiProvider.post(
+        '/tasks/assignment/$assignmentId/submit',
+        data: formData,
+      );
+
+      print('Submit link response status: ${response.statusCode}');
+      print('Submit link response data: ${response.data}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return TaskSubmissionResponseModel.fromJson(response.data);
+      }
+
+      return null;
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to submit link';
+
+      if (e.response != null) {
+        print('Submit link error response: ${e.response!.data}');
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        }
+      } else {
+        print('Submit link error: ${e.message}');
+      }
+
+      throw errorMessage;
+    } catch (e) {
+      print('Submit link unexpected error: $e');
+      throw 'An error occurred: ${e.toString()}';
+    }
+  }
+
   /// GET /tasks/assignment/:assignmentId/submissions - Get task submissions
   Future<List<TaskSubmissionModel>> getTaskSubmissions({
     required int assignmentId,

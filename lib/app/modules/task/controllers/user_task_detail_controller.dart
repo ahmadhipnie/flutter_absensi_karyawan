@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../data/models/task_model.dart' as data_model;
 import '../../../data/models/task_item.dart';
+import '../../../data/models/task_submission_model.dart';
 import '../../../data/services/task_service.dart';
 import '../../../core/config/app_config.dart';
 import '../../../utils/date_helper.dart';
@@ -38,6 +39,8 @@ class UserTaskDetailController extends GetxController {
   final submittedFileName = ''.obs;
   final submittedDate = ''.obs;
   final submittedFilePath = ''.obs;
+  final submittedContentType = ''.obs; // 'file' or 'link'
+  final submittedContentUrl = ''.obs; // URL for link submissions
   final isLoadingSubmissions = false.obs;
 
   @override
@@ -159,11 +162,25 @@ class UserTaskDetailController extends GetxController {
 
       if (submissions.isNotEmpty) {
         final latestSubmission = submissions.first;
-        submittedFileName.value = latestSubmission.fileName ?? 'Untitled';
+
+        // Store submission type
+        submittedContentType.value = latestSubmission.submissionType;
+
+        if (latestSubmission.submissionType == 'url') {
+          // URL submission
+          submittedFileName.value = latestSubmission.contentUrl ?? 'Untitled Link';
+          submittedContentUrl.value = latestSubmission.contentUrl ?? '';
+          submittedFilePath.value = '';
+        } else {
+          // File submission
+          submittedFileName.value = latestSubmission.fileName ?? 'Untitled';
+          submittedFilePath.value = latestSubmission.filePath ?? '';
+          submittedContentUrl.value = '';
+        }
+
         submittedDate.value = _formatSubmissionDate(
           latestSubmission.submittedAt ?? DateTime.now()
         );
-        submittedFilePath.value = latestSubmission.filePath ?? '';
       }
     } catch (e) {
       print('Error loading submissions: $e');
@@ -450,13 +467,16 @@ class UserTaskDetailController extends GetxController {
     try {
       isSubmitting.value = true;
 
-      // Collect all file paths (exclude LINK type for now)
+      // Separate files and links
       final filePaths = <String>[];
-      final linkFiles = <Map<String, dynamic>>[];
+      final linkFiles = <String>[];
 
       for (var file in uploadedFiles) {
         if (file['type'] == 'LINK') {
-          linkFiles.add(file);
+          final link = file['link'] as String?;
+          if (link != null && link.isNotEmpty) {
+            linkFiles.add(link);
+          }
         } else {
           final path = file['path'] as String?;
           if (path != null && path.isNotEmpty) {
@@ -465,33 +485,44 @@ class UserTaskDetailController extends GetxController {
         }
       }
 
-      // Check if there are any files to submit
-      if (filePaths.isEmpty && linkFiles.isNotEmpty) {
-        // Only link files, not supported yet
-        Get.snackbar(
-          'Info',
-          'Link submission is not yet implemented',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-        return;
-      }
-
-      if (filePaths.isEmpty) {
+      // Validate we have something to submit
+      if (filePaths.isEmpty && linkFiles.isEmpty) {
         Get.snackbar(
           'Error',
-          'No valid files to submit',
+          'No valid files or links to submit',
           snackPosition: SnackPosition.BOTTOM,
         );
         return;
       }
 
-      final response = await _taskService.submitTaskWork(
-        assignmentId: assignmentId.value!,
-        filePaths: filePaths,
-        submissionType: 'file',
-      );
+      TaskSubmissionResponseModel? lastResponse;
 
-      if (response != null && response.success) {
+      // Submit all files
+      if (filePaths.isNotEmpty) {
+        final response = await _taskService.submitTaskWork(
+          assignmentId: assignmentId.value!,
+          filePaths: filePaths,
+          submissionType: 'file',
+        );
+        if (response != null) {
+          lastResponse = response;
+        }
+      }
+
+      // Submit all links
+      if (linkFiles.isNotEmpty) {
+        for (var link in linkFiles) {
+          final response = await _taskService.submitTaskLink(
+            assignmentId: assignmentId.value!,
+            linkUrl: link,
+          );
+          if (response != null) {
+            lastResponse = response;
+          }
+        }
+      }
+
+      if (lastResponse != null && lastResponse.success) {
         // Update submission state
         isTaskSubmitted.value = true;
 
@@ -503,7 +534,7 @@ class UserTaskDetailController extends GetxController {
 
         Get.snackbar(
           'Success',
-          response.message,
+          lastResponse.message,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green,
           colorText: Colors.white,
@@ -560,32 +591,39 @@ class UserTaskDetailController extends GetxController {
     }
   }
 
-  /// Open submitted file in browser using preview endpoint
+  /// Open submitted file or link in browser
   Future<void> openSubmittedFile() async {
-    if (submittedFilePath.value.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'File path not available',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
     try {
-      final fileUrl = AppConfig.getTaskFilePreviewUrl(submittedFilePath.value);
+      String? targetUrl;
 
-      if (fileUrl == null) {
+      if (submittedContentType.value == 'url') {
+        // URL submission - open the content URL directly
+        targetUrl = submittedContentUrl.value;
+      } else {
+        // File submission - use preview endpoint
+        if (submittedFilePath.value.isEmpty) {
+          Get.snackbar(
+            'Error',
+            'File path not available',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return;
+        }
+        targetUrl = AppConfig.getTaskFilePreviewUrl(submittedFilePath.value);
+      }
+
+      if (targetUrl == null || targetUrl.isEmpty) {
         Get.snackbar(
           'Error',
-          'Invalid file URL',
+          'Invalid URL',
           snackPosition: SnackPosition.BOTTOM,
         );
         return;
       }
 
-      print('Opening file URL in browser: $fileUrl');
+      print('Opening URL in browser: $targetUrl');
 
-      final uri = Uri.parse(fileUrl);
+      final uri = Uri.parse(targetUrl);
 
       // Open in external browser
       await launchUrl(
@@ -595,7 +633,7 @@ class UserTaskDetailController extends GetxController {
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Failed to open file: ${e.toString()}',
+        'Failed to open: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
       );
     }

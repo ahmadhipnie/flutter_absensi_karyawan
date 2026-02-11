@@ -111,32 +111,45 @@ class EmployeeDetailController extends GetxController {
 
         // Debug: print the submission details
         print('=== SUBMISSION DETAILS ===');
+        print('SubmissionType: ${submission.submissionType}');
         print('FileName: ${submission.fileName}');
         print('FilePath: ${submission.filePath}');
-        print('ContentType: ${submission.contentUrl}');
+        print('ContentUrl: ${submission.contentUrl}');
 
-        // Add submitted file to output files
-        if (submission.fileName != null && submission.fileName!.isNotEmpty) {
-          final fileExtension = submission.fileName!.split('.').last.toLowerCase();
-          String iconType = 'file';
-
-          if (['pdf'].contains(fileExtension)) {
-            iconType = 'pdf';
-          } else if (['doc', 'docx'].contains(fileExtension)) {
-            iconType = 'doc';
-          } else if (['xls', 'xlsx'].contains(fileExtension)) {
-            iconType = 'xls';
-          } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileExtension)) {
-            iconType = 'image';
-          } else if (['txt'].contains(fileExtension)) {
-            iconType = 'txt';
+        // Handle different submission types
+        if (submission.submissionType == 'url') {
+          // Link submission
+          if (submission.contentUrl != null && submission.contentUrl!.isNotEmpty) {
+            outputFiles.add({
+              'name': submission.contentUrl!,
+              'type': 'link',
+              'path': submission.contentUrl!,
+            });
           }
+        } else {
+          // File submission
+          if (submission.fileName != null && submission.fileName!.isNotEmpty) {
+            final fileExtension = submission.fileName!.split('.').last.toLowerCase();
+            String iconType = 'file';
 
-          outputFiles.add({
-            'name': submission.fileName!,
-            'type': iconType,
-            'path': submission.filePath ?? '',
-          });
+            if (['pdf'].contains(fileExtension)) {
+              iconType = 'pdf';
+            } else if (['doc', 'docx'].contains(fileExtension)) {
+              iconType = 'doc';
+            } else if (['xls', 'xlsx'].contains(fileExtension)) {
+              iconType = 'xls';
+            } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileExtension)) {
+              iconType = 'image';
+            } else if (['txt'].contains(fileExtension)) {
+              iconType = 'txt';
+            }
+
+            outputFiles.add({
+              'name': submission.fileName!,
+              'type': iconType,
+              'path': submission.filePath ?? '',
+            });
+          }
         }
       }
     } catch (e) {
@@ -237,8 +250,8 @@ class EmployeeDetailController extends GetxController {
     }
   }
 
-  /// Open output file - uses filePath from submissions API
-  Future<void> openOutputFile(String filePath) async {
+  /// Open output file or link - uses filePath from submissions API
+  Future<void> openOutputFile(String filePath, {String fileType = 'file'}) async {
     if (filePath.isEmpty) {
       Get.snackbar(
         'Error',
@@ -249,20 +262,28 @@ class EmployeeDetailController extends GetxController {
     }
 
     try {
-      final fileUrl = AppConfig.getTaskFilePreviewUrl(filePath);
+      String? targetUrl;
 
-      if (fileUrl == null) {
+      if (fileType == 'link') {
+        // Link submission - open directly
+        targetUrl = filePath;
+      } else {
+        // File submission - use preview endpoint
+        targetUrl = AppConfig.getTaskFilePreviewUrl(filePath);
+      }
+
+      if (targetUrl == null || targetUrl.isEmpty) {
         Get.snackbar(
           'Error',
-          'Invalid file URL',
+          'Invalid URL',
           snackPosition: SnackPosition.BOTTOM,
         );
         return;
       }
 
-      print('Opening file URL in browser: $fileUrl');
+      print('Opening URL in browser: $targetUrl');
 
-      final uri = Uri.parse(fileUrl);
+      final uri = Uri.parse(targetUrl);
 
       // Open in external browser
       await launchUrl(

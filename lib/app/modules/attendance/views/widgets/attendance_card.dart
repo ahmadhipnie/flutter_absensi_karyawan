@@ -71,11 +71,24 @@ class AttendanceCard extends GetView<AttendanceController> {
 
   Widget _buildWorkHours(BuildContext context) {
     return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Obx(
-            () => Text(
+      child: Obx(() {
+        // Show loading while fetching schedule
+        if (controller.isLoadingSchedule.value) {
+          return const SizedBox(
+            height: 30,
+            child: Center(
+              child: CircularProgressIndicator(
+                color: AppTheme.primaryColor,
+                strokeWidth: 2,
+              ),
+            ),
+          );
+        }
+        
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
               '${controller.workStartTime.value} AM - ${controller.workEndTime.value} PM',
               style: const TextStyle(
                 fontSize: 22,
@@ -83,14 +96,14 @@ class AttendanceCard extends GetView<AttendanceController> {
                 color: Colors.black,
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          GestureDetector(
-            onTap: () => showEditTimeDialog(context),
-            child: const Icon(Icons.edit, color: Colors.redAccent, size: 20),
-          ),
-        ],
-      ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: () => showEditTimeDialog(context),
+              child: const Icon(Icons.edit, color: Colors.redAccent, size: 20),
+            ),
+          ],
+        );
+      }),
     );
   }
 

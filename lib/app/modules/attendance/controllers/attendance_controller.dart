@@ -5,8 +5,10 @@ import 'dart:async';
 import '../../../data/services/location_service.dart';
 import '../../../data/services/attendance_service.dart';
 import '../../../data/services/user_service.dart';
+import '../../../data/services/schedule_service.dart';
 import '../../../data/models/attendance_model.dart';
 import '../../../data/models/user_model.dart';
+import '../../../data/models/schedule_model.dart';
 import '../../../routes/app_pages.dart';
 
 class AttendanceController extends GetxController {
@@ -19,6 +21,11 @@ class AttendanceController extends GetxController {
   final LocationService _locationService = LocationService();
   final AttendanceService _attendanceService = Get.find<AttendanceService>();
   final UserService _userService = Get.find<UserService>();
+  final ScheduleService _scheduleService = ScheduleService();
+
+  // Schedule
+  final currentSchedule = Rxn<ScheduleModel>();
+  final isLoadingSchedule = false.obs;
 
   // Location
   final currentLocation = Rxn<LocationData>();
@@ -49,8 +56,8 @@ class AttendanceController extends GetxController {
   final showClockedIn = true.obs;
 
   void updateWorkHours(String start, String end) {
-    workStartTime.value = start;
-    workEndTime.value = end;
+    // Update schedule via API
+    updateScheduleTimes(start, end);
   }
 
   void clockIn() {
@@ -247,6 +254,7 @@ class AttendanceController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _loadSchedule(); // Load schedule first
     _loadCurrentLocation();
     _loadTodayAttendance();
     _loadAllUsers();
@@ -266,6 +274,102 @@ class AttendanceController extends GetxController {
       // Force UI update to check canCheckOut status
       update();
     });
+  }
+
+  /// Load schedule from API
+  Future<void> _loadSchedule() async {
+    try {
+      isLoadingSchedule.value = true;
+      print('Loading schedule from API...');
+      
+      final schedules = await _scheduleService.getSchedules();
+      
+      if (schedules.isNotEmpty) {
+        currentSchedule.value = schedules.first; // Use first schedule
+        
+        // Update work times from schedule
+        workStartTime.value = currentSchedule.value!.formattedStartTime;
+        workEndTime.value = currentSchedule.value!.formattedEndTime;
+        
+        print('Schedule loaded: ${workStartTime.value} - ${workEndTime.value}');
+      } else {
+        print('No schedules found, using default times');
+      }
+    } catch (e) {
+      print('Error loading schedule: $e');
+      // Keep default times if loading fails
+    } finally {
+      isLoadingSchedule.value = false;
+    }
+  }
+
+  /// Update schedule times (for supervisors only)
+  Future<void> updateScheduleTimes(String startTime, String endTime) async {
+    if (currentSchedule.value == null) {
+      Get.snackbar(
+        'Error',
+        'No schedule loaded',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+      );
+      return;
+    }
+
+    // Show loading dialog
+    Get.dialog(
+      const Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
+        ),
+      ),
+      barrierDismissible: false,
+    );
+
+    try {
+      print('Updating schedule: $startTime - $endTime');
+      
+      // Convert HH:MM to HH:MM:SS format for API
+      final startTimeFormatted = '$startTime:00';
+      final endTimeFormatted = '$endTime:00';
+      
+      final updatedSchedule = await _scheduleService.updateSchedule(
+        scheduleId: currentSchedule.value!.id,
+        startTime: startTimeFormatted,
+        endTime: endTimeFormatted,
+      );
+      
+      currentSchedule.value = updatedSchedule;
+      workStartTime.value = updatedSchedule.formattedStartTime;
+      workEndTime.value = updatedSchedule.formattedEndTime;
+      
+      // Close loading dialog
+      Get.back();
+      
+      // Show success message
+      Get.snackbar(
+        'Success',
+        'Schedule updated successfully',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.green[100],
+        duration: const Duration(seconds: 2),
+      );
+      
+      print('Schedule update successful: ${workStartTime.value} - ${workEndTime.value}');
+    } catch (e) {
+      print('Error updating schedule: $e');
+      
+      // Close loading dialog
+      Get.back();
+      
+      // Show error message
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red[100],
+        duration: const Duration(seconds: 3),
+      );
+    }
   }
 
   /// Load today's attendance status

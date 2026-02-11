@@ -7,10 +7,12 @@ import '../../../data/services/task_service.dart';
 import '../../../data/services/department_service.dart';
 import '../../../data/services/location_service.dart';
 import '../../../data/services/attendance_service.dart';
+import '../../../data/services/schedule_service.dart';
 import '../../../data/models/department_model.dart';
 import '../../../data/models/task_item.dart';
 import '../../../data/models/task_model.dart' as data_model;
 import '../../../data/models/attendance_model.dart';
+import '../../../data/models/schedule_model.dart';
 import '../../../routes/app_pages.dart';
 import '../../../utils/date_helper.dart';
 import '../../navigation/controllers/navigation_controller.dart';
@@ -35,6 +37,9 @@ class DashboardController extends GetxController {
   }
   // Department Service
   final DepartmentService _departmentService = DepartmentService();
+  
+  // Schedule Service
+  final ScheduleService _scheduleService = ScheduleService();
 
   // Attendance Service
   AttendanceService? get _attendanceService {
@@ -59,6 +64,10 @@ class DashboardController extends GetxController {
   final workStatus = 'Working'.obs;
   final workStartTime = '08:00 AM'.obs;
   final workEndTime = '05:00 PM'.obs;
+
+  // Schedule
+  final currentSchedule = Rxn<ScheduleModel>();
+  final isLoadingSchedule = false.obs;
 
   // Location
   final LocationService _locationService = LocationService();
@@ -100,6 +109,7 @@ class DashboardController extends GetxController {
     super.onInit();
     _lastBackPressedTime = null;
     _loadUserData();
+    _loadSchedule(); // Load schedule
     _loadOngoingTasks();
     _loadCurrentLocation();
     _loadTodayAttendance();
@@ -152,6 +162,36 @@ class DashboardController extends GetxController {
   /// Refresh location (can be called from UI)
   Future<void> refreshLocation() async {
     await _loadCurrentLocation();
+  }
+
+  /// Load schedule from API
+  Future<void> _loadSchedule() async {
+    try {
+      isLoadingSchedule.value = true;
+      print('DashboardController - Loading schedule from API...');
+      
+      final schedules = await _scheduleService.getSchedules();
+      
+      if (schedules.isNotEmpty) {
+        currentSchedule.value = schedules.first; // Use first schedule
+        
+        // Update work times from schedule (with AM/PM)
+        final startHour = currentSchedule.value!.startHour;
+        final endHour = currentSchedule.value!.endHour;
+        
+        workStartTime.value = '${currentSchedule.value!.formattedStartTime} ${startHour < 12 ? 'AM' : 'PM'}';
+        workEndTime.value = '${currentSchedule.value!.formattedEndTime} ${endHour < 12 ? 'AM' : 'PM'}';
+        
+        print('DashboardController - Schedule loaded: ${workStartTime.value} - ${workEndTime.value}');
+      } else {
+        print('DashboardController - No schedules found, using default times');
+      }
+    } catch (e) {
+      print('DashboardController - Error loading schedule: $e');
+      // Keep default times if loading fails
+    } finally {
+      isLoadingSchedule.value = false;
+    }
   }
 
   /// Get formatted location for display

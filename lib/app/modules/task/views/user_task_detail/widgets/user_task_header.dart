@@ -111,14 +111,16 @@ class UserTaskHeader extends GetView<UserTaskDetailController> {
       children: [
         const SizedBox(height: 14),
         InkWell(
-          onTap: () {
+          onTap: () async {
             print('Navigating to comments with assignmentId: ${controller.assignmentId.value}');
-            Get.toNamed(
+            await Get.toNamed(
               '/user-task-comment',
               arguments: {
                 'assignmentId': controller.assignmentId.value,
               },
             );
+            // Refresh comment count when returning
+            controller.refreshCommentCount();
           },
           child: Row(
             children: [

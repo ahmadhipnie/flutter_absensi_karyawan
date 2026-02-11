@@ -37,6 +37,9 @@ class TakeAttendanceController extends GetxController {
   // Submitting state
   final isSubmitting = false.obs;
 
+  // Track if controller is closed
+  bool _isClosed = false;
+
   @override
   void onInit() {
     super.onInit();
@@ -68,7 +71,10 @@ class TakeAttendanceController extends GetxController {
             currentLocation.value = locationData;
             latitude = locationData.latitude;
             longitude = locationData.longitude;
-            locationController.text = locationData.displayAddress;
+            // Check if controller is still alive before accessing
+            if (!_isClosed) {
+              locationController.text = locationData.displayAddress;
+            }
           } else {
             locationError.value = 'Unable to get location';
             _setDefaultLocation();
@@ -97,7 +103,9 @@ class TakeAttendanceController extends GetxController {
 
   /// Set default location when permission is denied
   void _setDefaultLocation() {
-    locationController.text = 'Location unavailable - Tap to retry';
+    if (!_isClosed) {
+      locationController.text = 'Location unavailable - Tap to retry';
+    }
   }
 
   /// Refresh location (can be called from UI)
@@ -112,6 +120,9 @@ class TakeAttendanceController extends GetxController {
     }
     if (currentLocation.value != null) {
       return currentLocation.value!.displayAddress;
+    }
+    if (_isClosed) {
+      return '';
     }
     return locationController.text;
   }
@@ -239,6 +250,12 @@ class TakeAttendanceController extends GetxController {
     // Prevent multiple submissions
     if (isSubmitting.value) {
       print('clockIn: Already submitting, ignoring duplicate call');
+      return;
+    }
+
+    // Check if controller is still valid
+    if (_isClosed) {
+      print('clockIn: Controller is closed, ignoring');
       return;
     }
 
@@ -392,6 +409,9 @@ class TakeAttendanceController extends GetxController {
 
   /// Get location data for API submission
   Map<String, dynamic>? getLocationDataForApi() {
+    if (_isClosed) {
+      return null;
+    }
     if (latitude == null || longitude == null) {
       return null;
     }
@@ -405,6 +425,7 @@ class TakeAttendanceController extends GetxController {
 
   @override
   void onClose() {
+    _isClosed = true;
     notesController.dispose();
     locationController.dispose();
     super.onClose();

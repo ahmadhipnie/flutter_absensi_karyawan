@@ -5,7 +5,10 @@ import '../../attendance/controllers/attendance_controller.dart';
 class TakeAttendanceBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<TakeAttendanceController>(() => TakeAttendanceController());
+    Get.lazyPut<TakeAttendanceController>(
+      () => TakeAttendanceController(),
+      fenix: true,
+    );
 
     // Register AttendanceController if not already registered
     if (!Get.isRegistered<AttendanceController>()) {

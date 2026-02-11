@@ -1,3 +1,5 @@
+import '../../core/config/app_config.dart';
+
 class ChatMessage {
   final String id;
   final String text;
@@ -23,8 +25,7 @@ class ChatMessage {
 
   /// Get full image URL
   String? get imageUrl {
-    if (image == null || image!.isEmpty) return null;
-    return 'https://api-absensi.hftech.web.id/api/assets/message_images/$image';
+    return AppConfig.getMessageImageUrl(image);
   }
 
   /// Check if message has image

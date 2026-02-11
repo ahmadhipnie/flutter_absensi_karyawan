@@ -37,7 +37,7 @@ class MemberDetailView extends StatelessWidget {
               color: const Color(0xFFFAFAFA),
               margin: const EdgeInsets.symmetric(vertical: 24),
             ),
-            const MemberTaskSection(),
+            MemberTaskSection(user: user),
           ],
         ),
       ),

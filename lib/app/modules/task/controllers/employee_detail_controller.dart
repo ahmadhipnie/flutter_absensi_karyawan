@@ -80,28 +80,36 @@ class EmployeeDetailController extends GetxController {
           assignmentStatus.value = 'pending';
         }
 
-        // Set status and color
-        final employeeStatus = arguments['status'] as EmployeeWorkStatus?;
+        // Set status and color - handle both enum and string
+        final employeeStatus = arguments['status'];
         if (employeeStatus != null) {
-          switch (employeeStatus) {
-            case EmployeeWorkStatus.onTime:
-              status.value = 'Tepat Waktu';
-              statusColor.value = const Color(0xFF4CAF50);
-              break;
-            case EmployeeWorkStatus.late:
-              status.value = 'Terlambat';
-              statusColor.value = const Color(0xFFF44336);
-              break;
-            case EmployeeWorkStatus.notSubmitted:
-              status.value = 'Tidak mengumpulkan';
-              statusColor.value = const Color(0xFF9E9E9E);
-              break;
+          // Handle enum type (from task detail view)
+          if (employeeStatus is EmployeeWorkStatus) {
+            switch (employeeStatus) {
+              case EmployeeWorkStatus.onTime:
+                status.value = 'Tepat Waktu';
+                statusColor.value = const Color(0xFF4CAF50);
+                break;
+              case EmployeeWorkStatus.late:
+                status.value = 'Terlambat';
+                statusColor.value = const Color(0xFFF44336);
+                break;
+              case EmployeeWorkStatus.notSubmitted:
+                status.value = 'Tidak mengumpulkan';
+                statusColor.value = const Color(0xFF9E9E9E);
+                break;
+            }
+          } 
+          // Handle string type (from member task view)
+          else if (employeeStatus is String) {
+            // Use assignment status directly for display
+            status.value = getAssignmentStatusDisplay(employeeStatus);
+            statusColor.value = getAssignmentStatusColor(employeeStatus);
           }
         }
 
-        // Fetch submission details if submitted
-        if (assignmentId.value != null &&
-            employeeStatus != EmployeeWorkStatus.notSubmitted) {
+        // Fetch submission details if we have assignment ID
+        if (assignmentId.value != null) {
           await _loadSubmissionDetails();
           await _loadComments();
         }

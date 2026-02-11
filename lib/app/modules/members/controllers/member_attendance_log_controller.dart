@@ -23,14 +23,15 @@ class MemberAttendanceLogController extends GetxController {
     try {
       isLoading.value = true;
 
-      final data = await _attendanceService.getMyAttendances();
+      // Use getAttendancesByUser to fetch attendances for specific member
+      final data = await _attendanceService.getAttendancesByUser(
+        userId: user.id,
+      );
 
-      // Filter by userId
-      final filtered = data.where((a) => a.userId == user.id).toList();
+      // Sort by date descending (newest first)
+      data.sort((a, b) => b.date.compareTo(a.date));
 
-      filtered.sort((a, b) => b.date.compareTo(a.date));
-
-      attendances.value = filtered;
+      attendances.value = data;
     } catch (e) {
       print('Error loading member attendances: $e');
       attendances.clear();

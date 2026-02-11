@@ -62,20 +62,20 @@ class UserTaskDetailController extends GetxController {
     if (arguments is data_model.TaskModel) {
       final task = arguments;
       taskId.value = task.taskId ?? task.id; // Use taskId if available, otherwise use id
-      assignmentId.value = task.id; // The id is the assignment ID
+      assignmentId.value = task.id; // The id is assignment ID
       taskTitle.value = task.taskSubject;
       postedDate.value = task.createdAt;
       dueDate.value = task.dueDate;
       status.value = _capitalizeFirst(task.status);
       description.value = task.taskDescription;
       location.value = task.location;
-      customerName.value = ''; // Not available from API
+      customerName.value = task.customerName ?? '';
 
       // Check if task is already submitted
       isTaskSubmitted.value = task.isSubmitted;
 
-      // Fetch full task details if location is empty
-      if (location.value.isEmpty && taskId.value != null) {
+      // Fetch full task details if location or customer name is empty
+      if ((location.value.isEmpty || customerName.value.isEmpty) && taskId.value != null) {
         await _loadFullTaskDetails();
       }
 
@@ -91,6 +91,7 @@ class UserTaskDetailController extends GetxController {
 
       return;
     }
+
 
     // Handle DashboardTaskItem (for backward compatibility)
     if (arguments is DashboardTaskItem) {

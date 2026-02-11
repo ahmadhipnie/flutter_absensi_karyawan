@@ -221,7 +221,7 @@ class DashboardController extends GetxController {
 
       // Only load tasks for member role
       if (userRole.value == 'member') {
-        final response = await taskService.getMyAssignedTasks();
+        final response = await taskService.getMyTasksWithCustomerName();
 
         if (response != null && response.success) {
           // Filter for incomplete tasks (not submitted)
@@ -237,7 +237,7 @@ class DashboardController extends GetxController {
           for (final task in incompleteTasks) {
             // Skip tasks without taskId (shouldn't happen for my-assigned endpoint)
             if (task.taskId == null) continue;
-            
+             
             dashboardItems.add(DashboardTaskItem(
               id: task.taskId.toString(),
               title: task.taskSubject,

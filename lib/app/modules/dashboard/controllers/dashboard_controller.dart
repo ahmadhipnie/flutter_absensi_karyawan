@@ -261,23 +261,34 @@ class DashboardController extends GetxController {
 
       // Only load tasks for member role
       if (userRole.value == 'member') {
-        final response = await taskService.getMyAssignedTasks();
-
+        final response = await taskService.getMyTasksWithCustomerName();
+ 
+        print('=== DASHBOARD TASK DEBUG ===');
+        print('Response is null: ${response == null}');
+        print('Response success: ${response?.success}');
+        print('Total tasks from API: ${response?.data?.length ?? 0}');
+        if (response?.data != null && response!.data.isNotEmpty) {
+          print('Task statuses: ${response.data.map((t) => '${t.taskSubject}: status="${t.status}", isSubmitted=${t.isSubmitted}').toList()}');
+        }
+ 
         if (response != null && response.success) {
-          // Filter for incomplete tasks (not submitted)
-          final incompleteTasks = response.data
-              .where((task) =>
-                  !task.isSubmitted && task.status.toLowerCase() != 'completed')
+          // Normalize status by removing underscores (in_progress -> in progress)
+          final normalizeStatus = (String status) => status.toLowerCase().replaceAll('_', ' ');
+
+          // Filter for tasks with in_progress status
+          // NOTE: Removed !task.isSubmitted check because backend returns is_submitted=true for all tasks
+          final inProgressTasks = response.data
+              .where((task) => normalizeStatus(task.status) == 'in progress')
               .toList();
 
           // Convert to DashboardTaskItem and store full model
           final dashboardItems = <DashboardTaskItem>[];
           _taskModelMap.clear();
-
-          for (final task in incompleteTasks) {
+ 
+          for (final task in inProgressTasks) {
             // Skip tasks without taskId (shouldn't happen for my-assigned endpoint)
             if (task.taskId == null) continue;
-            
+              
             dashboardItems.add(DashboardTaskItem(
               id: task.taskId.toString(),
               title: task.taskSubject,

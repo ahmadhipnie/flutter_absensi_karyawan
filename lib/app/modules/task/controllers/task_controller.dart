@@ -44,9 +44,32 @@ class TaskController extends GetxController {
   void onInit() {
     super.onInit();
     if (userRole.value == 'member') {
-      fetchMyAssignedTasks();
+      fetchMyTasks();
     } else if (userRole.value == 'supervisor') {
       fetchAllTasks();
+    }
+  }
+
+  /// Fetch my tasks from API (for member role)
+  Future<void> fetchMyTasks() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = null;
+
+      final response = await _taskService.getMyTasksWithCustomerName();
+
+      if (response != null && response.success) {
+        tasks.value = response.data;
+      }
+    } catch (e) {
+      errorMessage.value = e.toString();
+      Get.snackbar(
+        'Error',
+        e.toString(),
+        snackPosition: SnackPosition.TOP,
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 
@@ -115,6 +138,11 @@ class TaskController extends GetxController {
     );
   }
 
+  /// Normalize status by removing underscores and hyphens (for comparison)
+  String _normalizeStatus(String status) {
+    return status.toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ');
+  }
+
   /// Get filtered tasks based on selected status filter
   List<data_model.TaskModel> get filteredTasks {
     if (selectedFilter.value == 'All') {
@@ -129,9 +157,9 @@ class TaskController extends GetxController {
         return task.location.toLowerCase() == selectedFilter.value.toLowerCase();
       }).toList();
     } else {
-      // Filter by status for member
+      // Filter by status for member (with normalized comparison)
       return tasks.where((task) {
-        return task.status.toLowerCase() == selectedFilter.value.toLowerCase();
+        return _normalizeStatus(task.status) == _normalizeStatus(selectedFilter.value);
       }).toList();
     }
   }
@@ -220,7 +248,7 @@ class TaskController extends GetxController {
   @override
   Future<void> refresh() async {
     if (userRole.value == 'member') {
-      await fetchMyAssignedTasks();
+      await fetchMyTasks();
     } else if (userRole.value == 'supervisor') {
       await fetchAllTasks();
     }

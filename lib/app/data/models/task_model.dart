@@ -14,6 +14,7 @@ class TaskModel {
   final int? creatorId;        // From direct task response
   final String? creatorEmail;  // From direct task response
   final String? creatorName;   // From direct task response
+  final List<int>? assignedTo; // From /api/tasks response - list of user IDs
 
   TaskModel({
     required this.id,
@@ -31,17 +32,19 @@ class TaskModel {
     this.creatorId,
     this.creatorEmail,
     this.creatorName,
+    this.assignedTo,
   });
 
   factory TaskModel.fromJson(Map<String, dynamic> json) {
-    // Handle two different response formats:
+    // Handle different response formats:
     // 1. Task assignment format (from /tasks/my-assigned)
-    // 2. Direct task format (from /tasks)
+    // 2. Direct task format (from /api/tasks) with assigned_to
     
     final bool isDirectTaskFormat = json.containsKey('subject');
     
     if (isDirectTaskFormat) {
-      // Direct task format (from GET /tasks)
+      // Direct task format (from GET /api/tasks)
+      final assignedTo = json['assigned_to'];
       return TaskModel(
         id: json['id'] as int,
         taskId: null,
@@ -58,6 +61,7 @@ class TaskModel {
         creatorId: json['creator_id'] as int?,
         creatorEmail: json['creator_email'] as String?,
         creatorName: json['creator_name'] as String?,
+        assignedTo: assignedTo is List ? (assignedTo as List<int>).map((e) => e).toList() : null,
       );
     } else {
       // Task assignment format (from GET /tasks/my-assigned)
@@ -77,6 +81,7 @@ class TaskModel {
         creatorId: json['creator_id'] as int?,
         creatorEmail: json['creator_email'] as String?,
         creatorName: json['creator_name'] as String?,
+        assignedTo: null,
       );
     }
   }
@@ -94,7 +99,36 @@ class TaskModel {
       'task_description': taskDescription,
       'due_date': dueDate.toIso8601String(),
       'location': location,
+      if (assignedTo != null) 'assigned_to': assignedTo,
     };
+  }
+
+  TaskModel copyWith({
+    String? customerName,
+    String? location,
+  }) {
+    final copied = TaskModel(
+      id: id,
+      taskId: taskId,
+      userId: userId,
+      status: status,
+      isSubmitted: isSubmitted,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      taskSubject: taskSubject,
+      taskDescription: taskDescription,
+      dueDate: dueDate,
+      location: location ?? this.location,
+      customerName: customerName ?? this.customerName,
+      creatorId: creatorId,
+      creatorEmail: creatorEmail,
+      creatorName: creatorName,
+      assignedTo: assignedTo,
+    );
+    print('--- copyWith debug: ${taskSubject} ---');
+    print('  Original: status=$status, isSubmitted=$isSubmitted');
+    print('  Copied: status=${copied.status}, isSubmitted=${copied.isSubmitted}');
+    return copied;
   }
 }
 

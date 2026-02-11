@@ -25,6 +25,8 @@ class TaskService extends GetxService {
   bool get isLoading => _isLoading.value;
   String? get errorMessage => _errorMessage.value;
 
+  final _taskDetailsCache = <int, TaskModel>{};
+
   /// Get my assigned tasks for member role
   /// Returns TaskResponseModel if successful, null if failed
   /// Throws exception with error message - Controller should handle UI feedback
@@ -73,7 +75,56 @@ class TaskService extends GetxService {
       _isLoading.value = false;
     }
   }
-  
+
+  /// Get my tasks from /tasks endpoint, filtered by logged-in user ID
+  /// Returns TaskResponseModel if successful, null if failed
+  /// Throws exception with error message - Controller should handle UI feedback
+  Future<TaskResponseModel?> getMyTasks() async {
+    try {
+      _isLoading.value = true;
+      _errorMessage.value = null;
+
+      final response = await _apiProvider.get('/tasks/my-assigned');
+
+      if (response.statusCode == 200) {
+        final taskResponse = TaskResponseModel.fromJson(response.data);
+
+        if (taskResponse.success) {
+          _myAssignedTasks.value = taskResponse.data;
+        }
+
+        return taskResponse;
+      }
+
+      return null;
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to fetch tasks';
+
+      if (e.response != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        } else {
+          errorMessage = 'Error: ${e.response!.statusCode}';
+        }
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'Connection error. Check your internet.';
+      }
+
+      _errorMessage.value = errorMessage;
+      throw errorMessage;
+    } catch (e) {
+      final errorMessage = 'An unexpected error occurred: ${e.toString()}';
+      _errorMessage.value = errorMessage;
+      throw errorMessage;
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+   
   /// Get all tasks (for supervisor role)
   /// Returns TaskResponseModel if successful, null if failed
   /// Throws exception with error message - Controller should handle UI feedback
@@ -127,8 +178,141 @@ class TaskService extends GetxService {
   void clearTasks() {
     _myAssignedTasks.clear();
     _errorMessage.value = null;
+    _taskDetailsCache.clear();
   }
-  
+
+  /// Get my tasks with customer names from /tasks/my-assigned endpoint
+  /// Fetches assigned tasks and enriches them with customer names from /tasks/:id
+  /// Returns TaskResponseModel if successful, null if failed
+  /// Throws exception with error message - Controller should handle UI feedback
+  Future<TaskResponseModel?> getMyTasksWithCustomerName() async {
+    try {
+      _isLoading.value = true;
+      _errorMessage.value = null;
+
+      final response = await _apiProvider.get('/tasks/my-assigned');
+
+      print('=== API RESPONSE DEBUG ===');
+      print('Status code: ${response.statusCode}');
+      print('Response data: ${response.data}');
+
+      if (response.statusCode == 200) {
+        final taskResponse = TaskResponseModel.fromJson(response.data);
+
+        print('TaskResponse success: ${taskResponse.success}');
+        print('TaskResponse data length: ${taskResponse.data.length}');
+
+        if (taskResponse.success) {
+          print('Task statuses before enrichment: ${taskResponse.data.map((t) => '${t.taskSubject}: status="${t.status}", isSubmitted=${t.isSubmitted}').toList()}');
+          
+          final enrichedTasks = await _enrichTasksWithCustomerNames(taskResponse.data);
+          _myAssignedTasks.value = enrichedTasks;
+          return TaskResponseModel(success: true, data: enrichedTasks);
+        }
+      }
+
+      return null;
+    } on DioException catch (e) {
+      String errorMessage = 'Failed to fetch tasks';
+
+      if (e.response != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        } else {
+          errorMessage = 'Error: ${e.response!.statusCode}';
+        }
+      } else if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        errorMessage = 'Connection timeout. Please check your internet.';
+      } else if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'Connection error. Check your internet.';
+      }
+
+      _errorMessage.value = errorMessage;
+      throw errorMessage;
+    } catch (e) {
+      final errorMessage = 'An unexpected error occurred: ${e.toString()}';
+      _errorMessage.value = errorMessage;
+      throw errorMessage;
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  /// Enrich a single task with customer name by fetching full task details
+  Future<TaskModel> _enrichTaskWithCustomerName(TaskModel taskAssignment) async {
+    print('--- Enriching task: ${taskAssignment.taskSubject} ---');
+    print('  Initial: taskId=${taskAssignment.taskId}, status="${taskAssignment.status}", isSubmitted=${taskAssignment.isSubmitted}');
+    
+    if (taskAssignment.taskId == null) {
+      print('  No taskId, returning as-is');
+      return taskAssignment;
+    }
+
+    final taskId = taskAssignment.taskId!;
+
+    if (_taskDetailsCache.containsKey(taskId)) {
+      final cachedDetails = _taskDetailsCache[taskId]!;
+      final enriched = taskAssignment.copyWith(
+        customerName: cachedDetails.customerName,
+        location: taskAssignment.location.isEmpty ? cachedDetails.location : taskAssignment.location,
+      );
+      print('  From cache - final status="${enriched.status}", isSubmitted=${enriched.isSubmitted}');
+      return enriched;
+    }
+
+    try {
+      final fullTask = await getTaskById(taskId);
+
+      if (fullTask != null) {
+        _taskDetailsCache[taskId] = fullTask;
+        final enriched = taskAssignment.copyWith(
+          customerName: fullTask.customerName,
+          location: taskAssignment.location.isEmpty ? fullTask.location : taskAssignment.location,
+        );
+        print('  From API - final status="${enriched.status}", isSubmitted=${enriched.isSubmitted}');
+        return enriched;
+      }
+    } catch (e) {
+      print('Error enriching task $taskId: $e');
+    }
+
+    final result = taskAssignment;
+    print('  Using original - final status="${result.status}", isSubmitted=${result.isSubmitted}');
+    return result;
+  }
+
+  /// Enrich multiple tasks with customer names using controlled concurrency
+  /// Processes tasks in batches to avoid overwhelming the API
+  Future<List<TaskModel>> _enrichTasksWithCustomerNames(List<TaskModel> assignments) async {
+    print('=== ENRICHMENT DEBUG ===');
+    print('Total assignments to enrich: ${assignments.length}');
+    
+    if (assignments.isEmpty) {
+      return assignments;
+    }
+
+    final batchSize = 4;
+    final enrichedTasks = <TaskModel>[];
+ 
+    for (int i = 0; i < assignments.length; i += batchSize) {
+      final batch = assignments.sublist(i, (i + batchSize) < assignments.length ? (i + batchSize) : assignments.length);
+       
+      print('Processing batch $i-${i + batchSize - 1}');
+      final results = await Future.wait(
+        batch.map((task) => _enrichTaskWithCustomerName(task)),
+        eagerError: false,
+      );
+
+      enrichedTasks.addAll(results);
+    }
+
+    print('Total enriched tasks: ${enrichedTasks.length}');
+    print('Enriched task statuses: ${enrichedTasks.map((t) => '${t.taskSubject}: status="${t.status}", isSubmitted=${t.isSubmitted}').toList()}');
+    return enrichedTasks;
+  }
+   
   /// Create a new task (for supervisor)
   /// POST /tasks
   Future<Map<String, dynamic>?> createTask({

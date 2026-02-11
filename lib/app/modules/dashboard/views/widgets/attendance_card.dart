@@ -38,11 +38,14 @@ class AttendanceCard extends GetView<DashboardController> {
   }
 
   Widget _buildDateAndStatus() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Obx(
-          () => Text(
+    return Obx(() {
+      final attendance = controller.todayAttendance.value;
+      final statusInfo = _getStatusInfo(attendance);
+      
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
             controller.formattedDate,
             style: const TextStyle(
               color: Colors.black87,
@@ -50,24 +53,66 @@ class AttendanceCard extends GetView<DashboardController> {
               fontWeight: FontWeight.w500,
             ),
           ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.green.shade50,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            'Working',
-            style: TextStyle(
-              color: Colors.green.shade700,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: statusInfo['bgColor'],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              statusInfo['text'],
+              style: TextStyle(
+                color: statusInfo['textColor'],
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
+  }
+
+  Map<String, dynamic> _getStatusInfo(dynamic attendance) {
+    if (attendance == null) {
+      return {
+        'text': 'Not Checked In',
+        'bgColor': Colors.grey.shade100,
+        'textColor': Colors.grey.shade700,
+      };
+    }
+
+    // Check if checked out
+    if (attendance.hasCheckedOut) {
+      return {
+        'text': 'Checked Out',
+        'bgColor': Colors.blue.shade50,
+        'textColor': Colors.blue.shade700,
+      };
+    }
+
+    // Check if checked in
+    if (attendance.hasCheckedIn) {
+      // Check if late
+      if (attendance.lateDuration > 0) {
+        return {
+          'text': 'Late',
+          'bgColor': Colors.orange.shade50,
+          'textColor': Colors.orange.shade700,
+        };
+      }
+      return {
+        'text': 'Working',
+        'bgColor': Colors.green.shade50,
+        'textColor': Colors.green.shade700,
+      };
+    }
+
+    return {
+      'text': 'Not Checked In',
+      'bgColor': Colors.grey.shade100,
+      'textColor': Colors.grey.shade700,
+    };
   }
 
   Widget _buildWorkHours() {

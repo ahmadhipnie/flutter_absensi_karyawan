@@ -353,10 +353,8 @@ class TakeAttendanceController extends GetxController {
 
         print('clockIn: Now closing page...');
         // Close the page and return true
-        if (Get.isDialogOpen == false && Get.isBottomSheetOpen == false) {
-          Get.back(result: true);
-          print('clockIn: Get.back() called');
-        }
+        Get.back(result: true);
+        print('clockIn: Get.back() called');
       } else {
         print('clockIn: Failed! Success was false');
         Get.snackbar(

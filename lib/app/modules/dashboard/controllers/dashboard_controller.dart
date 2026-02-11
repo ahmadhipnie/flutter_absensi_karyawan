@@ -8,6 +8,7 @@ import '../../../data/services/department_service.dart';
 import '../../../data/services/location_service.dart';
 import '../../../data/services/attendance_service.dart';
 import '../../../data/services/schedule_service.dart';
+import '../../../data/services/notification_service.dart';
 import '../../../data/models/department_model.dart';
 import '../../../data/models/task_item.dart';
 import '../../../data/models/task_model.dart' as data_model;
@@ -113,6 +114,7 @@ class DashboardController extends GetxController {
     _loadOngoingTasks();
     _loadCurrentLocation();
     _loadTodayAttendance();
+    loadNotificationCount();
     _startUIUpdateTimer();
   }
 
@@ -519,6 +521,25 @@ class DashboardController extends GetxController {
   /// Search handler
   void onSearchChanged(String value) {
     searchQuery.value = value;
+  }
+
+  final unreadNotificationCount = 0.obs;
+
+  /// Load notification count for dashboard badge
+  Future<void> loadNotificationCount() async {
+    try {
+      final notificationService = Get.find<NotificationService>();
+      
+      if (notificationService != null) {
+        final response = await notificationService.getMyAnnouncements();
+        
+        if (response != null && response.success) {
+          unreadNotificationCount.value = response.data.length;
+        }
+      }
+    } catch (e) {
+      print('Error loading notification count: $e');
+    }
   }
 
   /// Navigate to notifications

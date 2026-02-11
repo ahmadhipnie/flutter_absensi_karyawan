@@ -4,6 +4,7 @@ import '../../../data/models/task_model.dart';
 import '../../../data/models/task_assignment_model.dart';
 import '../../../data/models/task_submission_model.dart';
 import '../../../data/services/task_service.dart';
+import '../../../core/config/app_config.dart';
 
 class TaskDetailController extends GetxController
     with GetSingleTickerProviderStateMixin {
@@ -122,28 +123,31 @@ class TaskDetailController extends GetxController
     lateEmployees.clear();
     assignedEmployees.clear();
     _submissionsCache.clear();
-    
+
     int approvedTotal = 0;
     int lateTotal = 0;
 
     for (var assignment in assignments) {
+      // Get profile photo URL from API response
+      final profilePhotoUrl = AppConfig.getProfilePhotoUrl(assignment.photoProfile);
+
       if (assignment.isSubmitted) {
         // Fetch submission details
         final submissions = await _taskService.getTaskSubmissions(
           assignmentId: assignment.id,
         );
-        
+
         if (submissions.isNotEmpty) {
           final submission = submissions.first;
           _submissionsCache[assignment.id] = submission;
 
           // Check if submission is late
           final isLate = _isSubmissionLate(submission.submittedAt, dueDate.value);
-          
+
           final employee = EmployeeWorkModel(
             id: assignment.userId.toString(),
             name: assignment.username,
-            avatarUrl: 'https://i.pravatar.cc/150?u=${assignment.userEmail}',
+            avatarUrl: profilePhotoUrl ?? '',
             status: isLate ? EmployeeWorkStatus.late : EmployeeWorkStatus.onTime,
             assignmentId: assignment.id,
             submissionDate: submission.submittedAt,
@@ -162,7 +166,7 @@ class TaskDetailController extends GetxController
         final employee = EmployeeWorkModel(
           id: assignment.userId.toString(),
           name: assignment.username,
-          avatarUrl: 'https://i.pravatar.cc/150?u=${assignment.userEmail}',
+          avatarUrl: profilePhotoUrl ?? '',
           status: EmployeeWorkStatus.notSubmitted,
           assignmentId: assignment.id,
         );

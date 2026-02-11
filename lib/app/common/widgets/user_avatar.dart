@@ -22,26 +22,37 @@ class UserAvatar extends StatelessWidget {
     final initials = _getInitials(name);
     final defaultColor = backgroundColor ?? AppTheme.primaryColor.value;
 
+    // If imageUrl is provided and not empty, try to load network image
     if (imageUrl != null && imageUrl!.isNotEmpty) {
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          image: DecorationImage(
-            image: NetworkImage(imageUrl!),
-            fit: BoxFit.cover,
-            onError: (_, __) {},
-          ),
+      return ClipOval(
+        child: Image.network(
+          imageUrl!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback to initials when image fails to load
+            return _buildFallback(initials, defaultColor);
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            // Show placeholder while loading
+            return _buildFallback(initials, defaultColor);
+          },
         ),
       );
     }
 
+    // No image URL provided, show initials
+    return _buildFallback(initials, defaultColor);
+  }
+
+  Widget _buildFallback(String initials, int color) {
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Color(defaultColor),
+        color: Color(color),
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,

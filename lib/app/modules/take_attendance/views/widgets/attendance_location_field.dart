@@ -8,6 +8,11 @@ class AttendanceLocationField extends GetView<TakeAttendanceController> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if controller is still registered before accessing
+    if (!Get.isRegistered<TakeAttendanceController>(tag: tag)) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../data/services/task_service.dart';
 import '../../../data/models/task_comment_model.dart';
+import '../../../core/config/app_config.dart';
 import 'task_detail_controller.dart';
 
 class EmployeeDetailController extends GetxController {
@@ -106,27 +108,48 @@ class EmployeeDetailController extends GetxController {
 
       if (submissions.isNotEmpty) {
         final submission = submissions.first;
-        
-        // Add submitted file to output files
-        if (submission.fileName != null && submission.fileName!.isNotEmpty) {
-          final fileExtension = submission.fileName!.split('.').last.toLowerCase();
-          String fileType = 'file';
-          
-          if (['pdf'].contains(fileExtension)) {
-            fileType = 'pdf';
-          } else if (['doc', 'docx'].contains(fileExtension)) {
-            fileType = 'doc';
-          } else if (['xls', 'xlsx'].contains(fileExtension)) {
-            fileType = 'xls';
-          } else if (['jpg', 'jpeg', 'png', 'gif'].contains(fileExtension)) {
-            fileType = 'image';
+
+        // Debug: print the submission details
+        print('=== SUBMISSION DETAILS ===');
+        print('SubmissionType: ${submission.submissionType}');
+        print('FileName: ${submission.fileName}');
+        print('FilePath: ${submission.filePath}');
+        print('ContentUrl: ${submission.contentUrl}');
+
+        // Handle different submission types
+        if (submission.submissionType == 'url') {
+          // Link submission
+          if (submission.contentUrl != null && submission.contentUrl!.isNotEmpty) {
+            outputFiles.add({
+              'name': submission.contentUrl!,
+              'type': 'link',
+              'path': submission.contentUrl!,
+            });
           }
-          
-          outputFiles.add({
-            'name': submission.fileName!,
-            'type': fileType,
-            'path': submission.filePath ?? '',
-          });
+        } else {
+          // File submission
+          if (submission.fileName != null && submission.fileName!.isNotEmpty) {
+            final fileExtension = submission.fileName!.split('.').last.toLowerCase();
+            String iconType = 'file';
+
+            if (['pdf'].contains(fileExtension)) {
+              iconType = 'pdf';
+            } else if (['doc', 'docx'].contains(fileExtension)) {
+              iconType = 'doc';
+            } else if (['xls', 'xlsx'].contains(fileExtension)) {
+              iconType = 'xls';
+            } else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileExtension)) {
+              iconType = 'image';
+            } else if (['txt'].contains(fileExtension)) {
+              iconType = 'txt';
+            }
+
+            outputFiles.add({
+              'name': submission.fileName!,
+              'type': iconType,
+              'path': submission.filePath ?? '',
+            });
+          }
         }
       }
     } catch (e) {
@@ -227,9 +250,54 @@ class EmployeeDetailController extends GetxController {
     }
   }
 
-  /// Open output file
-  void openOutputFile(String fileName) {
-    Get.snackbar('Open File', fileName);
+  /// Open output file or link - uses filePath from submissions API
+  Future<void> openOutputFile(String filePath, {String fileType = 'file'}) async {
+    if (filePath.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'File path is empty',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    try {
+      String? targetUrl;
+
+      if (fileType == 'link') {
+        // Link submission - open directly
+        targetUrl = filePath;
+      } else {
+        // File submission - use preview endpoint
+        targetUrl = AppConfig.getTaskFilePreviewUrl(filePath);
+      }
+
+      if (targetUrl == null || targetUrl.isEmpty) {
+        Get.snackbar(
+          'Error',
+          'Invalid URL',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return;
+      }
+
+      print('Opening URL in browser: $targetUrl');
+
+      final uri = Uri.parse(targetUrl);
+
+      // Open in external browser
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      print('Error opening file: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to open file: ${e.toString()}',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 
   @override

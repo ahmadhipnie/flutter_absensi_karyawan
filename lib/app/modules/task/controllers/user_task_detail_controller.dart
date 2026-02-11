@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../data/models/task_model.dart' as data_model;
 import '../../../data/models/task_item.dart';
+import '../../../data/models/task_submission_model.dart';
 import '../../../data/services/task_service.dart';
 import '../../../core/config/app_config.dart';
 import '../../../utils/date_helper.dart';
@@ -38,6 +39,8 @@ class UserTaskDetailController extends GetxController {
   final submittedFileName = ''.obs;
   final submittedDate = ''.obs;
   final submittedFilePath = ''.obs;
+  final submittedContentType = ''.obs; // 'file' or 'link'
+  final submittedContentUrl = ''.obs; // URL for link submissions
   final isLoadingSubmissions = false.obs;
 
   @override
@@ -67,20 +70,25 @@ class UserTaskDetailController extends GetxController {
       description.value = task.taskDescription;
       location.value = task.location;
       customerName.value = ''; // Not available from API
-      
+
       // Check if task is already submitted
       isTaskSubmitted.value = task.isSubmitted;
-      
+
+      // Fetch full task details if location is empty
+      if (location.value.isEmpty && taskId.value != null) {
+        await _loadFullTaskDetails();
+      }
+
       // If submitted, fetch submission details
       if (task.isSubmitted && assignmentId.value != null) {
         await _loadSubmissionDetails();
       }
-      
+
       // Load comment count
       if (assignmentId.value != null) {
         await _loadCommentsCount();
       }
-      
+
       return;
     }
 
@@ -98,6 +106,23 @@ class UserTaskDetailController extends GetxController {
 
     // Fallback to mock data
     _loadMockData();
+  }
+
+  /// Load full task details to get location and other missing fields
+  Future<void> _loadFullTaskDetails() async {
+    if (taskId.value == null) return;
+
+    try {
+      final fullTask = await _taskService.getTaskById(taskId.value!);
+      if (fullTask != null) {
+        location.value = fullTask.location;
+        customerName.value = fullTask.customerName ?? '';
+        print('Full task details loaded: location=${fullTask.location}, customer=${fullTask.customerName}');
+      }
+    } catch (e) {
+      print('Error loading full task details: $e');
+      // Don't show error, just continue with available data
+    }
   }
 
   /// Load mock data as fallback
@@ -137,11 +162,25 @@ class UserTaskDetailController extends GetxController {
 
       if (submissions.isNotEmpty) {
         final latestSubmission = submissions.first;
-        submittedFileName.value = latestSubmission.fileName ?? 'Untitled';
+
+        // Store submission type
+        submittedContentType.value = latestSubmission.submissionType;
+
+        if (latestSubmission.submissionType == 'url') {
+          // URL submission
+          submittedFileName.value = latestSubmission.contentUrl ?? 'Untitled Link';
+          submittedContentUrl.value = latestSubmission.contentUrl ?? '';
+          submittedFilePath.value = '';
+        } else {
+          // File submission
+          submittedFileName.value = latestSubmission.fileName ?? 'Untitled';
+          submittedFilePath.value = latestSubmission.filePath ?? '';
+          submittedContentUrl.value = '';
+        }
+
         submittedDate.value = _formatSubmissionDate(
           latestSubmission.submittedAt ?? DateTime.now()
         );
-        submittedFilePath.value = latestSubmission.filePath ?? '';
       }
     } catch (e) {
       print('Error loading submissions: $e');
@@ -155,18 +194,28 @@ class UserTaskDetailController extends GetxController {
 
   /// Load comments count from API
   Future<void> _loadCommentsCount() async {
-    if (assignmentId.value == null) return;
+    if (assignmentId.value == null) {
+      print('loadCommentsCount: assignmentId is null');
+      return;
+    }
 
     try {
+      print('loadCommentsCount: Fetching comments for assignmentId: ${assignmentId.value}');
       final comments = await _taskService.getAssignmentComments(
         assignmentId: assignmentId.value!,
       );
+      print('loadCommentsCount: Found ${comments.length} comments');
       commentsCount.value = comments.length;
     } catch (e) {
       print('Error loading comments count: $e');
       // Don't show error, just keep count at 0
       commentsCount.value = 0;
     }
+  }
+
+  /// Refresh comment count (call when returning from comments screen)
+  Future<void> refreshCommentCount() async {
+    await _loadCommentsCount();
   }
 
   /// Format date with time (WIB)
@@ -418,41 +467,74 @@ class UserTaskDetailController extends GetxController {
     try {
       isSubmitting.value = true;
 
-      // Currently, we'll submit the first file
-      // TODO: Handle multiple files if needed
-      final firstFile = uploadedFiles.first;
+      // Separate files and links
+      final filePaths = <String>[];
+      final linkFiles = <String>[];
 
-      if (firstFile['type'] == 'LINK') {
-        // TODO: Handle link submission if API supports it
+      for (var file in uploadedFiles) {
+        if (file['type'] == 'LINK') {
+          final link = file['link'] as String?;
+          if (link != null && link.isNotEmpty) {
+            linkFiles.add(link);
+          }
+        } else {
+          final path = file['path'] as String?;
+          if (path != null && path.isNotEmpty) {
+            filePaths.add(path);
+          }
+        }
+      }
+
+      // Validate we have something to submit
+      if (filePaths.isEmpty && linkFiles.isEmpty) {
         Get.snackbar(
-          'Info',
-          'Link submission is not yet implemented',
+          'Error',
+          'No valid files or links to submit',
           snackPosition: SnackPosition.BOTTOM,
         );
         return;
       }
 
-      final filePath = firstFile['path'] as String;
+      TaskSubmissionResponseModel? lastResponse;
 
-      final response = await _taskService.submitTaskWork(
-        assignmentId: assignmentId.value!,
-        filePath: filePath,
-        submissionType: 'file',
-      );
+      // Submit all files
+      if (filePaths.isNotEmpty) {
+        final response = await _taskService.submitTaskWork(
+          assignmentId: assignmentId.value!,
+          filePaths: filePaths,
+          submissionType: 'file',
+        );
+        if (response != null) {
+          lastResponse = response;
+        }
+      }
 
-      if (response != null && response.success) {
+      // Submit all links
+      if (linkFiles.isNotEmpty) {
+        for (var link in linkFiles) {
+          final response = await _taskService.submitTaskLink(
+            assignmentId: assignmentId.value!,
+            linkUrl: link,
+          );
+          if (response != null) {
+            lastResponse = response;
+          }
+        }
+      }
+
+      if (lastResponse != null && lastResponse.success) {
         // Update submission state
         isTaskSubmitted.value = true;
-        
+
         // Clear uploaded files list
         uploadedFiles.clear();
-        
+
         // Reload submission details from API to get accurate info
         await _loadSubmissionDetails();
-        
+
         Get.snackbar(
           'Success',
-          response.message,
+          lastResponse.message,
           snackPosition: SnackPosition.BOTTOM,
           backgroundColor: Colors.green,
           colorText: Colors.white,
@@ -509,44 +591,49 @@ class UserTaskDetailController extends GetxController {
     }
   }
 
-  /// Open submitted file in browser
+  /// Open submitted file or link in browser
   Future<void> openSubmittedFile() async {
-    if (submittedFilePath.value.isEmpty) {
-      Get.snackbar(
-        'Error',
-        'File path not available',
-        snackPosition: SnackPosition.BOTTOM,
-      );
-      return;
-    }
-
     try {
-      final fileUrl = AppConfig.getTaskFileUrl(submittedFilePath.value);
-      
-      if (fileUrl == null) {
+      String? targetUrl;
+
+      if (submittedContentType.value == 'url') {
+        // URL submission - open the content URL directly
+        targetUrl = submittedContentUrl.value;
+      } else {
+        // File submission - use preview endpoint
+        if (submittedFilePath.value.isEmpty) {
+          Get.snackbar(
+            'Error',
+            'File path not available',
+            snackPosition: SnackPosition.BOTTOM,
+          );
+          return;
+        }
+        targetUrl = AppConfig.getTaskFilePreviewUrl(submittedFilePath.value);
+      }
+
+      if (targetUrl == null || targetUrl.isEmpty) {
         Get.snackbar(
           'Error',
-          'Invalid file URL',
+          'Invalid URL',
           snackPosition: SnackPosition.BOTTOM,
         );
         return;
       }
 
-      final uri = Uri.parse(fileUrl);
-      
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        Get.snackbar(
-          'Error',
-          'Could not open file',
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
+      print('Opening URL in browser: $targetUrl');
+
+      final uri = Uri.parse(targetUrl);
+
+      // Open in external browser
+      await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
     } catch (e) {
       Get.snackbar(
         'Error',
-        'Failed to open file: ${e.toString()}',
+        'Failed to open: ${e.toString()}',
         snackPosition: SnackPosition.BOTTOM,
       );
     }

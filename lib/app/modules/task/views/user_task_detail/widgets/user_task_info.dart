@@ -11,9 +11,9 @@ class UserTaskInfo extends GetView<UserTaskDetailController> {
     return AppCardContainer(
       child: Column(
         children: [
-          _buildInfoRow('Customer Name', controller.customerName.value),
+          Obx(() => _buildInfoRow('Customer Name', controller.customerName.value)),
           const SizedBox(height: 16),
-          _buildInfoRow('Location', controller.location.value),
+          Obx(() => _buildInfoRow('Location', controller.location.value)),
         ],
       ),
     );
@@ -31,12 +31,16 @@ class UserTaskInfo extends GetView<UserTaskDetailController> {
             fontWeight: FontWeight.w400,
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Colors.black,
-            fontWeight: FontWeight.w500,
+        Flexible(
+          child: Text(
+            value.isEmpty ? '-' : value,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.right,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

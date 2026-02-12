@@ -9,6 +9,7 @@ import '../../../data/services/location_service.dart';
 import '../../../data/services/attendance_service.dart';
 import '../../../data/services/schedule_service.dart';
 import '../../../data/services/notification_service.dart';
+import '../../../data/services/notification_read_storage.dart';
 import '../../../data/models/department_model.dart';
 import '../../../data/models/task_item.dart';
 import '../../../data/models/task_model.dart' as data_model;
@@ -46,6 +47,15 @@ class DashboardController extends GetxController {
   AttendanceService? get _attendanceService {
     try {
       return Get.find<AttendanceService>();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Notification Read Storage
+  NotificationReadStorage? get _readStorage {
+    try {
+      return Get.find<NotificationReadStorage>();
     } catch (e) {
       return null;
     }
@@ -529,13 +539,13 @@ class DashboardController extends GetxController {
   Future<void> loadNotificationCount() async {
     try {
       final notificationService = Get.find<NotificationService>();
-      
-      if (notificationService != null) {
-        final response = await notificationService.getMyAnnouncements();
-        
-        if (response != null && response.success) {
-          unreadNotificationCount.value = response.data.length;
-        }
+      final storage = _readStorage;
+      final response = await notificationService.getMyAnnouncements();
+
+      if (response != null && response.success) {
+        // Calculate unread count based on locally stored read IDs
+        final allIds = response.data.map((n) => n.id).toList();
+        unreadNotificationCount.value = storage?.getUnreadCount(allIds) ?? allIds.length;
       }
     } catch (e) {
       print('Error loading notification count: $e');
@@ -544,7 +554,10 @@ class DashboardController extends GetxController {
 
   /// Navigate to notifications
   void openNotifications() {
-    Get.toNamed(Routes.NOTIFICATIONS);
+    Get.toNamed(Routes.NOTIFICATIONS)?.then((_) {
+      // Refresh badge count when returning from notifications
+      loadNotificationCount();
+    });
   }
 
   /// Navigate to profile

@@ -104,14 +104,55 @@ class MemberHeaderSimple extends GetView<DashboardController> {
   }
 
   Widget _buildNotificationButton() {
-    return GestureDetector(
-      onTap: controller.openNotifications,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        child: const Icon(
-          Icons.notifications_outlined,
+    return Obx(() {
+      final unreadCount = controller.unreadNotificationCount.value;
+
+      return GestureDetector(
+        onTap: controller.openNotifications,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Icon(
+                Icons.notifications_outlined,
+                color: Colors.white,
+                size: 28,
+              ),
+              if (unreadCount > 0)
+                Positioned(
+                  right: -4,
+                  top: -4,
+                  child: _buildBadge(unreadCount),
+                ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildBadge(int count) {
+    // Show "99+" for counts >= 100
+    final displayText = count >= 100 ? '99+' : count.toString();
+    final badgeWidth = displayText.length == 1 ? 18.0 : displayText.length == 2 ? 24.0 : 30.0;
+
+    return Container(
+      width: badgeWidth,
+      height: 18,
+      decoration: BoxDecoration(
+        color: Colors.red,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: const Color(0xFF003AE6), width: 1.5),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        displayText,
+        style: const TextStyle(
           color: Colors.white,
-          size: 28,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          height: 1.0,
         ),
       ),
     );

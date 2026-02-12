@@ -2,6 +2,7 @@ import 'package:get/get.dart';
 import '../../../data/services/task_service.dart';
 import '../../../data/services/chat_service.dart';
 import '../../../data/services/notification_service.dart';
+import '../../../data/services/notification_read_storage.dart';
 import '../../dashboard/controllers/dashboard_controller.dart';
 import '../../task/controllers/task_controller.dart';
 import '../../community/controllers/community_controller.dart';
@@ -17,6 +18,7 @@ class NavigationBinding extends Bindings {
     Get.lazyPut<TaskService>(() => TaskService(), fenix: true);
     Get.lazyPut<ChatService>(() => ChatService(), fenix: true);
     Get.lazyPut<NotificationService>(() => NotificationService(), fenix: true);
+    Get.lazyPut<NotificationReadStorage>(() => NotificationReadStorage(), fenix: true);
 
     Get.lazyPut<NavigationController>(() => NavigationController());
     Get.lazyPut<DashboardController>(() => DashboardController());

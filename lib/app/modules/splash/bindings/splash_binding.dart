@@ -1,7 +1,9 @@
 import 'package:get/get.dart';
+import '../../../core/config/fcm_service.dart';
 import '../../../data/providers/api_provider.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../data/services/attendance_service.dart';
+import '../../../data/services/device_token_service.dart';
 import '../../../data/services/user_service.dart';
 import '../controllers/splash_controller.dart';
 
@@ -26,6 +28,16 @@ class SplashBinding extends Bindings {
     // Initialize UserService as permanent singleton
     if (!Get.isRegistered<UserService>()) {
       Get.put<UserService>(UserService(), permanent: true);
+    }
+
+    // Initialize DeviceTokenService as permanent singleton
+    if (!Get.isRegistered<DeviceTokenService>()) {
+      Get.put<DeviceTokenService>(DeviceTokenService(), permanent: true);
+    }
+
+    // Initialize FCM Service as permanent singleton
+    if (!Get.isRegistered<FcmService>()) {
+      Get.put<FcmService>(FcmService(), permanent: true);
     }
 
     Get.put<SplashController>(SplashController());

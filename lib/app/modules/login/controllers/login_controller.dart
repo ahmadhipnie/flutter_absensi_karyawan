@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../../core/config/fcm_service.dart';
 import '../../../data/services/auth_service.dart';
 import '../../../routes/app_pages.dart';
 
@@ -70,6 +72,9 @@ class LoginController extends GetxController {
       if (response != null && response.success) {
         _showSuccessSnackbar(response.message);
 
+        // Register FCM token with backend after successful login
+        _registerFcmToken();
+
         // Navigate to main layout with bottom nav
         Get.offAllNamed(Routes.MAIN);
       } else {
@@ -116,5 +121,17 @@ class LoginController extends GetxController {
       message,
       snackPosition: SnackPosition.TOP,
     );
+  }
+
+  /// Register FCM token with backend (fire and forget)
+  void _registerFcmToken() {
+    try {
+      final fcmService = Get.find<FcmService>();
+      fcmService.registerTokenWithBackend();
+    } catch (e) {
+      if (kDebugMode) {
+        print('⚠️ FCM token registration skipped: $e');
+      }
+    }
   }
 }

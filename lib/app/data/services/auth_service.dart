@@ -1,9 +1,11 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/config/fcm_service.dart';
 import '../models/login_response_model.dart';
 import '../models/user_model.dart';
 import '../providers/api_provider.dart';
@@ -157,8 +159,17 @@ class AuthService extends GetxService {
   /// Logout user
   Future<void> logout() async {
     try {
-      // TODO: Call API to invalidate token if needed
-      // await _apiProvider.post('/users/logout');
+      // Remove FCM token from backend before logout
+      try {
+        if (Get.isRegistered<FcmService>()) {
+          final fcmService = Get.find<FcmService>();
+          await fcmService.removeTokenFromBackend();
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('⚠️ FCM token removal skipped: $e');
+        }
+      }
 
       // Clear local data
       _currentUser.value = null;

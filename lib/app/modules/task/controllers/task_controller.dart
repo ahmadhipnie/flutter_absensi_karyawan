@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/task_model.dart' as data_model;
+import '../../../data/models/task_assignment_model.dart';
 import '../../../data/services/task_service.dart';
 import '../../../utils/date_helper.dart';
 import '../../dashboard/controllers/dashboard_controller.dart';
@@ -29,15 +30,18 @@ class TaskController extends GetxController {
   // Observable list of tasks
   final RxList<data_model.TaskModel> tasks = <data_model.TaskModel>[].obs;
 
-  // Filter options - different for supervisor and member
+  // Map to store computed effective status for supervisor tasks (taskId -> effectiveStatus)
+  // The effective status is computed from the aggregate of all member assignment statuses
+  final Map<int, String> _effectiveStatusMap = {};
+
+  // Filter options - same status filters for both supervisor and member
   List<String> get filters {
-    if (isSupervisor) {
-      // Supervisor sees department filters
-      return ['All', 'Engineering', 'Marketing', 'Sales', 'HR'];
-    } else {
-      // Member sees status filters
-      return ['All', 'Pending', 'In Progress', 'Completed', 'Cancelled'];
-    }
+    // if (isSupervisor) {
+    //   // Supervisor sees department filters
+    //   return ['All', 'Engineering', 'Marketing', 'Sales', 'HR'];
+    // }
+    // Status filters for all roles
+    return ['All', 'Pending', 'In Progress', 'Completed', 'Cancelled'];
   }
 
   @override
@@ -89,15 +93,50 @@ class TaskController extends GetxController {
   }
 
   /// Fetch all tasks from API (for supervisor role)
+  /// Also fetches each task's assignments to compute effective status
   Future<void> fetchAllTasks() async {
     try {
       isLoading.value = true;
       errorMessage.value = null;
+      _effectiveStatusMap.clear();
 
       final response = await _taskService.getAllTasks();
 
       if (response != null && response.success) {
         tasks.value = response.data;
+
+        // Fetch assignments for each task to compute effective status
+        for (final task in response.data) {
+          try {
+            final taskDetail = await _taskService.getTaskWithAssignments(
+              task.id,
+            );
+            if (taskDetail != null && taskDetail.assignments.isNotEmpty) {
+              final effectiveStatus = _computeEffectiveStatus(
+                taskDetail.assignments,
+              );
+              _effectiveStatusMap[task.id] = effectiveStatus;
+              print(
+                '📋 Task "${task.taskSubject}" -> API status="${task.status}", effective="${effectiveStatus}"',
+              );
+            } else {
+              // No assignments, use the task's own status
+              _effectiveStatusMap[task.id] = task.status;
+              print(
+                '📋 Task "${task.taskSubject}" -> API status="${task.status}" (no assignments)',
+              );
+            }
+          } catch (e) {
+            // If fetching detail fails, fall back to the task's own status
+            _effectiveStatusMap[task.id] = task.status;
+            print(
+              '📋 Task "${task.taskSubject}" -> API status="${task.status}" (detail fetch failed: $e)',
+            );
+          }
+        }
+
+        // Trigger UI refresh after effective statuses are computed
+        tasks.refresh();
       }
     } catch (e) {
       errorMessage.value = e.toString();
@@ -105,6 +144,45 @@ class TaskController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// Compute the effective (aggregate) status from all member assignment statuses.
+  ///
+  /// Logic:
+  /// - If ALL assignments are 'completed' -> 'completed'
+  /// - If ALL assignments are 'cancelled' -> 'cancelled'
+  /// - If ANY assignment is 'in_progress' (and not all completed) -> 'in_progress'
+  /// - Otherwise -> 'pending'
+  String _computeEffectiveStatus(List<TaskAssignmentModel> assignments) {
+    if (assignments.isEmpty) return 'pending';
+
+    final statuses = assignments.map((a) => a.status.toLowerCase()).toList();
+
+    // All completed
+    if (statuses.every((s) => s == 'completed')) {
+      return 'completed';
+    }
+
+    // All cancelled
+    if (statuses.every((s) => s == 'cancelled' || s == 'canceled')) {
+      return 'cancelled';
+    }
+
+    // Any in_progress or completed (but not all completed) -> in_progress
+    if (statuses.any((s) => s == 'in_progress' || s == 'completed')) {
+      return 'in_progress';
+    }
+
+    // Default: pending
+    return 'pending';
+  }
+
+  /// Get the effective status for a task (supervisor: computed from assignments, member: task's own status)
+  String _getEffectiveStatus(data_model.TaskModel task) {
+    if (isSupervisor && _effectiveStatusMap.containsKey(task.id)) {
+      return _effectiveStatusMap[task.id]!;
+    }
+    return task.status;
   }
 
   /// Get tasks grouped by month
@@ -126,9 +204,15 @@ class TaskController extends GetxController {
     );
   }
 
-  /// Normalize status by removing underscores and hyphens (for comparison)
+  /// Normalize status by removing underscores and hyphens, and unifying spelling (for comparison)
   String _normalizeStatus(String status) {
-    return status.toLowerCase().replaceAll('_', ' ').replaceAll('-', ' ');
+    String normalized = status
+        .toLowerCase()
+        .replaceAll('_', ' ')
+        .replaceAll('-', ' ');
+    // Unify British/American spelling: "cancelled" -> "canceled"
+    normalized = normalized.replaceAll('cancelled', 'canceled');
+    return normalized;
   }
 
   /// Get filtered tasks based on selected status filter
@@ -137,21 +221,12 @@ class TaskController extends GetxController {
       return tasks;
     }
 
-    if (isSupervisor) {
-      // Filter by department for supervisor
-      return tasks.where((task) {
-        // Assuming task has a department field, adjust based on actual model
-        // For now, filter by location as department proxy
-        return task.location.toLowerCase() ==
-            selectedFilter.value.toLowerCase();
-      }).toList();
-    } else {
-      // Filter by status for member (with normalized comparison)
-      return tasks.where((task) {
-        return _normalizeStatus(task.status) ==
-            _normalizeStatus(selectedFilter.value);
-      }).toList();
-    }
+    // Filter by effective status (uses computed aggregate for supervisor)
+    return tasks.where((task) {
+      final effectiveStatus = _getEffectiveStatus(task);
+      return _normalizeStatus(effectiveStatus) ==
+          _normalizeStatus(selectedFilter.value);
+    }).toList();
   }
 
   /// Parse month key string to DateTime for sorting

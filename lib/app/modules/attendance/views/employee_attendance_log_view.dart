@@ -7,8 +7,14 @@ import '../../../data/models/attendance_model.dart';
 class EmployeeAttendanceLogView extends GetView<AttendanceController> {
   const EmployeeAttendanceLogView({super.key});
 
+  // Selected month for filtering (reactive)
+  static final _selectedMonth = DateTime.now().obs;
+
   @override
   Widget build(BuildContext context) {
+    // Reset to current month each time the view is opened
+    _selectedMonth.value = DateTime.now();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -29,50 +35,156 @@ class EmployeeAttendanceLogView extends GetView<AttendanceController> {
         centerTitle: false,
         titleSpacing: 0,
       ),
-      body: Obx(() {
-        if (controller.isLoadingAllAttendances.value) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
+      body: Column(
+        children: [
+          // Month selector
+          _buildMonthSelector(),
+          // Attendance list
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoadingAllAttendances.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-        final attendances = controller.allAttendances;
+              final filteredAttendances = _getFilteredAttendances();
 
-        if (attendances.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade400),
-                const SizedBox(height: 16),
-                Text(
-                  'No attendance records',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey.shade600,
+              if (filteredAttendances.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.inbox_outlined,
+                        size: 64,
+                        color: Colors.grey.shade400,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No attendance records',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'for the selected month',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    ],
                   ),
+                );
+              }
+
+              // Group attendances by date
+              final groupedAttendances = _groupAttendancesByDate(
+                filteredAttendances,
+              );
+
+              return RefreshIndicator(
+                onRefresh: controller.refreshAttendances,
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  itemCount: groupedAttendances.length,
+                  itemBuilder: (context, index) {
+                    final entry = groupedAttendances.entries.elementAt(index);
+                    return _buildDateSection(entry.key, entry.value);
+                  },
                 ),
-              ],
-            ),
-          );
-        }
-
-        // Group attendances by date
-        final groupedAttendances = _groupAttendancesByDate(attendances);
-
-        return RefreshIndicator(
-          onRefresh: controller.refreshAttendances,
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            itemCount: groupedAttendances.length,
-            itemBuilder: (context, index) {
-              final entry = groupedAttendances.entries.elementAt(index);
-              return _buildDateSection(entry.key, entry.value);
-            },
+              );
+            }),
           ),
-        );
-      }),
+        ],
+      ),
     );
+  }
+
+  Widget _buildMonthSelector() {
+    return Obx(() {
+      final month = _selectedMonth.value;
+      const months = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ];
+      final formattedMonth = '${months[month.month - 1]} ${month.year}';
+
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade200),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  _selectedMonth.value = DateTime(
+                    _selectedMonth.value.year,
+                    _selectedMonth.value.month - 1,
+                  );
+                },
+                icon: Icon(Icons.chevron_left, color: Colors.grey[700]),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  formattedMonth,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                onPressed: () {
+                  _selectedMonth.value = DateTime(
+                    _selectedMonth.value.year,
+                    _selectedMonth.value.month + 1,
+                  );
+                },
+                icon: Icon(Icons.chevron_right, color: Colors.grey[700]),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  /// Filter attendances by selected month
+  List<AttendanceModel> _getFilteredAttendances() {
+    final month = _selectedMonth.value;
+    return controller.allAttendances.where((attendance) {
+      return attendance.date.year == month.year &&
+          attendance.date.month == month.month;
+    }).toList()..sort((a, b) => b.date.compareTo(a.date));
   }
 
   Map<String, List<AttendanceModel>> _groupAttendancesByDate(
@@ -93,8 +205,18 @@ class EmployeeAttendanceLogView extends GetView<AttendanceController> {
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -136,9 +258,7 @@ class EmployeeAttendanceLogView extends GetView<AttendanceController> {
                       'https://ui-avatars.com/api/?name=$username&background=random',
                     ),
               onBackgroundImageError: (_, __) {},
-              child: photoUrl == null
-                  ? null
-                  : null,
+              child: photoUrl == null ? null : null,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -157,10 +277,7 @@ class EmployeeAttendanceLogView extends GetView<AttendanceController> {
                     attendance.hasCheckedOut
                         ? 'Check in: ${attendance.clockInTime} | Check out: ${attendance.clockOutTime}'
                         : 'Check in on ${attendance.clockInTime}',
-                    style: TextStyle(
-                      color: Colors.grey.shade500,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
                   ),
                   if (attendance.email != null) ...[
                     const SizedBox(height: 2),

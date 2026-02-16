@@ -204,13 +204,24 @@ class AttendanceController extends GetxController {
 
     // Check if current time is past work end time
     final now = DateTime.now();
-    final workEndHour = int.tryParse(workEndTime.value) ?? 17; // Default 5 PM
+
+    // Parse workEndTime which is in "HH:MM" format (e.g., "12:29")
+    int workEndHour = 17; // Default 5 PM
+    int workEndMinute = 0;
+    final timeParts = workEndTime.value.split(':');
+    if (timeParts.length >= 2) {
+      workEndHour = int.tryParse(timeParts[0]) ?? 17;
+      workEndMinute = int.tryParse(timeParts[1]) ?? 0;
+    } else {
+      workEndHour = int.tryParse(workEndTime.value) ?? 17;
+    }
+
     final workEndDateTime = DateTime(
       now.year,
       now.month,
       now.day,
       workEndHour,
-      0,
+      workEndMinute,
     );
 
     // Can check out if current time is >= work end time
@@ -281,16 +292,16 @@ class AttendanceController extends GetxController {
     try {
       isLoadingSchedule.value = true;
       print('Loading schedule from API...');
-      
+
       final schedules = await _scheduleService.getSchedules();
-      
+
       if (schedules.isNotEmpty) {
         currentSchedule.value = schedules.first; // Use first schedule
-        
+
         // Update work times from schedule
         workStartTime.value = currentSchedule.value!.formattedStartTime;
         workEndTime.value = currentSchedule.value!.formattedEndTime;
-        
+
         print('Schedule loaded: ${workStartTime.value} - ${workEndTime.value}');
       } else {
         print('No schedules found, using default times');
@@ -317,34 +328,30 @@ class AttendanceController extends GetxController {
 
     // Show loading dialog
     Get.dialog(
-      const Center(
-        child: CircularProgressIndicator(
-          color: Colors.white,
-        ),
-      ),
+      const Center(child: CircularProgressIndicator(color: Colors.white)),
       barrierDismissible: false,
     );
 
     try {
       print('Updating schedule: $startTime - $endTime');
-      
+
       // Convert HH:MM to HH:MM:SS format for API
       final startTimeFormatted = '$startTime:00';
       final endTimeFormatted = '$endTime:00';
-      
+
       final updatedSchedule = await _scheduleService.updateSchedule(
         scheduleId: currentSchedule.value!.id,
         startTime: startTimeFormatted,
         endTime: endTimeFormatted,
       );
-      
+
       currentSchedule.value = updatedSchedule;
       workStartTime.value = updatedSchedule.formattedStartTime;
       workEndTime.value = updatedSchedule.formattedEndTime;
-      
+
       // Close loading dialog
       Get.back();
-      
+
       // Show success message
       Get.snackbar(
         'Success',
@@ -353,14 +360,16 @@ class AttendanceController extends GetxController {
         backgroundColor: Colors.green[100],
         duration: const Duration(seconds: 2),
       );
-      
-      print('Schedule update successful: ${workStartTime.value} - ${workEndTime.value}');
+
+      print(
+        'Schedule update successful: ${workStartTime.value} - ${workEndTime.value}',
+      );
     } catch (e) {
       print('Error updating schedule: $e');
-      
+
       // Close loading dialog
       Get.back();
-      
+
       // Show error message
       Get.snackbar(
         'Error',
@@ -391,7 +400,7 @@ class AttendanceController extends GetxController {
       isLoadingAllAttendances.value = true;
       final attendances = await _attendanceService.getAllAttendances();
       allAttendances.value = attendances;
-      
+
       // Process attendances to populate employee lists
       _processAttendances(attendances);
     } catch (e) {
@@ -407,7 +416,7 @@ class AttendanceController extends GetxController {
       isLoadingUsers.value = true;
       final users = await _userService.getUsers();
       allUsers.value = users;
-      
+
       // Re-process attendances with user list now available
       _processAttendances(allAttendances);
     } catch (e) {
@@ -433,43 +442,45 @@ class AttendanceController extends GetxController {
     for (final attendance in todayAttendances) {
       if (attendance.hasCheckedIn && attendance.username != null) {
         userIdsWithAttendance.add(attendance.userId);
-        clockedIn.add(EmployeeAttendance(
-          name: attendance.username!,
-          checkInTime: attendance.clockInTime,
-          avatarUrl: '', // Could be enhanced with user photo URL if available
-          status: attendance.hasCheckedOut 
-              ? 'Checked out at ${attendance.clockOutTime}'
-              : 'Check in on ${attendance.clockInTime}',
-        ));
+        clockedIn.add(
+          EmployeeAttendance(
+            name: attendance.username!,
+            checkInTime: attendance.clockInTime,
+            avatarUrl: '', // Could be enhanced with user photo URL if available
+            status: attendance.hasCheckedOut
+                ? 'Checked out at ${attendance.clockOutTime}'
+                : 'Check in on ${attendance.clockInTime}',
+          ),
+        );
       }
     }
 
     employeesClockedIn.value = clockedIn;
-    
+
     // Get list of employees who haven't clocked in today
     final notClockedIn = <EmployeeAttendance>[];
-    
+
     for (final user in allUsers) {
       // Only include members (not supervisors or other roles)
-      if (user.role.toLowerCase() == 'member' && !userIdsWithAttendance.contains(user.id)) {
-        notClockedIn.add(EmployeeAttendance(
-          name: user.displayName,
-          checkInTime: '-',
-          avatarUrl: user.photoProfile ?? '',
-          status: 'Not clocked in yet',
-        ));
+      if (user.role.toLowerCase() == 'member' &&
+          !userIdsWithAttendance.contains(user.id)) {
+        notClockedIn.add(
+          EmployeeAttendance(
+            name: user.displayName,
+            checkInTime: '-',
+            avatarUrl: user.photoProfile ?? '',
+            status: 'Not clocked in yet',
+          ),
+        );
       }
     }
-    
+
     employeesNotClockedIn.value = notClockedIn;
   }
 
   /// Refresh all attendances (can be called after check-in/out)
   Future<void> refreshAttendances() async {
-    await Future.wait([
-      _loadAllAttendances(),
-      _loadAllUsers(),
-    ]);
+    await Future.wait([_loadAllAttendances(), _loadAllUsers()]);
   }
 
   /// Load current location with address

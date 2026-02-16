@@ -41,7 +41,7 @@ class TaskController extends GetxController {
     //   return ['All', 'Engineering', 'Marketing', 'Sales', 'HR'];
     // }
     // Status filters for all roles
-    return ['All', 'Pending', 'In Progress', 'Completed', 'Canceled'];
+    return ['All', 'Pending', 'In Progress', 'Completed', 'Cancelled'];
   }
 
   @override
@@ -270,9 +270,13 @@ class TaskController extends GetxController {
     return '${months[date.month - 1]} ${date.year}';
   }
 
-  /// Select filter
+  /// Select filter (toggle: clicking the same filter resets to 'All')
   void selectFilter(String filter) {
-    selectedFilter.value = filter;
+    if (selectedFilter.value == filter) {
+      selectedFilter.value = 'All';
+    } else {
+      selectedFilter.value = filter;
+    }
   }
 
   /// Format date to display format (WIB)

@@ -37,9 +37,10 @@ class DashboardController extends GetxController {
       return null;
     }
   }
+
   // Department Service
   final DepartmentService _departmentService = DepartmentService();
-  
+
   // Schedule Service
   final ScheduleService _scheduleService = ScheduleService();
 
@@ -106,7 +107,8 @@ class DashboardController extends GetxController {
   final ongoingTasks = <DashboardTaskItem>[].obs;
 
   // Store full TaskModel for navigation (key: taskId)
-  final RxMap<int, data_model.TaskModel> _taskModelMap = <int, data_model.TaskModel>{}.obs;
+  final RxMap<int, data_model.TaskModel> _taskModelMap =
+      <int, data_model.TaskModel>{}.obs;
 
   // Loading state for tasks
   final isTasksLoading = false.obs;
@@ -142,7 +144,8 @@ class DashboardController extends GetxController {
       locationError.value = '';
 
       // Check and request permission first (this will show the prompt)
-      final permissionStatus = await _locationService.checkAndRequestPermission();
+      final permissionStatus = await _locationService
+          .checkAndRequestPermission();
 
       switch (permissionStatus) {
         case LocationPermissionStatus.granted:
@@ -181,20 +184,24 @@ class DashboardController extends GetxController {
     try {
       isLoadingSchedule.value = true;
       print('DashboardController - Loading schedule from API...');
-      
+
       final schedules = await _scheduleService.getSchedules();
-      
+
       if (schedules.isNotEmpty) {
         currentSchedule.value = schedules.first; // Use first schedule
-        
+
         // Update work times from schedule (with AM/PM)
         final startHour = currentSchedule.value!.startHour;
         final endHour = currentSchedule.value!.endHour;
-        
-        workStartTime.value = '${currentSchedule.value!.formattedStartTime} ${startHour < 12 ? 'AM' : 'PM'}';
-        workEndTime.value = '${currentSchedule.value!.formattedEndTime} ${endHour < 12 ? 'AM' : 'PM'}';
-        
-        print('DashboardController - Schedule loaded: ${workStartTime.value} - ${workEndTime.value}');
+
+        workStartTime.value =
+            '${currentSchedule.value!.formattedStartTime} ${startHour < 12 ? 'AM' : 'PM'}';
+        workEndTime.value =
+            '${currentSchedule.value!.formattedEndTime} ${endHour < 12 ? 'AM' : 'PM'}';
+
+        print(
+          'DashboardController - Schedule loaded: ${workStartTime.value} - ${workEndTime.value}',
+        );
       } else {
         print('DashboardController - No schedules found, using default times');
       }
@@ -229,10 +236,7 @@ class DashboardController extends GetxController {
           'Please enable location permission to get your current address.',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
           TextButton(
             onPressed: () {
               Get.back();
@@ -254,12 +258,31 @@ class DashboardController extends GetxController {
         userRole.value = user.role;
         userPosition.value = user.role;
         userAvatarUrl.value = user.avatarUrl; // Load avatar URL
-        
+
         // Load departments if user is supervisor
         if (isSupervisor) {
           loadDepartments();
+        } else {
+          // Load member's department from API
+          _loadUserDepartment(user.departmentId);
         }
       }
+    }
+  }
+
+  /// Load the member's department from API using department_id
+  Future<void> _loadUserDepartment(int? departmentId) async {
+    if (departmentId == null) return;
+
+    try {
+      final department = await _departmentService.getDepartmentById(
+        departmentId,
+      );
+      if (department != null) {
+        userDepartment.value = department;
+      }
+    } catch (e) {
+      print('Error loading user department: $e');
     }
   }
 
@@ -274,18 +297,21 @@ class DashboardController extends GetxController {
       // Only load tasks for member role
       if (userRole.value == 'member') {
         final response = await taskService.getMyTasksWithCustomerName();
- 
+
         print('=== DASHBOARD TASK DEBUG ===');
         print('Response is null: ${response == null}');
         print('Response success: ${response?.success}');
         print('Total tasks from API: ${response?.data?.length ?? 0}');
         if (response?.data != null && response!.data.isNotEmpty) {
-          print('Task statuses: ${response.data.map((t) => '${t.taskSubject}: status="${t.status}", isSubmitted=${t.isSubmitted}').toList()}');
+          print(
+            'Task statuses: ${response.data.map((t) => '${t.taskSubject}: status="${t.status}", isSubmitted=${t.isSubmitted}').toList()}',
+          );
         }
- 
+
         if (response != null && response.success) {
           // Normalize status by removing underscores (in_progress -> in progress)
-          final normalizeStatus = (String status) => status.toLowerCase().replaceAll('_', ' ');
+          final normalizeStatus = (String status) =>
+              status.toLowerCase().replaceAll('_', ' ');
 
           // Filter for tasks with in_progress status
           // NOTE: Removed !task.isSubmitted check because backend returns is_submitted=true for all tasks
@@ -296,16 +322,18 @@ class DashboardController extends GetxController {
           // Convert to DashboardTaskItem and store full model
           final dashboardItems = <DashboardTaskItem>[];
           _taskModelMap.clear();
- 
+
           for (final task in inProgressTasks) {
             // Skip tasks without taskId (shouldn't happen for my-assigned endpoint)
             if (task.taskId == null) continue;
-              
-            dashboardItems.add(DashboardTaskItem(
-              id: task.taskId.toString(),
-              title: task.taskSubject,
-              dueDate: task.dueDate,
-            ));
+
+            dashboardItems.add(
+              DashboardTaskItem(
+                id: task.taskId.toString(),
+                title: task.taskSubject,
+                dueDate: task.dueDate,
+              ),
+            );
             _taskModelMap[task.taskId!] = task;
           }
 
@@ -345,6 +373,9 @@ class DashboardController extends GetxController {
     await _loadTodayAttendance();
     if (isSupervisor) {
       await loadDepartments();
+    } else {
+      final user = _authService?.currentUser;
+      await _loadUserDepartment(user?.departmentId);
     }
   }
 
@@ -386,7 +417,9 @@ class DashboardController extends GetxController {
 
     // Check if current time is past work end time
     final now = DateTime.now();
-    final workEndHour = int.tryParse(workEndTime.value.replaceAll(RegExp(r'[^0-9]'), '')) ?? 17; // Default 5 PM
+    final workEndHour =
+        int.tryParse(workEndTime.value.replaceAll(RegExp(r'[^0-9]'), '')) ??
+        17; // Default 5 PM
     final workEndDateTime = DateTime(
       now.year,
       now.month,
@@ -517,8 +550,18 @@ class DashboardController extends GetxController {
   String get formattedDate {
     final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     final date = currentDate.value;
     return '${days[date.weekday - 1]}, ${date.day} ${months[date.month - 1]} ${date.year}';
@@ -545,7 +588,8 @@ class DashboardController extends GetxController {
       if (response != null && response.success) {
         // Calculate unread count based on locally stored read IDs
         final allIds = response.data.map((n) => n.id).toList();
-        unreadNotificationCount.value = storage?.getUnreadCount(allIds) ?? allIds.length;
+        unreadNotificationCount.value =
+            storage?.getUnreadCount(allIds) ?? allIds.length;
       }
     } catch (e) {
       print('Error loading notification count: $e');
@@ -591,7 +635,7 @@ class DashboardController extends GetxController {
 
   void createNewDepartment() async {
     final result = await Get.toNamed(Routes.CREATE_DEPARTMENT);
-    
+
     // Refresh departments list if department was created
     if (result == true) {
       loadDepartments();
@@ -601,16 +645,27 @@ class DashboardController extends GetxController {
   void seeMoreTasks() => NavigationController.navigateToTask();
 
   void openDepartment(DepartmentModel department) async {
-    final result = await Get.toNamed(Routes.DEPARTMENT_DETAIL, arguments: department);
-    
+    // Members get read-only view, supervisors get full access
+    final arguments = isSupervisor
+        ? department
+        : {'department': department, 'readOnly': true};
+    final result = await Get.toNamed(
+      Routes.DEPARTMENT_DETAIL,
+      arguments: arguments,
+    );
+
     // Refresh departments if data was changed (edit/delete)
     if (result == true) {
-      loadDepartments();
+      if (isSupervisor) {
+        loadDepartments();
+      }
     }
   }
 
   void clockIn() {
-    Get.toNamed(Routes.TAKE_ATTENDANCE, arguments: {'type': 'check-in'})?.then((result) {
+    Get.toNamed(Routes.TAKE_ATTENDANCE, arguments: {'type': 'check-in'})?.then((
+      result,
+    ) {
       if (result == true) {
         _loadTodayAttendance(); // Refresh attendance after check-in
       }
@@ -618,11 +673,13 @@ class DashboardController extends GetxController {
   }
 
   void clockOut() {
-    Get.toNamed(Routes.TAKE_ATTENDANCE, arguments: {'type': 'check-out'})?.then((result) {
-      if (result == true) {
-        _loadTodayAttendance(); // Refresh attendance after check-out
-      }
-    });
+    Get.toNamed(Routes.TAKE_ATTENDANCE, arguments: {'type': 'check-out'})?.then(
+      (result) {
+        if (result == true) {
+          _loadTodayAttendance(); // Refresh attendance after check-out
+        }
+      },
+    );
   }
 
   void openTask(DashboardTaskItem task) {
@@ -631,10 +688,7 @@ class DashboardController extends GetxController {
     final fullTask = taskId != null ? _taskModelMap[taskId] : null;
 
     // For members, navigate to user task detail with full task model
-    Get.toNamed(
-      Routes.USER_TASK_DETAIL,
-      arguments: fullTask ?? task,
-    );
+    Get.toNamed(Routes.USER_TASK_DETAIL, arguments: fullTask ?? task);
   }
 
   // Double back to exit
@@ -642,8 +696,10 @@ class DashboardController extends GetxController {
 
   Future<bool> handleWillPop() async {
     final currentTime = DateTime.now();
-    final canExit = _lastBackPressedTime != null &&
-        currentTime.difference(_lastBackPressedTime!) < const Duration(seconds: 2);
+    final canExit =
+        _lastBackPressedTime != null &&
+        currentTime.difference(_lastBackPressedTime!) <
+            const Duration(seconds: 2);
 
     _lastBackPressedTime = currentTime;
 

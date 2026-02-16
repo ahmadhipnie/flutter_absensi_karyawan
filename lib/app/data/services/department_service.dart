@@ -11,16 +11,49 @@ class DepartmentService extends GetxService {
   // Use singleton ApiProvider
   ApiProvider get _apiProvider => ApiProvider.instance;
 
-  /// Get groups for a department
-  Future<List<DepartmentGroupModel>> getDepartmentGroups(int departmentId) async {
+  /// Get a single department by ID
+  /// GET /departments/:id
+  Future<DepartmentModel?> getDepartmentById(int departmentId) async {
     try {
-      final response = await _apiProvider.get('/conversations/department/$departmentId/groups');
+      final response = await _apiProvider.get('/departments/$departmentId');
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+        if (responseData['success'] == true && responseData['data'] != null) {
+          return DepartmentModel.fromJson(responseData['data']);
+        }
+        return null;
+      }
+
+      return null;
+    } on DioException catch (e) {
+      print('=== GET DEPARTMENT BY ID API ERROR ===');
+      print('Type: ${e.type}');
+      print('Message: ${e.message}');
+      print('Response: ${e.response}');
+      return null;
+    } catch (e) {
+      print('Error getting department by ID: $e');
+      return null;
+    }
+  }
+
+  /// Get groups for a department
+  Future<List<DepartmentGroupModel>> getDepartmentGroups(
+    int departmentId,
+  ) async {
+    try {
+      final response = await _apiProvider.get(
+        '/conversations/department/$departmentId/groups',
+      );
 
       if (response.statusCode == 200) {
         final responseData = response.data;
         if (responseData['success'] == true) {
           final List<dynamic> data = responseData['data'] ?? [];
-          return data.map((json) => DepartmentGroupModel.fromJson(json)).toList();
+          return data
+              .map((json) => DepartmentGroupModel.fromJson(json))
+              .toList();
         }
         throw responseData['message'] ?? 'Failed to load department groups';
       }
@@ -52,13 +85,17 @@ class DepartmentService extends GetxService {
   /// Get tasks for a department
   Future<List<DepartmentTaskModel>> getDepartmentTasks(int departmentId) async {
     try {
-      final response = await _apiProvider.get('/tasks/department/$departmentId/assignments');
+      final response = await _apiProvider.get(
+        '/tasks/department/$departmentId/assignments',
+      );
 
       if (response.statusCode == 200) {
         final responseData = response.data;
         if (responseData['success'] == true) {
           final List<dynamic> data = responseData['data'] ?? [];
-          return data.map((json) => DepartmentTaskModel.fromJson(json)).toList();
+          return data
+              .map((json) => DepartmentTaskModel.fromJson(json))
+              .toList();
         }
         throw responseData['message'] ?? 'Failed to load department tasks';
       }
@@ -95,7 +132,9 @@ class DepartmentService extends GetxService {
       final response = await _apiProvider.get('/departments');
 
       if (response.statusCode == 200) {
-        final departmentsResponse = DepartmentsResponseModel.fromJson(response.data);
+        final departmentsResponse = DepartmentsResponseModel.fromJson(
+          response.data,
+        );
 
         if (departmentsResponse.success) {
           return departmentsResponse.data;
@@ -159,10 +198,7 @@ class DepartmentService extends GetxService {
         });
       } else {
         // Use regular JSON data
-        requestData = {
-          'departments_name': name,
-          'description': description,
-        };
+        requestData = {'departments_name': name, 'description': description};
       }
 
       final response = await _apiProvider.post(
@@ -172,7 +208,7 @@ class DepartmentService extends GetxService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = response.data;
-        
+
         if (responseData['success'] == true) {
           return DepartmentModel.fromJson(responseData['data']);
         }
@@ -233,10 +269,7 @@ class DepartmentService extends GetxService {
           ),
         });
       } else {
-        requestData = {
-          'departments_name': name,
-          'description': description,
-        };
+        requestData = {'departments_name': name, 'description': description};
       }
 
       final response = await _apiProvider.put(

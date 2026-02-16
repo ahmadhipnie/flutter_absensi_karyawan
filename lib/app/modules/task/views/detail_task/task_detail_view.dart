@@ -13,32 +13,39 @@ class TaskDetailView extends GetView<TaskDetailController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.gray100,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const AppBackButton(),
-        actions: [
-          EditTaskButton(onPressed: controller.editTask),
-        ],
-      ),
-      body: Column(
-        children: [
-          TaskDetailTabBar(controller: controller.tabController),
-          Expanded(
-            child: Container(
-              color: AppTheme.gray100,
-              child: TabBarView(
-                controller: controller.tabController,
-                children: const [
-                  TaskDetailTabView(),
-                  EmployeeWorkTabView(),
-                ],
+    return Obx(
+      () => Scaffold(
+        backgroundColor: AppTheme.gray100,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: const AppBackButton(),
+          actions: [
+            if (!controller.isReadOnly.value)
+              EditTaskButton(onPressed: controller.editTask),
+          ],
+        ),
+        body: Column(
+          children: [
+            TaskDetailTabBar(
+              controller: controller.tabController,
+              isReadOnly: controller.isReadOnly.value,
+            ),
+            Expanded(
+              child: Container(
+                color: AppTheme.gray100,
+                child: TabBarView(
+                  controller: controller.tabController,
+                  children: [
+                    const TaskDetailTabView(),
+                    if (!controller.isReadOnly.value)
+                      const EmployeeWorkTabView(),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

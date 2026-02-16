@@ -203,15 +203,20 @@ class AttendanceService extends GetxService {
     try {
       final queryParams = <String, dynamic>{};
 
+      // Send date in YYYY-MM-DD format (consistent with getAttendancesByUser)
       if (startDate != null) {
-        queryParams['start_date'] = startDate.toIso8601String();
+        queryParams['start_date'] = startDate.toIso8601String().split('T')[0];
       }
       if (endDate != null) {
-        queryParams['end_date'] = endDate.toIso8601String();
+        queryParams['end_date'] = endDate.toIso8601String().split('T')[0];
       }
       if (status != null) {
         queryParams['status'] = status;
       }
+
+      print('=== FETCHING MY ATTENDANCES ===');
+      print('Start Date: ${queryParams['start_date']}');
+      print('End Date: ${queryParams['end_date']}');
 
       final response = await _apiProvider.get(
         '/attendances/my',
@@ -222,9 +227,41 @@ class AttendanceService extends GetxService {
         final data = response.data;
         if (data['success'] == true && data['data'] != null) {
           final List attendanceList = data['data'];
-          return attendanceList
+
+          // Parse all attendances
+          final allAttendances = attendanceList
               .map((json) => AttendanceModel.fromJson(json))
               .toList();
+
+          print('Total records from API: ${allAttendances.length}');
+
+          // CRITICAL: Client-side date filtering as fallback
+          // (in case backend ignores date parameters)
+          if (startDate != null && endDate != null) {
+            final dateFiltered = allAttendances.where((attendance) {
+              final attendanceDate = DateTime(
+                attendance.date.year,
+                attendance.date.month,
+                attendance.date.day,
+              );
+              final start = DateTime(
+                startDate.year,
+                startDate.month,
+                startDate.day,
+              );
+              final end = DateTime(endDate.year, endDate.month, endDate.day);
+
+              return (attendanceDate.isAfter(start) ||
+                      attendanceDate.isAtSameMomentAs(start)) &&
+                  (attendanceDate.isBefore(end) ||
+                      attendanceDate.isAtSameMomentAs(end));
+            }).toList();
+
+            print('After date filter: ${dateFiltered.length} records');
+            return dateFiltered;
+          }
+
+          return allAttendances;
         }
       }
 
@@ -268,9 +305,7 @@ class AttendanceService extends GetxService {
     DateTime? endDate,
   }) async {
     try {
-      final queryParams = <String, dynamic>{
-        'user_id': userId,
-      };
+      final queryParams = <String, dynamic>{'user_id': userId};
 
       if (startDate != null) {
         queryParams['start_date'] = startDate.toIso8601String().split('T')[0];
@@ -297,21 +332,21 @@ class AttendanceService extends GetxService {
         final data = response.data;
         if (data['success'] == true && data['data'] != null) {
           final List attendanceList = data['data'];
-          
+
           // Parse all attendances
           final allAttendances = attendanceList
               .map((json) => AttendanceModel.fromJson(json))
               .toList();
-          
+
           print('Total records from API: ${allAttendances.length}');
-          
+
           // CRITICAL: Filter by user_id first (backend may not filter properly)
           final userFiltered = allAttendances.where((attendance) {
             return attendance.userId == userId;
           }).toList();
-          
+
           print('After user filter: ${userFiltered.length} records');
-          
+
           // Then filter by date range if provided
           if (startDate != null && endDate != null) {
             final dateFiltered = userFiltered.where((attendance) {
@@ -320,17 +355,23 @@ class AttendanceService extends GetxService {
                 attendance.date.month,
                 attendance.date.day,
               );
-              final start = DateTime(startDate.year, startDate.month, startDate.day);
+              final start = DateTime(
+                startDate.year,
+                startDate.month,
+                startDate.day,
+              );
               final end = DateTime(endDate.year, endDate.month, endDate.day);
-              
-              return (attendanceDate.isAfter(start) || attendanceDate.isAtSameMomentAs(start)) &&
-                     (attendanceDate.isBefore(end) || attendanceDate.isAtSameMomentAs(end));
+
+              return (attendanceDate.isAfter(start) ||
+                      attendanceDate.isAtSameMomentAs(start)) &&
+                  (attendanceDate.isBefore(end) ||
+                      attendanceDate.isAtSameMomentAs(end));
             }).toList();
-            
+
             print('After date filter: ${dateFiltered.length} records');
             return dateFiltered;
           }
-          
+
           return userFiltered;
         }
       }

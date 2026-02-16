@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../controllers/login_controller.dart';
-import '../../../../core/theme/app_theme.dart';
 import 'login_header.dart';
 import 'email_input_field.dart';
 import 'password_input_field.dart';
@@ -54,8 +53,6 @@ class LoginCard extends GetView<LoginController> {
                   const EmailInputField(),
                   SizedBox(height: screenSize.height * 0.022),
                   const PasswordInputField(),
-                  const SizedBox(height: 10),
-                  _buildForgotPassword(),
                   SizedBox(height: screenSize.height * 0.02),
                   const LoginButton(),
                 ],
@@ -69,32 +66,7 @@ class LoginCard extends GetView<LoginController> {
   }
 
   Widget _buildLogo() {
-    return const Positioned(
-      top: 0,
-      child: _LogoWidget(),
-    );
-  }
-
-  Widget _buildForgotPassword() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: TextButton(
-        onPressed: controller.goToForgotPassword,
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-        child: const Text(
-          'Forget password?',
-          style: TextStyle(
-            color: AppTheme.errorColor,
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
+    return const Positioned(top: 0, child: _LogoWidget());
   }
 }
 
@@ -118,10 +90,7 @@ class _LogoWidget extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.all(16),
-      child: Image.asset(
-        'assets/logo.png',
-        fit: BoxFit.contain,
-      ),
+      child: Image.asset('assets/logo.png', fit: BoxFit.contain),
     );
   }
 }

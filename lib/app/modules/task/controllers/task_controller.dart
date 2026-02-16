@@ -36,7 +36,7 @@ class TaskController extends GetxController {
       return ['All', 'Engineering', 'Marketing', 'Sales', 'HR'];
     } else {
       // Member sees status filters
-      return ['All', 'Pending', 'In Progress', 'Completed'];
+      return ['All', 'Pending', 'In Progress', 'Completed', 'Cancelled'];
     }
   }
 
@@ -63,11 +63,7 @@ class TaskController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = e.toString();
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.TOP,
-      );
+      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.TOP);
     } finally {
       isLoading.value = false;
     }
@@ -86,16 +82,12 @@ class TaskController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = e.toString();
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.TOP,
-      );
+      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.TOP);
     } finally {
       isLoading.value = false;
     }
   }
-  
+
   /// Fetch all tasks from API (for supervisor role)
   Future<void> fetchAllTasks() async {
     try {
@@ -109,11 +101,7 @@ class TaskController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = e.toString();
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.TOP,
-      );
+      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.TOP);
     } finally {
       isLoading.value = false;
     }
@@ -154,12 +142,14 @@ class TaskController extends GetxController {
       return tasks.where((task) {
         // Assuming task has a department field, adjust based on actual model
         // For now, filter by location as department proxy
-        return task.location.toLowerCase() == selectedFilter.value.toLowerCase();
+        return task.location.toLowerCase() ==
+            selectedFilter.value.toLowerCase();
       }).toList();
     } else {
       // Filter by status for member (with normalized comparison)
       return tasks.where((task) {
-        return _normalizeStatus(task.status) == _normalizeStatus(selectedFilter.value);
+        return _normalizeStatus(task.status) ==
+            _normalizeStatus(selectedFilter.value);
       }).toList();
     }
   }
@@ -205,9 +195,13 @@ class TaskController extends GetxController {
     return '${months[date.month - 1]} ${date.year}';
   }
 
-  /// Select filter
+  /// Select filter (toggle: clicking the same filter resets to 'All')
   void selectFilter(String filter) {
-    selectedFilter.value = filter;
+    if (selectedFilter.value == filter) {
+      selectedFilter.value = 'All';
+    } else {
+      selectedFilter.value = filter;
+    }
   }
 
   /// Format date to display format (WIB)
@@ -234,7 +228,10 @@ class TaskController extends GetxController {
   /// Member -> UserTaskDetailView (with status, upload, submit button)
   void openTaskDetail(data_model.TaskModel task) async {
     if (userRole.value == 'supervisor') {
-      final result = await Get.toNamed('/task-detail', arguments: {'taskId': task.id});
+      final result = await Get.toNamed(
+        '/task-detail',
+        arguments: {'taskId': task.id},
+      );
       // Refresh after edit if result is true
       if (result == true) {
         await refresh();

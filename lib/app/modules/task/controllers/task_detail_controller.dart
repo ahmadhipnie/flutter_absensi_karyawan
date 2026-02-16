@@ -12,8 +12,10 @@ class TaskDetailController extends GetxController
 
   final selectedTabIndex = 0.obs;
   final isLoading = true.obs;
+  final isReadOnly = false.obs;
   final Rxn<TaskModel> task = Rxn<TaskModel>();
-  final Rxn<TaskWithAssignmentsModel> taskWithAssignments = Rxn<TaskWithAssignmentsModel>();
+  final Rxn<TaskWithAssignmentsModel> taskWithAssignments =
+      Rxn<TaskWithAssignmentsModel>();
 
   late final TaskService _taskService;
 
@@ -29,6 +31,9 @@ class TaskDetailController extends GetxController
 
   // Task ID passed as argument
   int? get taskId => Get.arguments?['taskId'] as int?;
+
+  // Read-only flag from arguments
+  bool get readOnly => Get.arguments?['readOnly'] as bool? ?? false;
 
   // Employee work statistics
   final approvedCount = 0.obs;
@@ -46,8 +51,15 @@ class TaskDetailController extends GetxController
   void onInit() {
     super.onInit();
     _taskService = Get.find<TaskService>();
-    
-    tabController = TabController(length: 2, vsync: this);
+
+    // Set read-only mode from arguments
+    isReadOnly.value = readOnly;
+
+    // TabController length: 1 tab for read-only (Instructions only), 2 tabs for full access
+    tabController = TabController(
+      length: isReadOnly.value ? 1 : 2,
+      vsync: this,
+    );
     tabController.addListener(() {
       selectedTabIndex.value = tabController.index;
     });
@@ -62,13 +74,13 @@ class TaskDetailController extends GetxController
   Future<void> loadTaskDetail() async {
     try {
       isLoading.value = true;
-      
+
       // Get task with assignments
       final taskData = await _taskService.getTaskWithAssignments(taskId!);
-      
+
       if (taskData != null) {
         taskWithAssignments.value = taskData;
-        
+
         // Also set the basic task for backward compatibility
         task.value = TaskModel(
           id: taskData.id,
@@ -77,7 +89,8 @@ class TaskDetailController extends GetxController
           taskDescription: taskData.description,
           customerName: taskData.customerName,
           location: taskData.location,
-          status: 'active', // Default status as it's not in TaskWithAssignmentsModel
+          status:
+              'active', // Default status as it's not in TaskWithAssignmentsModel
           dueDate: taskData.dueDate,
           createdAt: taskData.createdAt,
           updatedAt: taskData.updatedAt,
@@ -85,7 +98,7 @@ class TaskDetailController extends GetxController
           creatorEmail: taskData.creatorEmail,
           isSubmitted: false, // This is per-assignment, not per-task
         );
-        
+
         // Populate observable fields
         taskTitle.value = taskData.subject;
         postedOn.value = taskData.createdAt;
@@ -106,18 +119,16 @@ class TaskDetailController extends GetxController
         );
       }
     } catch (e) {
-      Get.snackbar(
-        'Error',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
     } finally {
       isLoading.value = false;
     }
   }
 
   /// Process assignments and categorize employees
-  Future<void> _processAssignments(List<TaskAssignmentModel> assignments) async {
+  Future<void> _processAssignments(
+    List<TaskAssignmentModel> assignments,
+  ) async {
     // Clear previous data
     approvedEmployees.clear();
     lateEmployees.clear();
@@ -129,7 +140,9 @@ class TaskDetailController extends GetxController
 
     for (var assignment in assignments) {
       // Get profile photo URL from API response
-      final profilePhotoUrl = AppConfig.getProfilePhotoUrl(assignment.photoProfile);
+      final profilePhotoUrl = AppConfig.getProfilePhotoUrl(
+        assignment.photoProfile,
+      );
 
       // Get assignment status from API (pending, in_progress, completed, cancelled)
       final assignmentStatus = assignment.status;
@@ -145,13 +158,18 @@ class TaskDetailController extends GetxController
           _submissionsCache[assignment.id] = submission;
 
           // Check if submission is late
-          final isLate = _isSubmissionLate(submission.submittedAt, dueDate.value);
+          final isLate = _isSubmissionLate(
+            submission.submittedAt,
+            dueDate.value,
+          );
 
           final employee = EmployeeWorkModel(
             id: assignment.userId.toString(),
             name: assignment.username,
             avatarUrl: profilePhotoUrl ?? '',
-            status: isLate ? EmployeeWorkStatus.late : EmployeeWorkStatus.onTime,
+            status: isLate
+                ? EmployeeWorkStatus.late
+                : EmployeeWorkStatus.onTime,
             assignmentId: assignment.id,
             submissionDate: submission.submittedAt,
             assignmentStatus: assignmentStatus,
@@ -229,10 +247,7 @@ class TaskDetailController extends GetxController
     // Navigate to edit task with task object
     final result = await Get.toNamed(
       '/edit-task',
-      arguments: {
-        'taskId': taskId,
-        'task': task.value,
-      },
+      arguments: {'taskId': taskId, 'task': task.value},
     );
 
     // Reload task detail if edit was successful

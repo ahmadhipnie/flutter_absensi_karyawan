@@ -108,14 +108,23 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                                     onTap: () async {
                                       final result = await Get.toNamed(
                                         Routes.DEPARTMENT_INFO,
-                                        arguments: dept,
+                                        arguments: controller.isReadOnly.value
+                                            ? {
+                                                'department': dept,
+                                                'readOnly': true,
+                                              }
+                                            : dept,
                                       );
                                       // If department was edited or deleted, go back with result
                                       if (result == true) {
                                         Get.back(result: true);
                                       }
                                     },
-                                    child: Icon(Icons.info_outline, size: 18, color: Colors.grey[400]),
+                                    child: Icon(
+                                      Icons.info_outline,
+                                      size: 18,
+                                      color: Colors.grey[400],
+                                    ),
                                   ),
                                 ],
                               ),
@@ -134,9 +143,14 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                                 )
                               else
                                 Obx(() {
-                                  final membersCtrl = Get.find<MembersController>();
+                                  final membersCtrl =
+                                      Get.find<MembersController>();
                                   final memberCount = dept != null
-                                      ? membersCtrl.members.where((m) => m.departmentId == dept.id).length
+                                      ? membersCtrl.members
+                                            .where(
+                                              (m) => m.departmentId == dept.id,
+                                            )
+                                            .length
                                       : 0;
 
                                   return Text(
@@ -165,23 +179,18 @@ class DepartmentDetailView extends GetView<DepartmentController> {
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: _buildTabs(),
-            ),
-          ),
-          
-          Container(
-            height: 1,
-            color: const Color(0xFFF3F4F6),
+            child: Align(alignment: Alignment.centerLeft, child: _buildTabs()),
           ),
 
-          // Announcement Card shown below tabs so it's visible across all tab pages
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: _buildAnnouncementCard(),
-          ),
-          
+          Container(height: 1, color: const Color(0xFFF3F4F6)),
+
+          // Announcement Card shown below tabs (hidden in read-only mode)
+          if (!controller.isReadOnly.value)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              child: _buildAnnouncementCard(),
+            ),
+
           // Tab View Content (Task/Discussion/Members)
           // Since TabBarView usually expands, we wrap in Expanded.
           Expanded(
@@ -206,17 +215,19 @@ class DepartmentDetailView extends GetView<DepartmentController> {
         if (dept == null) return;
 
         List<UserModel> members = [];
-        
+
         if (Get.isRegistered<MembersController>()) {
           final membersCtrl = Get.find<MembersController>();
           members = membersCtrl.members.where((m) {
             final byId = m.departmentId != null && m.departmentId == dept.id;
             final byName = m.location != null && m.location == dept.name;
-            final byIdString = m.departmentId != null && m.departmentId.toString() == dept.id.toString();
+            final byIdString =
+                m.departmentId != null &&
+                m.departmentId.toString() == dept.id.toString();
             return byId || byName || byIdString;
           }).toList();
         }
-        
+
         Get.toNamed(Routes.CREATE_ANNOUNCEMENT, arguments: members);
       },
       child: Container(
@@ -271,10 +282,7 @@ class DepartmentDetailView extends GetView<DepartmentController> {
         ),
         labelColor: const Color(0xFF1F2937),
         unselectedLabelColor: const Color(0xFF9CA3AF),
-        labelStyle: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
+        labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
         unselectedLabelStyle: const TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w500,
@@ -312,10 +320,12 @@ class DepartmentDetailView extends GetView<DepartmentController> {
   Widget _buildTaskTab() {
     return Obx(() {
       if (controller.isLoadingTasks.value) {
-        return const Center(child: Padding(
-          padding: EdgeInsets.all(20.0),
-          child: CircularProgressIndicator(),
-        ));
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: CircularProgressIndicator(),
+          ),
+        );
       }
 
       if (controller.departmentTasks.isEmpty) {
@@ -323,7 +333,11 @@ class DepartmentDetailView extends GetView<DepartmentController> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.assignment_outlined, size: 48, color: Colors.grey.shade300),
+              Icon(
+                Icons.assignment_outlined,
+                size: 48,
+                color: Colors.grey.shade300,
+              ),
               const SizedBox(height: 12),
               Text(
                 'No tasks assigned yet',
@@ -352,7 +366,13 @@ class DepartmentDetailView extends GetView<DepartmentController> {
   Widget _buildTaskItem(DepartmentTaskModel task) {
     return InkWell(
       onTap: () async {
-        final result = await Get.toNamed(Routes.TASK_DETAIL, arguments: {'taskId': task.taskId});
+        final result = await Get.toNamed(
+          Routes.TASK_DETAIL,
+          arguments: {
+            'taskId': task.taskId,
+            'readOnly': controller.isReadOnly.value,
+          },
+        );
         if (result == true) {
           await controller.fetchDepartmentTasks();
         }
@@ -425,7 +445,11 @@ class DepartmentDetailView extends GetView<DepartmentController> {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey.shade400),
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 14,
+                      color: Colors.grey.shade400,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       _formatDate(task.dueDate),
@@ -439,7 +463,11 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                 if (task.location.isNotEmpty)
                   Row(
                     children: [
-                      Icon(Icons.location_on_outlined, size: 14, color: Colors.grey.shade400),
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: Colors.grey.shade400,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         task.location,
@@ -461,10 +489,12 @@ class DepartmentDetailView extends GetView<DepartmentController> {
   Widget _buildDiscussionTab() {
     return Obx(() {
       if (controller.isLoadingGroups.value) {
-        return const Center(child: Padding(
-          padding: EdgeInsets.all(20.0),
-          child: CircularProgressIndicator(),
-        ));
+        return const Center(
+          child: Padding(
+            padding: EdgeInsets.all(20.0),
+            child: CircularProgressIndicator(),
+          ),
+        );
       }
 
       if (controller.departmentGroups.isEmpty) {
@@ -472,7 +502,11 @@ class DepartmentDetailView extends GetView<DepartmentController> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey.shade300),
+              Icon(
+                Icons.chat_bubble_outline,
+                size: 48,
+                color: Colors.grey.shade300,
+              ),
               const SizedBox(height: 12),
               Text(
                 'No discussion groups found',
@@ -507,11 +541,14 @@ class DepartmentDetailView extends GetView<DepartmentController> {
         // Since we don't have full context on ChatDetail, we'll just show TODO or try to navigate
         // Routes.CHAT_DETAIL usually expects a conversation ID or object.
         // Assuming we can pass arguments.
-        Get.toNamed(Routes.CHAT_DETAIL, arguments: {
-          'chatId': group.id.toString(),
-          'title': group.title,
-          'type': group.type,
-        });
+        Get.toNamed(
+          Routes.CHAT_DETAIL,
+          arguments: {
+            'chatId': group.id.toString(),
+            'title': group.title,
+            'type': group.type,
+          },
+        );
       },
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -566,7 +603,11 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.shade400),
+            Icon(
+              Icons.arrow_forward_ios,
+              size: 14,
+              color: Colors.grey.shade400,
+            ),
           ],
         ),
       ),
@@ -624,8 +665,18 @@ class DepartmentDetailView extends GetView<DepartmentController> {
     try {
       final date = DateTime.parse(dateStr);
       final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${date.day} ${months[date.month - 1]} ${date.year}';
     } catch (e) {
@@ -649,7 +700,9 @@ class DepartmentDetailView extends GetView<DepartmentController> {
             final byId = m.departmentId != null && m.departmentId == dept.id;
             final byName = m.location != null && m.location == dept.name;
             // Also handle possible string-int mismatch
-            final byIdString = m.departmentId != null && m.departmentId.toString() == dept.id.toString();
+            final byIdString =
+                m.departmentId != null &&
+                m.departmentId.toString() == dept.id.toString();
             return byId || byName || byIdString;
           }).toList();
 
@@ -664,9 +717,16 @@ class DepartmentDetailView extends GetView<DepartmentController> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.people_outline, size: 48, color: Colors.grey.shade400),
+                        Icon(
+                          Icons.people_outline,
+                          size: 48,
+                          color: Colors.grey.shade400,
+                        ),
                         const SizedBox(height: 12),
-                        Text('No members in this department', style: TextStyle(color: Colors.grey.shade600)),
+                        Text(
+                          'No members in this department',
+                          style: TextStyle(color: Colors.grey.shade600),
+                        ),
                       ],
                     ),
                   ),
@@ -680,7 +740,8 @@ class DepartmentDetailView extends GetView<DepartmentController> {
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: members.length,
-              separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+              separatorBuilder: (_, __) =>
+                  const Divider(height: 1, color: Color(0xFFF3F4F6)),
               itemBuilder: (context, index) {
                 return MemberListItem(user: members[index]);
               },
@@ -717,7 +778,9 @@ class DepartmentDetailView extends GetView<DepartmentController> {
         final members = users.where((u) {
           final byId = u.departmentId != null && u.departmentId == dept.id;
           final byName = u.location != null && u.location == dept.name;
-          final byIdString = u.departmentId != null && u.departmentId.toString() == dept.id.toString();
+          final byIdString =
+              u.departmentId != null &&
+              u.departmentId.toString() == dept.id.toString();
           return byId || byName || byIdString;
         }).toList();
 
@@ -740,7 +803,8 @@ class DepartmentDetailView extends GetView<DepartmentController> {
         return ListView.separated(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           itemCount: members.length,
-          separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+          separatorBuilder: (_, __) =>
+              const Divider(height: 1, color: Color(0xFFF3F4F6)),
           itemBuilder: (context, index) => MemberListItem(user: members[index]),
         );
       },

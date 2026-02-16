@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/app_theme.dart';
 
 class TaskDetailTabBar extends StatelessWidget {
-  const TaskDetailTabBar({required this.controller, super.key});
+  const TaskDetailTabBar({
+    required this.controller,
+    this.isReadOnly = false,
+    super.key,
+  });
 
   final TabController controller;
+  final bool isReadOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +30,9 @@ class TaskDetailTabBar extends StatelessWidget {
         indicatorColor: AppTheme.primaryColor,
         indicatorWeight: 3,
         indicatorSize: TabBarIndicatorSize.tab,
-        tabs: const [
-          Tab(text: 'Instructions'),
-          Tab(text: 'Employee Work'),
+        tabs: [
+          const Tab(text: 'Instructions'),
+          if (!isReadOnly) const Tab(text: 'Employee Work'),
         ],
       ),
     );

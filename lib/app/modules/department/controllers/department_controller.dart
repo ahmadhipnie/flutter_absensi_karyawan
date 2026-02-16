@@ -9,14 +9,15 @@ import '../../../data/models/department_task_model.dart';
 import '../../../data/models/department_group_model.dart';
 import '../../members/controllers/members_controller.dart';
 
-class DepartmentController extends GetxController with GetSingleTickerProviderStateMixin {
+class DepartmentController extends GetxController
+    with GetSingleTickerProviderStateMixin {
   final DepartmentService _departmentService = DepartmentService();
   final ImagePicker _picker = ImagePicker();
 
   // Form Controllers
   late TextEditingController nameController;
   late TextEditingController descriptionController;
-  
+
   // Tabs for Detail View
   late TabController tabController;
   final tabs = ['Task', 'Discussion', 'Members'];
@@ -26,11 +27,14 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
   final isLoadingTasks = false.obs;
   final isLoadingGroups = false.obs;
   final selectedImage = Rxn<File>();
-  
+
   // Current department data (for detail/edit/info views)
   final department = Rxn<DepartmentModel>();
   final departmentTasks = <DepartmentTaskModel>[].obs;
   final departmentGroups = <DepartmentGroupModel>[].obs;
+
+  // Read-only mode (for member role viewing department)
+  final isReadOnly = false.obs;
 
   @override
   void onInit() {
@@ -38,12 +42,20 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
     nameController = TextEditingController();
     descriptionController = TextEditingController();
     tabController = TabController(length: tabs.length, vsync: this);
-    
+
     // Load department from arguments if available
     if (Get.arguments is DepartmentModel) {
       department.value = Get.arguments as DepartmentModel;
+    } else if (Get.arguments is Map) {
+      final args = Get.arguments as Map;
+      if (args['department'] is DepartmentModel) {
+        department.value = args['department'] as DepartmentModel;
+      }
+      if (args['readOnly'] == true) {
+        isReadOnly.value = true;
+      }
     }
-    
+
     // Fetch members data to ensure it's fresh
     _fetchMembersData();
 
@@ -53,7 +65,7 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
       fetchDepartmentGroups();
     }
   }
-  
+
   /// Fetch members data to ensure member count is accurate
   Future<void> _fetchMembersData() async {
     try {
@@ -70,10 +82,12 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
   /// Fetch department tasks
   Future<void> fetchDepartmentTasks() async {
     if (department.value == null) return;
-    
+
     try {
       isLoadingTasks.value = true;
-      final tasks = await _departmentService.getDepartmentTasks(department.value!.id);
+      final tasks = await _departmentService.getDepartmentTasks(
+        department.value!.id,
+      );
       departmentTasks.assignAll(tasks);
     } catch (e) {
       print('Error fetching department tasks: $e');
@@ -85,10 +99,12 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
   /// Fetch department groups (conversations)
   Future<void> fetchDepartmentGroups() async {
     if (department.value == null) return;
-    
+
     try {
       isLoadingGroups.value = true;
-      final groups = await _departmentService.getDepartmentGroups(department.value!.id);
+      final groups = await _departmentService.getDepartmentGroups(
+        department.value!.id,
+      );
       departmentGroups.assignAll(groups);
     } catch (e) {
       print('Error fetching department groups: $e');
@@ -104,7 +120,7 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
     tabController.dispose();
     super.onClose();
   }
-  
+
   /// Load form with existing department data for editing
   void loadDepartmentForEdit() {
     if (department.value != null) {
@@ -119,7 +135,7 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
       // Request storage permission for Android 12 and below
       // For Android 13+ (API 33+), use photos permission
       PermissionStatus status;
-      
+
       if (await Permission.photos.isGranted) {
         status = PermissionStatus.granted;
       } else if (await Permission.storage.isGranted) {
@@ -127,13 +143,13 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
       } else {
         // Try photos first (Android 13+)
         status = await Permission.photos.request();
-        
+
         // If denied, try storage (Android 12-)
         if (!status.isGranted) {
           status = await Permission.storage.request();
         }
       }
-      
+
       if (!status.isGranted) {
         Get.snackbar(
           'Permission Denied',
@@ -219,10 +235,7 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
           children: [
             const Text(
               'Select Photo',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             ListTile(
@@ -244,7 +257,10 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
             if (selectedImage.value != null)
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('Remove Photo', style: TextStyle(color: Colors.red)),
+                title: const Text(
+                  'Remove Photo',
+                  style: TextStyle(color: Colors.red),
+                ),
                 onTap: () {
                   Get.back();
                   selectedImage.value = null;
@@ -414,9 +430,7 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
     // Show confirm dialog
     Get.dialog(
       AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Row(
           children: [
             Icon(Icons.warning_rounded, color: Colors.red[700], size: 28),
@@ -451,7 +465,10 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
             onPressed: () => Get.back(),
             child: Text(
               'Cancel',
-              style: TextStyle(color: Colors.grey[600], fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           ElevatedButton(
@@ -462,12 +479,17 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red[700],
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             child: const Text(
               'Delete',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -510,7 +532,7 @@ class DepartmentController extends GetxController with GetSingleTickerProviderSt
       // Navigate back to dashboard (close detail + info if open)
       // We use Get.until to go back until dashboard
       Get.back(result: true); // Close current view (info or edit)
-      
+
       // Also try to close department detail if we're nested
       await Future.delayed(const Duration(milliseconds: 100));
       if (Get.currentRoute.contains('department')) {

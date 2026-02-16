@@ -89,12 +89,6 @@ class LoginController extends GetxController {
     }
   }
 
-  /// Navigate to forgot password screen
-  void goToForgotPassword() {
-    // TODO: Implement forgot password navigation
-    _showInfoSnackbar('Forgot password feature coming soon');
-  }
-
   void _showSuccessSnackbar(String message) {
     Get.snackbar(
       'Success',
@@ -112,14 +106,6 @@ class LoginController extends GetxController {
       snackPosition: SnackPosition.TOP,
       backgroundColor: Colors.red,
       colorText: Colors.white,
-    );
-  }
-
-  void _showInfoSnackbar(String message) {
-    Get.snackbar(
-      'Info',
-      message,
-      snackPosition: SnackPosition.TOP,
     );
   }
 

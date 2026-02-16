@@ -15,56 +15,69 @@ class DepartmentInfoView extends GetView<DepartmentController> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.black87, size: 20),
+          icon: const Icon(
+            Icons.arrow_back_ios,
+            color: Colors.black87,
+            size: 20,
+          ),
           onPressed: () => Get.back(),
         ),
         title: const Text(''),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8, top: 12, bottom: 12),
-            child: ElevatedButton(
-              onPressed: () async {
-                controller.loadDepartmentForEdit();
-                final result = await Get.toNamed(
-                  Routes.EDIT_DEPARTMENT,
-                  arguments: controller.department.value,
-                );
-                if (result == true) {
-                  Get.back(result: true);
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE0E7FF),
-                foregroundColor: AppTheme.primaryColor,
-                elevation: 0,
-                textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+          // Only show Edit/Delete buttons when not in read-only mode
+          if (!controller.isReadOnly.value) ...[
+            Container(
+              margin: const EdgeInsets.only(right: 8, top: 12, bottom: 12),
+              child: ElevatedButton(
+                onPressed: () async {
+                  controller.loadDepartmentForEdit();
+                  final result = await Get.toNamed(
+                    Routes.EDIT_DEPARTMENT,
+                    arguments: controller.department.value,
+                  );
+                  if (result == true) {
+                    Get.back(result: true);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE0E7FF),
+                  foregroundColor: AppTheme.primaryColor,
+                  elevation: 0,
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: const Text('Edit'),
               ),
-              child: const Text('Edit'),
             ),
-          ),
-          Container(
-            margin: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
-            child: ElevatedButton(
-              onPressed: () => controller.deleteDepartment(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red[50],
-                foregroundColor: Colors.red[700],
-                elevation: 0,
-                textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            Container(
+              margin: const EdgeInsets.only(right: 16, top: 12, bottom: 12),
+              child: ElevatedButton(
+                onPressed: () => controller.deleteDepartment(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red[50],
+                  foregroundColor: Colors.red[700],
+                  elevation: 0,
+                  textStyle: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: const Text('Delete'),
               ),
-              child: const Text('Delete'),
             ),
-          ),
+          ],
         ],
       ),
       body: Obx(() {
@@ -109,7 +122,11 @@ class DepartmentInfoView extends GetView<DepartmentController> {
                     else if (!Get.isRegistered<MembersController>())
                       const Text(
                         '0 members',
-                        style: TextStyle(fontSize: 14, color: Color(0xFF6B7280), fontWeight: FontWeight.w500),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color(0xFF6B7280),
+                          fontWeight: FontWeight.w500,
+                        ),
                         textAlign: TextAlign.center,
                       )
                     else
@@ -122,13 +139,21 @@ class DepartmentInfoView extends GetView<DepartmentController> {
 
                           return Text(
                             '$memberCount member${memberCount == 1 ? '' : 's'}',
-                            style: const TextStyle(fontSize: 14, color: Color(0xFF6B7280), fontWeight: FontWeight.w500),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                              fontWeight: FontWeight.w500,
+                            ),
                             textAlign: TextAlign.center,
                           );
                         } catch (e) {
                           return const Text(
                             '0 members',
-                            style: TextStyle(fontSize: 14, color: Color(0xFF6B7280), fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B7280),
+                              fontWeight: FontWeight.w500,
+                            ),
                             textAlign: TextAlign.center,
                           );
                         }

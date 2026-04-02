@@ -576,6 +576,15 @@ class DashboardController extends GetxController {
     searchQuery.value = value;
   }
 
+  /// Departments filtered by search query
+  List<DepartmentModel> get filteredDepartments {
+    if (searchQuery.value.isEmpty) return departments;
+    final query = searchQuery.value.toLowerCase();
+    return departments
+        .where((d) => d.name.toLowerCase().contains(query))
+        .toList();
+  }
+
   final unreadNotificationCount = 0.obs;
 
   /// Load notification count for dashboard badge

@@ -47,16 +47,38 @@ class DepartmentSection extends GetView<DashboardController> {
           );
         }
 
+        final filtered = controller.filteredDepartments;
+
+        if (filtered.isEmpty && controller.searchQuery.value.isNotEmpty) {
+          return Column(
+            children: [
+              _buildCreateDepartmentItem(),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                child: Center(
+                  child: Text(
+                    'No departments found',
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
         return ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: controller.departments.length + 1, // +1 for create button
+          itemCount: filtered.length + 1, // +1 for create button
           itemBuilder: (context, index) {
             if (index == 0) {
               return _buildCreateDepartmentItem();
             }
-            return _buildDepartmentItem(controller.departments[index - 1]);
+            return _buildDepartmentItem(filtered[index - 1]);
           },
         );
       },

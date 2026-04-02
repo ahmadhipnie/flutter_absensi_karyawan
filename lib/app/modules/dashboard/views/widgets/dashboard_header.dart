@@ -189,7 +189,7 @@ class DashboardHeader extends GetView<DashboardController> {
           controller: controller.searchController,
           onChanged: controller.onSearchChanged,
           decoration: const InputDecoration(
-            hintText: 'Ingin mencari apa?',
+            hintText: 'Search departments...',
             hintStyle: TextStyle(
               color: Color(0xFF9E9E9E),
               fontSize: 14,
